@@ -1,0 +1,11 @@
+<app-navbar [cartCount]="cartCount()"></app-navbar>
+
+<main class="main">
+  <router-outlet></router-outlet>
+
+  <!-- Botones flotantes (mock) -->
+  <a class="float wa" href="#" aria-label="WhatsApp">🟢</a>
+  <button class="float bot" type="button" aria-label="Chatbot">🤖</button>
+</main>
+
+<app-footer></app-footer>

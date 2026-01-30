@@ -1,0 +1,24 @@
+.wrap{
+  width: min(1100px, calc(100% - 32px));
+  margin: 20px auto;
+  display:grid;
+  grid-template-columns: 420px 1fr;
+  gap: 18px;
+  align-items: stretch;
+}
+.panel{ padding: 18px; display:grid; gap: 10px; }
+.brand{ font-weight:900; }
+.brand span{ color: #22c55e; }
+label{ font-weight:800; font-size: 14px; }
+input{
+  height: 44px; border-radius: 10px; border:1px solid var(--border);
+  padding: 0 12px;
+}
+.photo{
+  background: url("https://placehold.co/900x900") center/cover no-repeat;
+  min-height: 520px;
+}
+@media (max-width: 900px){
+  .wrap{ grid-template-columns: 1fr; }
+  .photo{ display:none; }
+}

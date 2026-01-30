@@ -1,0 +1,23 @@
+.nav{ background: var(--primary); color:#fff; }
+.nav-inner{
+  height: 64px;
+  display:flex;
+  align-items:center;
+  gap:16px;
+}
+.brand{ color:#fff; text-decoration:none; display:flex; align-items:center; gap:10px; }
+.brand-text{ font-size: 20px; }
+.accent{ color: #ffb703; }
+.links{ margin-left: 18px; display:flex; gap:18px; }
+.links a{ color:#fff; text-decoration:none; font-weight:800; opacity:.9; }
+.links a.active{ text-decoration: underline; opacity:1; }
+.cart{ margin-left:auto; color:#fff; text-decoration:none; font-size: 22px; position:relative; }
+.badge{
+  position:absolute; top:-6px; right:-10px;
+  background:#ff3b3b; color:#fff;
+  font-size:12px; font-weight:900;
+  border-radius:999px; padding:2px 7px;
+}
+@media (max-width: 640px){
+  .links{ display:none; } /* mobile: simple */
+}

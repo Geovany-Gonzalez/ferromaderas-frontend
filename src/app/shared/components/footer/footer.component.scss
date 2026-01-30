@@ -1,0 +1,12 @@
+.foot{ background: var(--primary); color:#fff; margin-top: 40px; }
+.foot-inner{
+  padding: 16px 0;
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  font-weight:800;
+}
+a{ color:#fff; }
+@media (max-width:640px){
+  .foot-inner{ flex-direction:column; align-items:center; text-align:center; }
+}

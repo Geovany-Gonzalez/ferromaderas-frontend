@@ -1,0 +1,19 @@
+<header class="nav">
+  <div class="container nav-inner">
+    <a class="brand" routerLink="/">
+      <span class="logo">🏠</span>
+      <span class="brand-text"><b>Ferro</b><b class="accent">Maderas</b></span>
+    </a>
+
+    <nav class="links">
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}">Inicio</a>
+      <a routerLink="/catalogo" routerLinkActive="active">Catálogo</a>
+      <a routerLink="/ubicacion" routerLinkActive="active">Ubicación</a>
+    </nav>
+
+    <a class="cart" routerLink="/carrito" aria-label="Ver carrito">
+      🛒
+      <span class="badge" *ngIf="cartCount > 0">{{ cartCount }}</span>
+    </a>
+  </div>
+</header>

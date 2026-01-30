@@ -1,0 +1,29 @@
+<section class="container hero card">
+  <div class="hero-bar">Cotizá rápido y pedí por WhatsApp</div>
+
+  <div class="hero-body">
+    <div class="q">¿Qué estás buscando?</div>
+
+    <div class="search">
+      <input placeholder='Ej: PVC 1/2, cemento, pintura...' />
+      <button type="button" aria-label="Buscar">🔎</button>
+    </div>
+
+    <div class="cta">
+      <a class="btn btn-primary" routerLink="/catalogo">Ver catálogo</a>
+      <a class="btn btn-primary" routerLink="/carrito">Ver carrito</a>
+    </div>
+  </div>
+</section>
+
+<section class="container section-title">
+  <div class="title">Productos destacados en <span>FerroMaderas</span></div>
+</section>
+
+<section class="container grid">
+  <app-product-card
+    *ngFor="let p of featured; trackBy: trackById"
+    [product]="p"
+    (add)="onAdd($event)">
+  </app-product-card>
+</section>
