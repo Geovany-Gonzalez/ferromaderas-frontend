@@ -2,22 +2,23 @@
   background: var(--primary); 
   color:#fff; 
   margin-top: 40px; 
-  padding: 48px 0;
+  padding: 24px 0;
 }
 .foot-inner{
-  padding: 32px 0;
+  padding: 16px 0;
   display:flex;
   justify-content:space-between;
   align-items: center;
   gap:24px;
   font-weight:700;
-  font-size: 18px;
+  font-size: 20px;
 }
 a{ 
   color:#fff; 
   text-decoration: underline;
   transition: opacity 0.3s;
-  font-size: 18px;
+  font-size: 20px;
+  font-weight: 700;
 }
 a:hover{
   opacity: 0.8;
@@ -42,10 +43,9 @@ a:hover{
 .whatsapp-link:hover{
   transform: scale(1.1);
 }
-.whatsapp-link img{
+.whatsapp-link svg{
   width: 32px;
   height: 32px;
-  filter: brightness(0) invert(1);
 }
 @media (max-width:640px){
   .foot-inner{ 

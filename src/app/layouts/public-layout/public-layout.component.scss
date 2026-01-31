@@ -26,15 +26,23 @@
   text-decoration:none; 
   background: #25d366;
 }
-.wa img {
-  filter: brightness(0) invert(1);
+.wa svg {
+  width: 36px;
+  height: 36px;
 }
 .bot{ 
   bottom: 100px;
-  background: var(--primary);
+  background: transparent;
+  box-shadow: none;
+  border-radius: 16px;
+  padding: 0;
+  overflow: hidden;
+  border: none;
 }
 .bot img{
-  filter: brightness(0) invert(1);
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 @media (max-width: 640px){
@@ -52,5 +60,11 @@
   }
   .bot{
     bottom: 84px;
+    width: 56px;
+    height: 56px;
+  }
+  .bot img{
+    width: 100%;
+    height: 100%;
   }
 }
