@@ -1,7 +1,7 @@
 /* You can add global styles to this file, and also import other style files */
 :root{
-  --primary:#1a2aa7;     /* azul */
-  --primary-2:#0f1c7a;
+  --primary:#1e3a8a;     /* azul oscuro */
+  --primary-2:#1e40af;
   --bg:#f4f6fb;
   --card:#ffffff;
   --text:#0b1020;
@@ -21,8 +21,20 @@ body{
 }
 
 .container{
-  width: min(1100px, calc(100% - 32px));
+  width: min(1400px, calc(100% - 40px));
   margin: 0 auto;
+}
+
+@media (max-width: 768px){
+  .container{
+    width: calc(100% - 24px);
+  }
+}
+
+@media (max-width: 480px){
+  .container{
+    width: calc(100% - 16px);
+  }
 }
 
 .btn{

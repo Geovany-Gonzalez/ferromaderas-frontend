@@ -1,18 +1,22 @@
 <header class="nav">
   <div class="container nav-inner">
     <a class="brand" routerLink="/">
-      <span class="logo">🏠</span>
+      <img class="logo" src="/assets/icons/logo.png" alt="Logo" />
       <span class="brand-text"><b>Ferro</b><b class="accent">Maderas</b></span>
     </a>
 
-    <nav class="links">
-      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}">Inicio</a>
-      <a routerLink="/catalogo" routerLinkActive="active">Catálogo</a>
-      <a routerLink="/ubicacion" routerLinkActive="active">Ubicación</a>
+    <nav class="links" [class.active]="menuOpen">
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" (click)="menuOpen = false">Inicio</a>
+      <a routerLink="/catalogo" routerLinkActive="active" (click)="menuOpen = false">Catálogo</a>
+      <a routerLink="/ubicacion" routerLinkActive="active" (click)="menuOpen = false">Ubicación</a>
     </nav>
 
+    <button class="menu-toggle" (click)="menuOpen = !menuOpen" aria-label="Toggle menu">
+      <img src="/assets/icons/Menu-hamburguesa.png" alt="Menu" />
+    </button>
+
     <a class="cart" routerLink="/carrito" aria-label="Ver carrito">
-      🛒
+      <img src="/assets/icons/Carrito-compras.png" alt="Carrito" />
       <span class="badge" *ngIf="cartCount > 0">{{ cartCount }}</span>
     </a>
   </div>
