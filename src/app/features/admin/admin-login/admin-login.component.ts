@@ -9,5 +9,4 @@ import { CommonModule } from '@angular/common';
   styleUrl: './admin-login.component.scss',
 })
 export class AdminLoginComponent {
-
 }
