@@ -1,0 +1,65 @@
+<div class="location-page">
+  <!-- Sección de Contacto -->
+  <section class="container contact-section card">
+    <div class="section-header">
+      <h1>Contacto y ubicación</h1>
+    </div>
+
+    <div class="contact-info">
+      <div class="info-item">
+        <img src="/assets/icons/Ubicacion.png" alt="Ubicación" class="info-icon">
+        <div class="info-text">
+          <h3>Dirección</h3>
+          <p>3a. Calle 3-03 Barrio de la Cruz, Amatitlán</p>
+        </div>
+      </div>
+
+      <div class="info-item">
+        <img src="/assets/icons/Calendario.png" alt="Horario" class="info-icon">
+        <div class="info-text">
+          <h3>Horario</h3>
+          <p>Lunes a sábado de 7:30 am a 5:30 pm</p>
+        </div>
+      </div>
+
+      <div class="info-item">
+        <img src="/assets/icons/Telefono.png" alt="Teléfono" class="info-icon">
+        <div class="info-text">
+          <h3>Teléfono</h3>
+          <p>4129-5898</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Sección del Mapa -->
+  <section class="container map-section">
+    <div class="map-header">
+      <h2>
+        ¿Cómo llegar a
+        <img src="/assets/icons/logo.png" alt="Logo" class="brand-logo">
+        <span class="brand-name">Ferro<span class="accent">Maderas</span>?</span>
+      </h2>
+    </div>
+
+    <div class="map-container card">
+      <iframe
+        [src]="mapEmbedUrl"
+        width="100%"
+        height="450"
+        style="border:0;"
+        allowfullscreen=""
+        loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade">
+      </iframe>
+    </div>
+
+    <div class="map-actions">
+      <button class="btn btn-maps" (click)="openInGoogleMaps()">
+        <img src="/assets/icons/Maps.png" alt="Google Maps" class="btn-icon">
+        Abrir en Google Maps
+      </button>
+      <p class="map-hint">Haz clic para abrir en Google Maps y obtener direcciones desde tu ubicación</p>
+    </div>
+  </section>
+</div>
