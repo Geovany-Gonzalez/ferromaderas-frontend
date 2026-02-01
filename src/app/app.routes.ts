@@ -12,6 +12,11 @@ export const routes: Routes = [
           import('./features/public/home/home.component').then(m => m.HomeComponent),
       },
       {
+        path: 'categorias',
+        loadComponent: () =>
+          import('./features/public/categories/categories.component').then(m => m.CategoriesComponent),
+      },
+      {
         path: 'ubicacion',
         loadComponent: () =>
           import('./features/public/location/location.component').then(m => m.LocationComponent),

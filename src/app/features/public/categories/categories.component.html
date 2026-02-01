@@ -1,0 +1,53 @@
+<section class="container hero card">
+  <div class="hero-bar">Compra por categoría</div>
+  
+  <div class="hero-body">
+    <p class="description">
+      Explora nuestras categorías de productos y encuentra exactamente lo que necesitas para tu proyecto.
+    </p>
+  </div>
+</section>
+
+<section class="container section-title">
+  <div class="title">
+    Todas las categorías en 
+    <img src="/assets/icons/logo.png" alt="Logo" class="title-logo" />
+    <span class="brand-name">Ferro<span class="accent">Maderas</span></span>
+  </div>
+</section>
+
+<section class="container categories-grid">
+  <div 
+    *ngFor="let category of categories; trackBy: trackById" 
+    class="category-card card"
+    (click)="onCategoryClick(category)"
+    role="button"
+    tabindex="0"
+    [attr.aria-label]="'Ver productos de ' + category.name">
+    
+    <div class="category-image">
+      <img [src]="category.imageUrl" [alt]="category.name" />
+    </div>
+    
+    <div class="category-info">
+      <h3 class="category-name">{{ category.name }}</h3>
+      <button class="btn btn-primary">Ver productos</button>
+    </div>
+  </div>
+</section>
+
+<section class="container cta-section">
+  <div class="cta-card">
+    <div class="cta-image">
+      <img src="/assets/images/persona.png" alt="Cliente buscando productos" />
+    </div>
+    <div class="cta-content card">
+      <h2>¿No encontrás lo que buscás?</h2>
+      <p>Contactanos por WhatsApp y te ayudamos a encontrar el producto perfecto</p>
+      <a href="https://wa.me/50683456789" target="_blank" class="btn btn-primary whatsapp-btn">
+        <img src="/assets/icons/Whatsapp.png" alt="WhatsApp" class="whatsapp-icon" />
+        Contactar por WhatsApp
+      </a>
+    </div>
+  </div>
+</section>
