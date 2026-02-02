@@ -10,15 +10,15 @@
   justify-content:space-between;
   align-items: center;
   gap:24px;
-  font-weight:700;
-  font-size: 20px;
+  font-weight:600;
+  font-size: 18px;
   position: relative;
 }
 a{ 
   color:#fff; 
   text-decoration: underline;
   transition: opacity 0.3s;
-  font-size: 20px;
+  font-size: 24px;
   font-weight: 700;
 }
 a:hover{
@@ -27,7 +27,7 @@ a:hover{
 .copyright{
   flex: 1;
   text-align: center;
-  font-size: 18px;
+  font-size: 17px;
 }
 .whatsapp-link{
   text-decoration: none;
@@ -72,6 +72,6 @@ a:hover{
     height: 52px;
   }
   a{
-    font-size: 16px;
+    font-size: 20px;
   }
 }

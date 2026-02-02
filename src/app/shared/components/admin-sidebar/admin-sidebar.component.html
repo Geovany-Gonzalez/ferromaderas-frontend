@@ -1,0 +1,41 @@
+<!-- Botón hamburguesa para mobile -->
+<button class="hamburger-btn" (click)="toggleMenu()" [class.active]="isMenuOpen">
+  <span></span>
+  <span></span>
+  <span></span>
+</button>
+
+<!-- Overlay para cerrar el menú al hacer click fuera -->
+<div class="sidebar-overlay" *ngIf="isMenuOpen" (click)="closeMenu()"></div>
+
+<!-- Sidebar -->
+<aside class="admin-sidebar" [class.open]="isMenuOpen">
+  <div class="welcome-section">
+    <h2 class="welcome-title">¡Bienvenido!</h2>
+  </div>
+  
+  <div class="avatar-section">
+    <p class="user-name">{{ userName }}</p>
+    <div class="user-avatar">
+      <img src="assets/images/persona.png" alt="Usuario" />
+      <span class="online-indicator"></span>
+    </div>
+  </div>
+  
+  <div class="spacer"></div>
+
+  <div class="menu-section">
+    <h3 class="menu-title">Accesos rápidos</h3>
+    <nav class="menu-nav">
+      <a
+        *ngFor="let item of menuItems"
+        [routerLink]="item.route"
+        routerLinkActive="active"
+        class="menu-item"
+        (click)="closeMenu()"
+      >
+        {{ item.label }}
+      </a>
+    </nav>
+  </div>
+</aside>

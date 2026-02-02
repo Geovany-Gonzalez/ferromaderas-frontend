@@ -15,7 +15,7 @@
   flex-shrink: 0;
 }
 .logo{ width: 56px; height: 56px; }
-.brand-text{ font-size: 26px; }
+.brand-text{ font-size: 24px; font-weight: 800; }
 .accent{ color: #ff8c00; }
 .links{ 
   display:flex; 
@@ -28,8 +28,8 @@
 .links a{ 
   color:#fff; 
   text-decoration:none; 
-  font-weight:800; 
-  font-size: 22px;
+  font-weight:700; 
+  font-size: 24px;
   opacity:.95;
   padding: 12px 20px;
   border-radius: 8px;
@@ -63,7 +63,7 @@
   margin-left:auto; 
   color:#fff; 
   text-decoration:none; 
-  font-size: 22px; 
+  font-size: 18px; 
   position:relative;
   padding: 10px;
   border-radius: 8px;
@@ -81,15 +81,15 @@
 }
 .badge{
   position:absolute; 
-  top:2px; 
-  right:2px;
+  top:12px; 
+  right:12px;
   background:#ff3b30; 
   color:#fff;
-  font-size:14px; 
-  font-weight:900;
+  font-size:13px; 
+  font-weight:800;
   border-radius:999px; 
-  padding:4px 9px;
-  min-width: 24px;
+  padding:4px 8px;
+  min-width: 22px;
   text-align: center;
   box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
@@ -126,17 +126,17 @@
   .links a{
     padding: 18px 20px;
     border-bottom: 1px solid rgba(255,255,255,0.1);
-    font-size: 19px;
+    font-size: 22px;
     width: 100%;
     text-align: left;
     display: block;
   }
-  .brand-text{ font-size: 22px; }
+  .brand-text{ font-size: 20px; }
   .logo{ width: 48px; height: 48px; }
   .cart{ margin-left: 0; }
   .cart img{ width: 44px; height: 44px; }
   .badge{
-    font-size: 12px;
-    padding: 3px 7px;
+    font-size: 11px;
+    padding: 3px 6px;
   }
 }

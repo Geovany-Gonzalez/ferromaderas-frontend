@@ -1,0 +1,39 @@
+.admin-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f9fafb;
+}
+
+.admin-content {
+  display: flex;
+  flex: 1;
+  align-items: flex-start;
+}
+
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  background: #f9fafb;
+  padding: 2rem;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+@media (max-width: 768px) {
+  .admin-content {
+    flex-direction: column;
+  }
+  
+  .main-content {
+    padding: 1rem;
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-content {
+    padding: 0.75rem;
+  }
+}

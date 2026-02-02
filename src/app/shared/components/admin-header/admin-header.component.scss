@@ -1,0 +1,182 @@
+.admin-header {
+  background: #1E3A8A;
+  padding: 0.75rem 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 3rem;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.logo-icon {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+}
+
+.logo-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.brand-name {
+  display: flex;
+  align-items: baseline;
+  
+  .ferro {
+    font-size: 24px;
+    font-weight: 700;
+    color: white;
+  }
+  
+  .maderas {
+    font-size: 24px;
+    font-weight: 700;
+    color: #fbbf24;
+  }
+}
+
+.subtitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #4ade80;
+}
+
+.globe-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.3s;
+  margin-left: 2rem;
+  
+  &:hover {
+    transform: scale(1.1);
+  }
+}
+
+.globe-icon {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+}
+
+.system-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: white;
+  margin: 0;
+  flex: 1;
+  text-align: center;
+}
+
+.logout-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.3s;
+  
+  &:hover {
+    transform: scale(1.1);
+  }
+  
+  .logout-icon {
+    width: 50px;
+    height: 50px;
+    object-fit: contain;
+  }
+}
+
+@media (max-width: 1024px) {
+  .system-title {
+    font-size: 24px;
+  }
+  
+  .globe-icon {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .logo-icon {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .logout-icon {
+    width: 45px;
+    height: 45px;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-header {
+    padding: 0.5rem 1rem;
+  }
+  
+  .header-content {
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: space-between;
+  }
+  
+  .brand-name {
+    .ferro,
+    .maderas {
+      font-size: 20px;
+    }
+  }
+  
+  .subtitle {
+    font-size: 12px;
+  }
+  
+  .logo-icon {
+    width: 45px;
+    height: 45px;
+  }
+  
+  .globe-btn {
+    order: 2;
+    margin-left: 0;
+  }
+  
+  .logout-btn {
+    order: 3;
+  }
+  
+  .system-title {
+    flex-basis: 100%;
+    order: 4;
+    font-size: 20px;
+    margin-top: 0.5rem;
+  }
+  
+  .globe-icon {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .logout-btn {
+    .logout-icon {
+      width: 40px;
+      height: 40px;
+    }
+  }
+}

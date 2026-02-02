@@ -9,6 +9,15 @@
   --border:#e5e7eb;
   --shadow: 0 8px 24px rgba(0,0,0,.12);
   --radius: 14px;
+  
+  /* Typography System */
+  --font-h1: 30px;
+  --font-h2: 24px;
+  --font-h3: 20px;
+  --font-h4: 18px;
+  --font-body: 16px;
+  --font-small: 14px;
+  --font-button: 16px;
 }
 
 *{ box-sizing:border-box; }
@@ -18,6 +27,8 @@ body{
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   background: var(--bg);
   color: var(--text);
+  font-size: var(--font-body);
+  line-height: 1.6;
 }
 
 .container{
@@ -41,8 +52,10 @@ body{
   border:0;
   border-radius: 10px;
   padding: 12px 18px;
+  font-size: var(--font-button);
   font-weight: 700;
   cursor: pointer;
+  transition: all 0.3s ease;
 }
 .btn-primary{
   background: var(--primary);

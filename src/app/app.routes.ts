@@ -21,12 +21,43 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/public/location/location.component').then(m => m.LocationComponent),
       },
+      {
+        path: 'politicas',
+        loadComponent: () =>
+          import('./features/public/policies/policies.component').then(m => m.PoliciesComponent),
+      },
     ],
   },
   {
     path: 'admin-login',
     loadComponent: () =>
       import('./features/admin/admin-login/admin-login.component').then(m => m.AdminLoginComponent),
+  },
+  {
+    path: 'admin',
+    loadComponent: () =>
+      import('./layouts/admin-layout/admin-layout').then(m => m.AdminLayout),
+    children: [
+      {
+        path: '',
+        redirectTo: 'dashboard',
+        pathMatch: 'full',
+      },
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./features/admin/dashboard/dashboard.component').then(m => m.DashboardComponent),
+      },
+      // Rutas futuras para otras secciones administrativas
+      // {
+      //   path: 'productos',
+      //   loadComponent: () => import('./features/admin/productos/productos.component').then(m => m.ProductosComponent),
+      // },
+      // {
+      //   path: 'categorias',
+      //   loadComponent: () => import('./features/admin/categorias/categorias.component').then(m => m.CategoriasComponent),
+      // },
+    ],
   },
   { path: '**', redirectTo: '' },
 ];
