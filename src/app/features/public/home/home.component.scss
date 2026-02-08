@@ -17,10 +17,10 @@ gole.hero {
 }
 
 .hero-body{
-  padding: 32px 28px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
   align-items: center;
 }
 
@@ -56,17 +56,25 @@ gole.hero {
 }
 
 .search button {
-  background: #5a7fd6;
-  color: white;
+  background: var(--primary);
   border: none;
-  padding: 12px 20px;
+  padding: 14px 24px;
   border-radius: 8px;
-  margin-left: 8px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 50px;
+  transition: all 0.3s ease;
+}
+
+.search button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(44, 62, 143, 0.4);
+  background: #3d4fa3;
+}
+
+.search button:active {
+  transform: translateY(0);
 }
 
 .search button img {

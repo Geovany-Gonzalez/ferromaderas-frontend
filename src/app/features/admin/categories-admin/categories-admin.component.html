@@ -1,0 +1,154 @@
+<div class="categories-admin-container">
+  <div class="header-section">
+    <h1 class="page-title">{{ isEditing ? 'Editar categoría' : 'Crear categoría' }}</h1>
+    <p class="page-subtitle">Las categorías se muestran en burbujas en el catálogo.</p>
+  </div>
+
+  <!-- Formulario de creación/edición -->
+  <div class="form-card card">
+    <div class="form-section">
+      <h2 class="section-title">Sección 1: Datos de la categoría</h2>
+      
+      <div class="form-group">
+        <label for="categoryName">Nombre de la categoría:</label>
+        <input 
+          type="text" 
+          id="categoryName"
+          [(ngModel)]="categoryForm.name"
+          placeholder="Ej: Cemento, PVC, Pintura..."
+          class="form-input"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="categoryDescription">Descripción breve:</label>
+        <textarea 
+          id="categoryDescription"
+          [(ngModel)]="categoryForm.description"
+          placeholder="Descripción opcional de la categoría..."
+          class="form-textarea"
+          rows="3"
+        ></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="categoryStatus">Estado:</label>
+        <select 
+          id="categoryStatus"
+          [(ngModel)]="categoryForm.active"
+          class="form-select"
+        >
+          <option [ngValue]="true">Activa</option>
+          <option [ngValue]="false">Inactiva</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h2 class="section-title">Sección 2: Imagen de la categoría</h2>
+      
+      <div class="form-group">
+        <label>Imagen de perfil:</label>
+        <div class="image-upload-section">
+          <input 
+            type="file" 
+            id="imageFile"
+            (change)="onImageSelect($event)"
+            accept=".webp,.jpg,.jpeg"
+            class="file-input"
+          />
+          <label for="imageFile" class="file-label">
+            <img src="/assets/icons/Agregar.png" alt="Subir" class="upload-icon" />
+            Selecciona una imagen dentro del equipo
+          </label>
+          <p class="file-hint">Formatos permitidos: .webp, .jpg, .jpeg</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h2 class="section-title">Sección 3: Vista previa</h2>
+      
+      <div class="preview-section">
+        <div class="preview-card" *ngIf="previewImage">
+          <img [src]="previewImage" [alt]="categoryForm.name || 'Vista previa'" class="preview-image" />
+          <p class="preview-name">{{ categoryForm.name || 'Nombre de categoría' }}</p>
+        </div>
+        <div class="preview-placeholder" *ngIf="!previewImage">
+          <p>La vista previa aparecerá aquí</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button 
+        type="button" 
+        (click)="saveCategory()"
+        class="btn btn-save"
+      >
+        Guardar
+      </button>
+      <button 
+        type="button" 
+        (click)="openCreateModal()"
+        class="btn btn-cancel"
+        *ngIf="isEditing"
+      >
+        Cancelar
+      </button>
+    </div>
+  </div>
+
+  <!-- Lista de categorías existentes -->
+  <div class="categories-list-section" *ngIf="categories.length > 0">
+    <h2 class="section-title">Categorías existentes</h2>
+    
+    <div class="categories-grid">
+      <div 
+        *ngFor="let category of categories; trackBy: trackById"
+        class="category-item card"
+        [class.inactive]="!category.active"
+      >
+        <div class="category-image-wrapper">
+          <img [src]="category.imageUrl" [alt]="category.name" class="category-image" />
+          <span class="status-badge" [class.active]="category.active">
+            {{ category.active ? 'Activa' : 'Inactiva' }}
+          </span>
+        </div>
+        
+        <div class="category-info">
+          <h3 class="category-name">{{ category.name }}</h3>
+          <p class="category-description" *ngIf="category.description">
+            {{ category.description }}
+          </p>
+          <p class="category-slug">Slug: {{ category.slug }}</p>
+        </div>
+        
+        <div class="category-actions">
+          <button 
+            (click)="openEditModal(category)"
+            class="btn-action btn-edit"
+            title="Modificar"
+          >
+            <img src="/assets/icons/Modificar.png" alt="Modificar" />
+          </button>
+          <button 
+            (click)="toggleCategoryStatus(category)"
+            class="btn-action btn-toggle"
+            [title]="category.active ? 'Desactivar' : 'Activar'"
+            [class.active]="category.active"
+          >
+            <span class="toggle-icon">{{ category.active ? '🚫' : '👁️' }}</span>
+          </button>
+          <button 
+            (click)="deleteCategory(category)"
+            class="btn-action btn-delete"
+            title="Eliminar"
+          >
+            ✕
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

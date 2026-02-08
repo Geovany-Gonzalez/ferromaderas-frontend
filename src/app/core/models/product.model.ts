@@ -4,5 +4,7 @@ export interface Product {
   name: string;
   price: number;     // GTQ
   imageUrl: string;
+  categoryId: string;
   featured?: boolean;
+  description?: string;
 }

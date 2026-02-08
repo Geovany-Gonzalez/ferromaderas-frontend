@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { CatalogService } from '../../../core/services/catalog.service';
 import { Category } from '../../../core/models/category.model';
 
@@ -13,7 +14,10 @@ import { Category } from '../../../core/models/category.model';
 export class CategoriesComponent implements OnInit {
   categories: Category[] = [];
 
-  constructor(private catalogService: CatalogService) {}
+  constructor(
+    private catalogService: CatalogService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
     this.categories = this.catalogService.getCategories();
@@ -24,7 +28,6 @@ export class CategoriesComponent implements OnInit {
   }
 
   onCategoryClick(category: Category): void {
-    // Preparado para futura navegación a productos filtrados
-    console.log('Categoría seleccionada:', category.name);
+    this.router.navigate(['/categoria', category.slug]);
   }
 }

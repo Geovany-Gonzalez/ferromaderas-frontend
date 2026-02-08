@@ -17,6 +17,11 @@ export const routes: Routes = [
           import('./features/public/categories/categories.component').then(m => m.CategoriesComponent),
       },
       {
+        path: 'categoria/:slug',
+        loadComponent: () =>
+          import('./features/public/category-detail/category-detail.component').then(m => m.CategoryDetailComponent),
+      },
+      {
         path: 'ubicacion',
         loadComponent: () =>
           import('./features/public/location/location.component').then(m => m.LocationComponent),
@@ -48,14 +53,15 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/admin/dashboard/dashboard.component').then(m => m.DashboardComponent),
       },
+      {
+        path: 'categorias',
+        loadComponent: () =>
+          import('./features/admin/categories-admin/categories-admin.component').then(m => m.CategoriesAdminComponent),
+      },
       // Rutas futuras para otras secciones administrativas
       // {
       //   path: 'productos',
       //   loadComponent: () => import('./features/admin/productos/productos.component').then(m => m.ProductosComponent),
-      // },
-      // {
-      //   path: 'categorias',
-      //   loadComponent: () => import('./features/admin/categorias/categorias.component').then(m => m.CategoriasComponent),
       // },
     ],
   },

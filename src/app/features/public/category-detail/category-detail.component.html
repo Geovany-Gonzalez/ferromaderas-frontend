@@ -1,0 +1,64 @@
+<div class="container">
+  <section class="hero card" *ngIf="category">
+    <div class="hero-bar">{{ category.name }}</div>
+    
+    <div class="hero-body">
+      <p class="description">
+        {{ category.description || 'Explora nuestros productos de ' + category.name }}
+      </p>
+    </div>
+  </section>
+</div>
+
+<section class="container search-section" *ngIf="category">
+  <div class="search-bar card">
+    <h2 class="search-title">¿Qué estás buscando?</h2>
+    <div class="search-input-wrapper">
+      <input 
+        type="text" 
+        [(ngModel)]="searchTerm"
+        placeholder="Ej: PVC 1/2, cemento, pintura..."
+        class="search-input"
+      />
+      <button class="search-button">
+        <img src="/assets/icons/Lupa.png" alt="Buscar" />
+      </button>
+    </div>
+  </div>
+</section>
+
+<section class="container section-title" *ngIf="category">
+  <div class="title">
+    {{ category.name }}
+  </div>
+</section>
+
+<section class="container products-grid" *ngIf="filteredProducts.length > 0">
+  <app-product-card
+    *ngFor="let product of filteredProducts; trackBy: trackById"
+    [product]="product"
+    (add)="onAddToCart($event)"
+  ></app-product-card>
+</section>
+
+<section class="container no-products" *ngIf="filteredProducts.length === 0 && category">
+  <div class="no-products-card card">
+    <h3>No se encontraron productos</h3>
+    <p>No hay productos disponibles en esta categoría{{ searchTerm ? ' que coincidan con tu búsqueda' : '' }}.</p>
+  </div>
+</section>
+
+<section class="container cta-section">
+  <div class="cta-card">
+    <div class="cta-image">
+      <img src="/assets/icons/busqueda.jpg" alt="Cliente buscando productos" />
+    </div>
+    <div class="cta-content card">
+      <h2>Cotizá rápido y pedí por WhatsApp</h2>
+      <p>¿No encontrás lo que buscás? Contactanos por WhatsApp y te ayudamos a encontrar el producto perfecto</p>
+      <a href="https://wa.me/50683456789" target="_blank" class="btn btn-primary whatsapp-btn">
+        <img src="/assets/icons/Whatsapp.png" alt="WhatsApp" class="whatsapp-icon" />
+        Contactar por WhatsApp
+      </a>
+    </div>
+  </div>
