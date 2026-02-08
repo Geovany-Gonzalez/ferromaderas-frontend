@@ -1,0 +1,58 @@
+<div class="policies-admin-page">
+  <div class="container">
+    <h1>Administrar Políticas</h1>
+
+    <div class="actions">
+      <button (click)="onEdit()" *ngIf="isPreview">Volver a Editar</button>
+      <button (click)="onPreview()" *ngIf="!isPreview">Vista Previa</button>
+      <button (click)="onSave()" *ngIf="!isPreview">Guardar Cambios</button>
+    </div>
+
+    <!-- Preview Mode -->
+    <div *ngIf="isPreview">
+      <h2>Vista Previa</h2>
+      <div class="policies-grid">
+        <div class="policy-card card" *ngFor="let policy of previewPolicies">
+          <div class="policy-header">
+            <h2>{{ policy.title }}</h2>
+          </div>
+          <div class="policy-content">
+            <div class="policy-icon">
+              <img [src]="policy.icon" [alt]="policy.title" />
+            </div>
+            <ul class="policy-list">
+              <li *ngFor="let item of policy.content">{{ item }}</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Mode -->
+    <div *ngIf="!isPreview">
+      <h2>Editar Políticas</h2>
+      <div class="edit-form">
+        <div *ngFor="let policy of policies; let i = index; trackBy: trackByFn" class="policy-form-item">
+          <div class="form-group">
+            <label>Título</label>
+            <input type="text" [(ngModel)]="policy.title" name="title-{{i}}">
+          </div>
+          <div class="form-group">
+            <label>Icono (URL)</label>
+            <input type="text" [(ngModel)]="policy.icon" name="icon-{{i}}">
+          </div>
+          <div class="form-group">
+            <label>Contenido</label>
+            <div *ngFor="let item of policy.content; let j = index; trackBy: trackByFn" class="content-item">
+              <textarea [(ngModel)]="policy.content[j]" name="content-{{i}}-{{j}}"></textarea>
+              <button (click)="removeContent(policy, j)">Eliminar</button>
+            </div>
+            <button (click)="addContent(policy)">Agregar Contenido</button>
+          </div>
+          <button (click)="removePolicy(i)">Eliminar Política</button>
+        </div>
+        <button (click)="addPolicy()">Agregar Política</button>
+      </div>
+    </div>
+  </div>
+</div>

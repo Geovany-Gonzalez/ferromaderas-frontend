@@ -11,105 +11,20 @@
     </section>
 
     <!-- Policies Grid -->
-    <section class="policies-grid">
-    <!-- Precios y vigencia -->
-    <div class="policy-card card">
-      <div class="policy-header">
-        <h2>Precios y vigencia</h2>
-      </div>
-      <div class="policy-content">
-        <div class="policy-icon">
-          <img src="/assets/icons/placeholder-price.png" alt="Precios y vigencia" />
+    <section class="policies-grid" *ngIf="policies$ | async as policies">
+      <div class="policy-card card" *ngFor="let policy of policies">
+        <div class="policy-header">
+          <h2>{{ policy.title }}</h2>
         </div>
-        <ul class="policy-list">
-          <li>Los precios pueden variar sin previo aviso.</li>
-          <li>La cotización se confirma al finalizar por WhatsApp.</li>
-        </ul>
-      </div>
-    </div>
-
-    <!-- Envío y flete -->
-    <div class="policy-card card">
-      <div class="policy-header">
-        <h2>Envío y flete</h2>
-      </div>
-      <div class="policy-content">
-        <div class="policy-icon">
-          <img src="/assets/icons/placeholder-delivery.png" alt="Envío y flete" />
-        </div>
-        <ul class="policy-list">
-          <li>El flete depende de zona/distancia/productos.</li>
-          <li>Se confirma antes de cerrar el pedido.</li>
-        </ul>
-      </div>
-    </div>
-
-    <!-- Cambios y devoluciones -->
-    <div class="policy-card card">
-      <div class="policy-header">
-        <h2>Cambios y devoluciones</h2>
-      </div>
-      <div class="policy-content">
-        <div class="policy-icon">
-          <img src="/assets/icons/placeholder-returns.png" alt="Cambios y devoluciones" />
-        </div>
-        <ul class="policy-list">
-          <li>No se aceptan cambios ni devoluciones tras la entrega.</li>
-          <li>Aplica revisión al recibir.</li>
-        </ul>
-      </div>
-    </div>
-
-    <!-- Disponibilidad -->
-    <div class="policy-card card">
-      <div class="policy-header">
-        <h2>Disponibilidad</h2>
-      </div>
-      <div class="policy-content">
-        <div class="policy-icon">
-          <img src="/assets/icons/placeholder-stock.png" alt="Disponibilidad" />
-        </div>
-        <ul class="policy-list">
-          <li>Productos sujetos a stock.</li>
-          <li>Si se agota el producto, el vendedor por vía Whatsapp te ofrecerá la mejor alternativa.</li>
-        </ul>
-      </div>
-    </div>
-
-    <!-- Métodos de pago -->
-    <div class="policy-card card">
-      <div class="policy-header">
-        <h2>Métodos de pago</h2>
-      </div>
-      <div class="policy-content">
-        <div class="policy-icon">
-          <img src="/assets/icons/placeholder-payment.png" alt="Métodos de pago" />
-        </div>
-        <div class="policy-text">
-          <p class="payment-intro">Los métodos de pago son únicamente los siguientes:</p>
+        <div class="policy-content">
+          <div class="policy-icon">
+            <img [src]="policy.icon" [alt]="policy.title" />
+          </div>
           <ul class="policy-list">
-            <li>Efectivo.</li>
-            <li>Transferencia</li>
+            <li *ngFor="let item of policy.content">{{ item }}</li>
           </ul>
         </div>
       </div>
-    </div>
-
-    <!-- Horarios -->
-    <div class="policy-card card">
-      <div class="policy-header">
-        <h2>Horarios</h2>
-      </div>
-      <div class="policy-content">
-        <div class="policy-icon">
-          <img src="/assets/icons/placeholder-schedule.png" alt="Horarios" />
-        </div>
-        <ul class="policy-list">
-          <li>Lunes a sábado 7:30 am – 5:30 pm.</li>
-          <li>Fuera de horario se atiende el siguiente día hábil.</li>
-        </ul>
-      </div>
-    </div>
     </section>
   </div>
 </div>

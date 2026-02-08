@@ -58,6 +58,11 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/admin/categories-admin/categories-admin.component').then(m => m.CategoriesAdminComponent),
       },
+      {
+        path: 'politicas',
+        loadComponent: () =>
+          import('./features/admin/policies-admin/policies-admin').then(m => m.PoliciesAdminComponent),
+      },
       // Rutas futuras para otras secciones administrativas
       // {
       //   path: 'productos',
