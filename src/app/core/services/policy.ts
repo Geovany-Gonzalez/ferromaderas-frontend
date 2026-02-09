@@ -7,12 +7,20 @@ export interface Policy {
   icon: string;
 }
 
-@Injectable({
-  providedIn: 'root'
-})
-export class PolicyService {
+export interface PolicyPage {
+  title: string;
+  subtitle: string;
+  policies: Policy[];
+}
 
-  private policies = new BehaviorSubject<Policy[]>([
+const STORAGE_KEY = 'ferromaderas_policy_page';
+/** Siempre mostramos exactamente 6 políticas en público y admin. */
+const POLICY_COUNT = 6;
+
+const DEFAULT_POLICY_PAGE: PolicyPage = {
+  title: 'Políticas de compra',
+  subtitle: 'Leé estas condiciones antes de confirmar tu pedido por WhatsApp.',
+  policies: [
     {
       title: 'Precios y vigencia',
       icon: '/assets/icons/placeholder-price.png',
@@ -62,14 +70,109 @@ export class PolicyService {
         'Fuera de horario se atiende el siguiente día hábil.'
       ]
     }
-  ]);
+  ]
+};
 
-  getPolicies() {
-    return this.policies.asObservable();
+@Injectable({
+  providedIn: 'root'
+})
+export class PolicyService {
+
+  private policyPage = new BehaviorSubject<PolicyPage>(this.loadFromStorage());
+
+  constructor() {
+    if (typeof window !== 'undefined') {
+      window.addEventListener('storage', (e: StorageEvent) => {
+        if (e.key === STORAGE_KEY && e.newValue) {
+          try {
+            const parsed = JSON.parse(e.newValue) as PolicyPage;
+            if (parsed?.title != null && Array.isArray(parsed?.policies)) {
+              this.policyPage.next(parsed);
+            }
+          } catch (_) {}
+        }
+      });
+    }
   }
 
-  updatePolicies(policies: Policy[]) {
-    this.policies.next(policies);
+  /** Siempre devuelve exactamente POLICY_COUNT (6) políticas, fusionando con la estructura por defecto. */
+  private loadFromStorage(): PolicyPage {
+    const defaultCopy = () => JSON.parse(JSON.stringify(DEFAULT_POLICY_PAGE));
+    const defaultPolicies = DEFAULT_POLICY_PAGE.policies;
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as PolicyPage;
+        const title = parsed?.title != null ? parsed.title : DEFAULT_POLICY_PAGE.title;
+        const subtitle = parsed?.subtitle != null ? parsed.subtitle : DEFAULT_POLICY_PAGE.subtitle;
+        // Construir siempre 6 políticas: por índice se toma lo guardado o el valor por defecto
+        const policies: Policy[] = [];
+        for (let i = 0; i < POLICY_COUNT; i++) {
+          const def = defaultPolicies[i];
+          const stored = parsed?.policies?.[i];
+          if (stored && typeof stored.title === 'string') {
+            policies.push({
+              title: stored.title,
+              icon: typeof stored.icon === 'string' ? stored.icon : (def?.icon ?? ''),
+              content: Array.isArray(stored.content) ? [...stored.content] : (def?.content ? [...def.content] : [])
+            });
+          } else {
+            policies.push(JSON.parse(JSON.stringify(def)));
+          }
+        }
+        return { title, subtitle, policies };
+      }
+    } catch (_) {}
+    return defaultCopy();
+  }
+
+  getPolicyPage() {
+    return this.policyPage.asObservable();
+  }
+
+  /** Devuelve siempre una copia de la página por defecto (para asegurar que el admin tenga qué editar). */
+  getDefaultPolicyPage(): PolicyPage {
+    return JSON.parse(JSON.stringify(DEFAULT_POLICY_PAGE));
+  }
+
+  /** Valor actual de políticas (misma fuente que el sitio público). Siempre máximo 6. */
+  getPolicyPageSnapshot(): PolicyPage {
+    const current = this.policyPage.getValue();
+    if (!current?.policies?.length) {
+      const fixed = this.loadFromStorage();
+      if (!fixed.policies?.length) {
+        const defaultPage = this.getDefaultPolicyPage();
+        this.policyPage.next(defaultPage);
+        return JSON.parse(JSON.stringify(defaultPage));
+      }
+      this.policyPage.next(fixed);
+      return JSON.parse(JSON.stringify(fixed));
+    }
+    if (current.policies.length > POLICY_COUNT) {
+      const fixed: PolicyPage = {
+        title: current.title,
+        subtitle: current.subtitle,
+        policies: current.policies.slice(0, POLICY_COUNT)
+      };
+      this.policyPage.next(fixed);
+      return JSON.parse(JSON.stringify(fixed));
+    }
+    return JSON.parse(JSON.stringify(current));
+  }
+
+  updatePolicyPage(policyPage: PolicyPage) {
+    const copy = JSON.parse(JSON.stringify(policyPage));
+    copy.policies = (copy.policies || []).slice(0, POLICY_COUNT);
+    const defaultPolicies = DEFAULT_POLICY_PAGE.policies;
+    while (copy.policies.length < POLICY_COUNT) {
+      const idx = copy.policies.length;
+      copy.policies.push(JSON.parse(JSON.stringify(defaultPolicies[idx] || defaultPolicies[0])));
+    }
+    const toEmit = JSON.parse(JSON.stringify(copy));
+    this.policyPage.next(toEmit);
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(copy));
+    } catch (_) {}
   }
 
 }

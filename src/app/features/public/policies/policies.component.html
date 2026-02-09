@@ -1,18 +1,18 @@
-<div class="policies-page">
+<div class="policies-page" *ngIf="policyPage">
   <div class="container">
-    <!-- Title Section -->
+    <!-- Title Section (dinámico: lo que se edita en admin) -->
     <section class="policies-title">
-      <h1>Políticas de compra</h1>
+      <h1>{{ policyPage.title }}</h1>
     </section>
 
     <!-- Subtitle Section -->
     <section class="policies-subtitle">
-      <p>Leé estas condiciones antes de confirmar tu pedido por WhatsApp.</p>
+      <p>{{ policyPage.subtitle }}</p>
     </section>
 
-    <!-- Policies Grid -->
-    <section class="policies-grid" *ngIf="policies$ | async as policies">
-      <div class="policy-card card" *ngFor="let policy of policies">
+    <!-- Policies Grid: siempre refleja lo guardado en admin -->
+    <section class="policies-grid">
+      <div class="policy-card card" *ngFor="let policy of (policyPage.policies || [])">
         <div class="policy-header">
           <h2>{{ policy.title }}</h2>
         </div>

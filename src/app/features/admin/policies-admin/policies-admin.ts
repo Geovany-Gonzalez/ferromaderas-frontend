@@ -1,8 +1,7 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Policy, PolicyService } from '../../../core/services/policy';
-import { Observable } from 'rxjs';
+import { Policy, PolicyPage, PolicyService } from '../../../core/services/policy';
 
 @Component({
   selector: 'app-policies-admin',
@@ -13,47 +12,115 @@ import { Observable } from 'rxjs';
 })
 export class PoliciesAdminComponent implements OnInit {
   private policyService = inject(PolicyService);
-  public policies: Policy[] = [];
-  public previewPolicies: Policy[] = [];
-  public isPreview = false;
+  private cdr = inject(ChangeDetectorRef);
+
+  public policyPage: PolicyPage = { title: '', subtitle: '', policies: [] };
+  public hasUnsavedChanges = false;
+  public isEditMode = false;
+  private savedSnapshot: string = '';
+
+  /** Array de políticas para el template (nunca undefined). */
+  get policies(): Policy[] {
+    return this.policyPage?.policies ?? [];
+  }
+
+  enterEditMode(): void {
+    if (!this.policyPage.policies?.length) {
+      this.policyPage = this.policyService.getPolicyPageSnapshot();
+      if (!this.policyPage.policies?.length) {
+        this.policyPage = this.policyService.getDefaultPolicyPage();
+        this.policyService.updatePolicyPage(this.policyPage);
+      }
+    }
+    this.isEditMode = true;
+    this.cdr.detectChanges();
+    setTimeout(() => this.cdr.detectChanges(), 0);
+  }
+
+  cancelEdit(): void {
+    this.policyPage = this.policyService.getPolicyPageSnapshot();
+    this.savedSnapshot = JSON.stringify(this.policyPage);
+    this.hasUnsavedChanges = false;
+    this.isEditMode = false;
+    this.cdr.detectChanges();
+  }
+
+  /** Carga las 6 políticas por defecto (por si no se cargaron al inicio). */
+  loadDefaultPolicies(): void {
+    this.policyPage = this.policyService.getDefaultPolicyPage();
+    this.policyService.updatePolicyPage(this.policyPage);
+    this.savedSnapshot = JSON.stringify(this.policyPage);
+    this.hasUnsavedChanges = false;
+    this.cdr.detectChanges();
+  }
 
   ngOnInit(): void {
-    this.policyService.getPolicies().subscribe(policies => {
-      this.policies = JSON.parse(JSON.stringify(policies));
+    // Carga inmediata: mismo contenido que el sitio público, siempre con políticas para editar
+    this.policyPage = this.policyService.getPolicyPageSnapshot();
+    if (!this.policyPage.policies?.length) {
+      this.policyPage = this.policyService.getDefaultPolicyPage();
+      this.policyService.updatePolicyPage(this.policyPage);
+    }
+    this.savedSnapshot = JSON.stringify(this.policyPage);
+    this.hasUnsavedChanges = false;
+    this.cdr.detectChanges();
+
+    // Mantener sincronizado solo si llegan datos válidos (nunca sobrescribir con vacío)
+    this.policyService.getPolicyPage().subscribe(policyPage => {
+      if (policyPage?.policies?.length) {
+        this.policyPage = JSON.parse(JSON.stringify(policyPage));
+        this.savedSnapshot = JSON.stringify(this.policyPage);
+        this.hasUnsavedChanges = false;
+        this.cdr.detectChanges();
+      }
     });
   }
 
-  onSave() {
-    this.policyService.updatePolicies(this.policies);
-    alert('Políticas guardadas');
+  markDirty(): void {
+    this.hasUnsavedChanges = true;
+    this.cdr.markForCheck();
   }
 
-  onPreview() {
-    this.previewPolicies = JSON.parse(JSON.stringify(this.policies));
-    this.isPreview = true;
+  onSave(): void {
+    const copy = JSON.parse(JSON.stringify(this.policyPage));
+    this.policyService.updatePolicyPage(copy);
+    this.savedSnapshot = JSON.stringify(copy);
+    this.hasUnsavedChanges = false;
+    this.cdr.markForCheck();
+    alert('Políticas guardadas. El sitio público se ha actualizado.');
   }
 
-  onEdit() {
-    this.isPreview = false;
+  goPreview(): void {
+    window.open('/politicas', '_blank');
   }
 
-  addPolicy() {
-    this.policies.push({ title: '', icon: '', content: [''] });
+  addContent(policy: Policy): void {
+    policy.content.push('Nuevo contenido');
+    this.markDirty();
   }
 
-  removePolicy(index: number) {
-    this.policies.splice(index, 1);
+  /** Selecciona imagen para la política: solo JPG, JPEG o PNG. Convierte a data URL. */
+  onPolicyImageSelect(policy: Policy, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input?.files?.[0];
+    if (!file) return;
+    const ext = (file.name.split('.').pop() || '').toLowerCase();
+    if (!['jpg', 'jpeg', 'png'].includes(ext)) {
+      alert('Solo se permiten imágenes JPG, JPEG o PNG.');
+      input.value = '';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      policy.icon = reader.result as string;
+      this.markDirty();
+      input.value = '';
+      this.cdr.detectChanges();
+    };
+    reader.readAsDataURL(file);
   }
 
-  addContent(policy: Policy) {
-    policy.content.push('');
-  }
-
-  removeContent(policy: Policy, index: number) {
-    policy.content.splice(index, 1);
-  }
-
-  trackByFn(index: any, item: any) {
+  trackByFn(index: number): number {
     return index;
   }
 }

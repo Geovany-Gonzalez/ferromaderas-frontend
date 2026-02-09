@@ -1,17 +1,33 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Policy, PolicyService } from '../../../core/services/policy';
-import { Observable } from 'rxjs';
+import { PolicyPage, PolicyService } from '../../../core/services/policy';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-policies',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './policies.component.html',
-  styleUrl: './policies.component.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  styleUrl: './policies.component.scss'
 })
-export class PoliciesComponent {
+export class PoliciesComponent implements OnInit, OnDestroy {
   private policyService = inject(PolicyService);
-  public policies$: Observable<Policy[]> = this.policyService.getPolicies();
+  private cdr = inject(ChangeDetectorRef);
+  private destroy$ = new Subject<void>();
+
+  public policyPage: PolicyPage | null = null;
+
+  ngOnInit(): void {
+    this.policyService.getPolicyPage()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(page => {
+        this.policyPage = page;
+        this.cdr.detectChanges();
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 }

@@ -1,18 +1,22 @@
 <div class="policies-admin-page">
-  <div class="container">
-    <h1>Administrar Políticas</h1>
+  <div class="actions">
+    <button type="button" class="btn-editar" [class.active]="isEditMode" (click)="enterEditMode()" [disabled]="isEditMode">Editar</button>
+    <button type="button" class="btn-cancel" *ngIf="isEditMode" (click)="cancelEdit()">Cancelar</button>
+    <button type="button" class="btn-preview" (click)="goPreview()">Vista previa</button>
+    <button type="button" class="btn-save" (click)="onSave()" [disabled]="!isEditMode || !hasUnsavedChanges">Guardar cambios</button>
+  </div>
 
-    <div class="actions">
-      <button (click)="onEdit()" *ngIf="isPreview">Volver a Editar</button>
-      <button (click)="onPreview()" *ngIf="!isPreview">Vista Previa</button>
-      <button (click)="onSave()" *ngIf="!isPreview">Guardar Cambios</button>
-    </div>
-
-    <!-- Preview Mode -->
-    <div *ngIf="isPreview">
-      <h2>Vista Previa</h2>
-      <div class="policies-grid">
-        <div class="policy-card card" *ngFor="let policy of previewPolicies">
+  <div class="policies-page">
+    <!-- Vista solo lectura: igual que el sitio público -->
+    <ng-container *ngIf="!isEditMode">
+      <section class="policies-title">
+        <h1>{{ policyPage.title }}</h1>
+      </section>
+      <section class="policies-subtitle">
+        <p>{{ policyPage.subtitle }}</p>
+      </section>
+      <section class="policies-grid">
+        <div class="policy-card card" *ngFor="let policy of policies; trackBy: trackByFn">
           <div class="policy-header">
             <h2>{{ policy.title }}</h2>
           </div>
@@ -21,38 +25,47 @@
               <img [src]="policy.icon" [alt]="policy.title" />
             </div>
             <ul class="policy-list">
-              <li *ngFor="let item of policy.content">{{ item }}</li>
+              <li *ngFor="let item of policy.content; trackBy: trackByFn">{{ item }}</li>
             </ul>
           </div>
         </div>
-      </div>
-    </div>
+      </section>
+    </ng-container>
 
-    <!-- Edit Mode -->
-    <div *ngIf="!isPreview">
-      <h2>Editar Políticas</h2>
-      <div class="edit-form">
-        <div *ngFor="let policy of policies; let i = index; trackBy: trackByFn" class="policy-form-item">
-          <div class="form-group">
-            <label>Título</label>
-            <input type="text" [(ngModel)]="policy.title" name="title-{{i}}">
+    <!-- Modo edición: campos editables -->
+    <ng-container *ngIf="isEditMode">
+      <p class="edit-mode-hint" *ngIf="!policies.length">
+        No hay políticas cargadas. <button type="button" class="btn-load-default" (click)="loadDefaultPolicies()">Cargar políticas por defecto</button>
+      </p>
+      <section class="policies-title" *ngIf="policies.length">
+        <input type="text" class="title-input" [(ngModel)]="policyPage.title" (ngModelChange)="markDirty()" placeholder="Título (ej. Políticas de compra)">
+      </section>
+      <section class="policies-subtitle" *ngIf="policies.length">
+        <textarea class="subtitle-input" [(ngModel)]="policyPage.subtitle" (ngModelChange)="markDirty()" placeholder="Subtítulo" rows="2"></textarea>
+      </section>
+      <section class="policies-grid" *ngIf="policies.length">
+        <div class="policy-card card" *ngFor="let policy of policies; let i = index; trackBy: trackByFn">
+          <div class="policy-header">
+            <input type="text" class="policy-title-input" [(ngModel)]="policy.title" (ngModelChange)="markDirty()" placeholder="Título de la política">
           </div>
-          <div class="form-group">
-            <label>Icono (URL)</label>
-            <input type="text" [(ngModel)]="policy.icon" name="icon-{{i}}">
-          </div>
-          <div class="form-group">
-            <label>Contenido</label>
-            <div *ngFor="let item of policy.content; let j = index; trackBy: trackByFn" class="content-item">
-              <textarea [(ngModel)]="policy.content[j]" name="content-{{i}}-{{j}}"></textarea>
-              <button (click)="removeContent(policy, j)">Eliminar</button>
+          <div class="policy-content">
+            <div class="policy-icon">
+              <img [src]="policy.icon" [alt]="policy.title" class="icon-preview" />
+              <div class="icon-actions">
+                <input type="file" accept=".jpg,.jpeg,.png" (change)="onPolicyImageSelect(policy, $event)" class="icon-file-input" [id]="'policy-icon-' + i" />
+                <label [attr.for]="'policy-icon-' + i" class="icon-file-label">Cambiar imagen (JPG, JPEG o PNG)</label>
+              </div>
+              <input type="text" [(ngModel)]="policy.icon" (ngModelChange)="markDirty()" placeholder="O pega aquí la URL del icono" class="icon-url-input">
             </div>
-            <button (click)="addContent(policy)">Agregar Contenido</button>
+            <ul class="policy-list">
+              <li *ngFor="let item of policy.content; let j = index; trackBy: trackByFn">
+                <input type="text" class="content-item-input" [(ngModel)]="policy.content[j]" (ngModelChange)="markDirty()" placeholder="Texto del ítem">
+              </li>
+            </ul>
+            <button type="button" (click)="addContent(policy)">Agregar item</button>
           </div>
-          <button (click)="removePolicy(i)">Eliminar Política</button>
         </div>
-        <button (click)="addPolicy()">Agregar Política</button>
-      </div>
-    </div>
+      </section>
+    </ng-container>
   </div>
 </div>

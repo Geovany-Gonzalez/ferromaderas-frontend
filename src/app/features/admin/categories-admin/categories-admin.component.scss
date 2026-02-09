@@ -1,57 +1,65 @@
 .categories-admin-container {
-  padding: 2rem;
-  max-width: 1400px;
   margin: 0 auto;
 }
 
-// Header Section
+// Header Section - pegado: título, cuadro blanco y Sección 1
 .header-section {
-  margin-bottom: 2rem;
-
+  margin-bottom: 0;
   .page-title {
     background: #2c3e8f;
     color: white;
     padding: 1rem 1.5rem;
-    border-radius: 8px;
+    border-radius: 8px 8px 0 0;
     font-size: 1.25rem;
     font-weight: 600;
-    margin-bottom: 0.5rem;
+    margin: 0;
     text-align: center;
   }
 
   .page-subtitle {
-    color: #64748b;
+    color: #1e293b;
     font-size: 1rem;
+    font-weight: 700;
     text-align: center;
-    margin-top: 1rem;
+    margin: 0;
+    padding: 0.75rem 1rem;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-top: none;
+    border-radius: 0;
   }
 }
 
-// Form Card
-.form-card {
+// Form Card - 100% cuadrado, pegado al cuadro blanco de arriba
+.form-card.card {
   background: white;
-  padding: 2rem;
+  padding: 0;
   margin-bottom: 2rem;
+  margin-top: 0;
+  overflow: hidden;
+  border-radius: 0;
+  border: 1px solid #e2e8f0;
+  border-top: none;
 }
 
 .form-section {
-  margin-bottom: 2rem;
-  padding-bottom: 2rem;
+  margin-bottom: 0;
+  padding: 0 1.5rem 1.5rem;
   border-bottom: 2px solid #e2e8f0;
 
   &:last-of-type {
     border-bottom: none;
-    padding-bottom: 0;
+    padding-bottom: 1.5rem;
   }
 
   .section-title {
     background: #2c3e8f;
     color: white;
     padding: 1rem 1.5rem;
-    border-radius: 8px;
+    border-radius: 0;
     font-size: 1.25rem;
     font-weight: 600;
-    margin-bottom: 1.5rem;
+    margin: 0 -1.5rem 1rem -1.5rem; /* tope a tope con el cuadro blanco */
   }
 }
 
@@ -185,8 +193,8 @@
   display: flex;
   gap: 1rem;
   justify-content: center;
-  margin-top: 2rem;
-  padding-top: 2rem;
+  margin: 0;
+  padding: 1.5rem 1.5rem 2rem;
   border-top: 2px solid #e2e8f0;
 
   .btn {
@@ -412,14 +420,15 @@
     }
   }
 
-  .form-card {
-    padding: 1.5rem;
-  }
-
   .form-section {
+    padding-left: 1rem;
+    padding-right: 1rem;
+
     .section-title {
       font-size: 1.1rem;
       padding: 0.875rem 1rem;
+      margin-left: -1rem;
+      margin-right: -1rem;
     }
   }
 

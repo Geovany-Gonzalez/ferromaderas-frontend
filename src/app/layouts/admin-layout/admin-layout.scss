@@ -8,32 +8,41 @@
 .admin-content {
   display: flex;
   flex: 1;
-  align-items: flex-start;
+  min-height: 0; /* Permite que flex hijos hagan scroll */
+}
+
+/* Sidebar fijo: no crea hueco, el main ocupa el resto */
+.admin-content > app-admin-sidebar {
+  flex: 0 0 auto;
 }
 
 .main-content {
   flex: 1;
+  min-width: 0; /* Evita overflow en flex */
   overflow-y: auto;
-  background: #f9fafb;
-  padding: 2rem;
-  width: 100%;
-  max-width: 100%;
   overflow-x: hidden;
+  background: #f9fafb;
+}
+
+.content-wrapper {
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 1.25rem 1.5rem;
 }
 
 @media (max-width: 768px) {
   .admin-content {
     flex-direction: column;
   }
-  
-  .main-content {
+
+  .content-wrapper {
     padding: 1rem;
-    width: 100%;
   }
 }
 
 @media (max-width: 480px) {
-  .main-content {
+  .content-wrapper {
     padding: 0.75rem;
   }
 }
