@@ -1,0 +1,17 @@
+<!-- Toast de mensajes -->
+<div class="toast-wrap" *ngIf="toast.visible" [class.toast-success]="toast.type === 'success'" [class.toast-error]="toast.type === 'error'" [class.toast-info]="toast.type === 'info'">
+  <p class="toast-message">{{ toast.message }}</p>
+  <button type="button" class="toast-close" (click)="closeToast()" aria-label="Cerrar">×</button>
+</div>
+
+<!-- Modal de confirmación -->
+<div class="confirm-backdrop" *ngIf="confirm.visible" (click)="onConfirmCancel()">
+  <div class="confirm-modal" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" [attr.aria-label]="confirm.title">
+    <h3 class="confirm-title">{{ confirm.title }}</h3>
+    <p class="confirm-message">{{ confirm.message }}</p>
+    <div class="confirm-actions">
+      <button type="button" class="btn-confirm-cancel" (click)="onConfirmCancel()">Cancelar</button>
+      <button type="button" class="btn-confirm-ok" (click)="onConfirmAccept()">Aceptar</button>
+    </div>
+  </div>
+</div>

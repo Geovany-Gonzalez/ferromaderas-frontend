@@ -2,6 +2,9 @@ import { Injectable } from '@angular/core';
 import { Category } from '../models/category.model';
 import { Product } from '../models/product.model';
 
+/** Máximo de productos que pueden estar en destacados. */
+export const FEATURED_LIMIT = 9;
+
 @Injectable({ providedIn: 'root' })
 export class CatalogService {
   private readonly CATEGORIES_KEY = 'ferromaderas_categories';
@@ -54,15 +57,16 @@ export class CatalogService {
     const savedProducts = localStorage.getItem(this.PRODUCTS_KEY);
     if (savedProducts) {
       this.products = JSON.parse(savedProducts);
+      this.products = this.products.map(p => ({ ...p, active: p.active !== false }));
     } else {
       // Datos iniciales
       this.products = [
-        { id: 'p1', code: '001', name: 'Cemento UGC progreso', categoryId: 'cat2', price: 82, imageUrl: 'https://placehold.co/240x180', featured: true },
-        { id: 'p2', code: '002', name: 'Cemento La Cantera', categoryId: 'cat2', price: 78, imageUrl: 'https://placehold.co/240x180', featured: true },
-        { id: 'p3', code: '003', name: 'Cemento El Nacional', categoryId: 'cat2', price: 72, imageUrl: 'https://placehold.co/240x180', featured: true },
-        { id: 'p4', code: '004', name: 'Cemento Magacem', categoryId: 'cat2', price: 70, imageUrl: 'https://placehold.co/240x180', featured: true },
-        { id: 'p5', code: '005', name: 'Tubo PVC 1/2 pulgada', categoryId: 'cat1', price: 15, imageUrl: 'https://placehold.co/240x180', featured: false },
-        { id: 'p6', code: '006', name: 'Pintura látex blanca', categoryId: 'cat3', price: 105, imageUrl: 'https://placehold.co/240x180', featured: true },
+        { id: 'p1', code: '001', name: 'Cemento UGC progreso', categoryId: 'cat2', price: 82, imageUrl: 'https://placehold.co/240x180', featured: true, active: true },
+        { id: 'p2', code: '002', name: 'Cemento La Cantera', categoryId: 'cat2', price: 78, imageUrl: 'https://placehold.co/240x180', featured: true, active: true },
+        { id: 'p3', code: '003', name: 'Cemento El Nacional', categoryId: 'cat2', price: 72, imageUrl: 'https://placehold.co/240x180', featured: true, active: true },
+        { id: 'p4', code: '004', name: 'Cemento Magacem', categoryId: 'cat2', price: 70, imageUrl: 'https://placehold.co/240x180', featured: true, active: true },
+        { id: 'p5', code: '005', name: 'Tubo PVC 1/2 pulgada', categoryId: 'cat1', price: 15, imageUrl: 'https://placehold.co/240x180', featured: false, active: true },
+        { id: 'p6', code: '006', name: 'Pintura látex blanca', categoryId: 'cat3', price: 105, imageUrl: 'https://placehold.co/240x180', featured: true, active: true },
       ];
       this.saveProducts();
     }
@@ -116,17 +120,8 @@ export class CatalogService {
   deleteCategory(id: string): boolean {
     const index = this.categories.findIndex(c => c.id === id);
     if (index === -1) return false;
-    
-    // Verificar si hay productos en esta categoría
-    const hasProducts = this.products.some(p => p.categoryId === id);
-    if (hasProducts) {
-      // Marcar como inactiva en lugar de eliminar
-      this.categories[index].active = false;
-      this.saveCategories();
-      return true;
-    }
-    
-    this.categories.splice(index, 1);
+    // Siempre desactivar para mantener historial
+    this.categories[index].active = false;
     this.saveCategories();
     return true;
   }
@@ -136,8 +131,10 @@ export class CatalogService {
     return this.products;
   }
 
-  getProductsByCategory(categoryId: string): Product[] {
-    return this.products.filter(p => p.categoryId === categoryId);
+  getProductsByCategory(categoryId: string, activeOnly = true): Product[] {
+    return this.products.filter(p =>
+      p.categoryId === categoryId && (activeOnly ? p.active !== false : true)
+    );
   }
 
   getProductsByCategorySlug(slug: string): Product[] {
@@ -146,14 +143,25 @@ export class CatalogService {
     return this.getProductsByCategory(category.id);
   }
 
-  getFeaturedProducts(limit = 6): Product[] {
-    return this.products.filter(p => p.featured).slice(0, limit);
+  getFeaturedProducts(limit = FEATURED_LIMIT): Product[] {
+    return this.products.filter(p => p.featured && p.active !== false).slice(0, limit);
+  }
+
+  /** Cantidad actual de productos destacados (activos). */
+  getFeaturedCount(): number {
+    return this.products.filter(p => p.featured && p.active !== false).length;
+  }
+
+  /** Productos activos que no están en destacados (para agregar a destacados). */
+  getNonFeaturedProducts(): Product[] {
+    return this.products.filter(p => p.active !== false && !p.featured);
   }
 
   addProduct(product: Omit<Product, 'id'>): Product {
     const newProduct: Product = {
       ...product,
-      id: this.generateId('p')
+      id: this.generateId('p'),
+      active: product.active !== false
     };
     this.products.push(newProduct);
     this.saveProducts();
@@ -172,10 +180,18 @@ export class CatalogService {
   deleteProduct(id: string): boolean {
     const index = this.products.findIndex(p => p.id === id);
     if (index === -1) return false;
-    
-    this.products.splice(index, 1);
+    this.products[index].active = false;
     this.saveProducts();
     return true;
+  }
+
+  /** Genera el siguiente código interno de producto (secuencial: 001, 002, ...). */
+  getNextProductCode(): string {
+    const codes = this.products
+      .map(p => parseInt(p.code, 10))
+      .filter(n => !isNaN(n));
+    const next = codes.length ? Math.max(...codes) + 1 : 1;
+    return String(next).padStart(3, '0');
   }
 
   // Utilidades

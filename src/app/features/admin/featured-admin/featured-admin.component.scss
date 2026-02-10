@@ -1,0 +1,242 @@
+.featured-admin-container {
+  margin: 0 auto;
+}
+
+.section-block {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+}
+
+.section-title {
+  background: #2c3e8f;
+  color: white;
+  padding: 1rem 1.5rem;
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.section-desc {
+  padding: 0.75rem 1.5rem;
+  margin: 0;
+  color: #475569;
+  font-size: 0.9375rem;
+  text-align: center;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.limit-warning {
+  padding: 0.75rem 1.5rem;
+  margin: 0;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  text-align: center;
+}
+
+.featured-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1rem;
+  padding: 1.5rem;
+}
+
+.featured-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f8fafc;
+  transition: box-shadow 0.2s ease;
+  &:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+}
+
+.card-image-wrap {
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: #e2e8f0;
+  .card-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.card-body {
+  padding: 0.75rem;
+  .card-code {
+    font-size: 0.75rem;
+    color: #64748b;
+  }
+  .card-name {
+    margin: 0.25rem 0 0 0;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #1e293b;
+    line-height: 1.3;
+  }
+  .card-category {
+    margin: 0.25rem 0 0 0;
+    font-size: 0.8125rem;
+    color: #64748b;
+  }
+  .card-price {
+    margin: 0.35rem 0 0 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #166534;
+  }
+  .btn-unstar {
+    margin-top: 0.5rem;
+    width: 100%;
+    padding: 0.4rem 0.5rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    background: white;
+    font-size: 0.8125rem;
+    color: #64748b;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    transition: all 0.2s ease;
+    .star-icon {
+      width: 14px;
+      height: 14px;
+      color: #eab308;
+    }
+    &:hover {
+      background: #fef3c7;
+      color: #92400e;
+      border-color: #fcd34d;
+    }
+  }
+}
+
+.empty-hint {
+  padding: 1.5rem;
+  margin: 0;
+  text-align: center;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.search-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 200px;
+  max-width: 400px;
+  .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    color: #64748b;
+  }
+  .search-input {
+    width: 100%;
+    padding: 0.5rem 0.75rem 0.5rem 40px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 1rem;
+    background: white;
+    &:focus {
+      outline: none;
+      border-color: #1e3a8a;
+    }
+    &::placeholder {
+      color: #94a3b8;
+    }
+  }
+}
+
+.table-wrap {
+  padding: 0 1.5rem 1.5rem;
+}
+
+.products-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+  th, td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+    color: #0b1020;
+  }
+  thead th {
+    background: #f0fdf4;
+    font-weight: 700;
+    color: #166534;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    font-size: 0.8125rem;
+  }
+  tbody tr:hover {
+    background: #f8fafc;
+  }
+  .col-code { font-weight: 600; width: 5rem; }
+  .col-name { font-weight: 600; }
+  .col-category { color: #475569; }
+  .col-price { font-weight: 600; white-space: nowrap; }
+  .actions-cell { white-space: nowrap; }
+}
+
+.btn-add-featured {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: white;
+  font-size: 0.875rem;
+  color: #1e3a8a;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  .star-icon {
+    width: 16px;
+    height: 16px;
+    color: #94a3b8;
+  }
+  &:hover:not(:disabled) {
+    background: #dbeafe;
+    border-color: #93c5fd;
+    .star-icon { color: #eab308; }
+  }
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.empty-message {
+  text-align: center;
+  padding: 1.5rem;
+  color: #64748b;
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .featured-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
+}

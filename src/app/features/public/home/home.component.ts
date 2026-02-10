@@ -18,7 +18,7 @@ export class HomeComponent {
   private catalog = inject(CatalogService);
   private cart = inject(CartService);
 
-  featured = this.catalog.getFeaturedProducts(6);
+  featured = this.catalog.getFeaturedProducts();
 
   onAdd(p: Product){ this.cart.addOne(p); }
   trackById(_: number, p: Product){ return p.id; }

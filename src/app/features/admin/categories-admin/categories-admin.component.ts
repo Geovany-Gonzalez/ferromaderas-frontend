@@ -1,30 +1,30 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
 import { CatalogService } from '../../../core/services/catalog.service';
+import { NotificationService } from '../../../core/services/notification.service';
 import { Category } from '../../../core/models/category.model';
+
+type EstadoFilter = 'todos' | 'activo' | 'inactivo';
 
 @Component({
   selector: 'app-categories-admin',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './categories-admin.component.html',
-  styleUrls: ['./categories-admin.component.scss']
+  styleUrls: ['./categories-admin.component.scss'],
 })
 export class CategoriesAdminComponent implements OnInit {
   categories: Category[] = [];
-  showModal = false;
-  isEditing = false;
-  previewImage: string = '';
-  
-  categoryForm: Partial<Category> = {
-    name: '',
-    description: '',
-    imageUrl: '',
-    active: true
-  };
+  searchTerm = '';
+  filterEstado: EstadoFilter = 'todos';
 
-  constructor(private catalogService: CatalogService) {}
+  constructor(
+    private catalogService: CatalogService,
+    private router: Router,
+    private notification: NotificationService
+  ) {}
 
   ngOnInit(): void {
     this.loadCategories();
@@ -34,125 +34,61 @@ export class CategoriesAdminComponent implements OnInit {
     this.categories = this.catalogService.getAllCategories();
   }
 
-  openCreateModal(): void {
-    this.isEditing = false;
-    this.categoryForm = {
-      name: '',
-      description: '',
-      imageUrl: '',
-      active: true
-    };
-    this.previewImage = '';
-    this.showModal = true;
-  }
-
-  openEditModal(category: Category): void {
-    this.isEditing = true;
-    this.categoryForm = { ...category };
-    this.previewImage = category.imageUrl;
-    this.showModal = true;
-  }
-
-  closeModal(): void {
-    this.showModal = false;
-    this.categoryForm = {
-      name: '',
-      description: '',
-      imageUrl: '',
-      active: true
-    };
-    this.previewImage = '';
-  }
-
-  onImageSelect(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files[0]) {
-      const file = input.files[0];
-      
-      // Validar formato de archivo
-      const allowedFormats = ['image/webp', 'image/jpeg', 'image/jpg'];
-      if (!allowedFormats.includes(file.type)) {
-        alert('Formato de imagen no permitido. Solo se aceptan archivos WebP (.webp) o JPG (.jpg, .jpeg)');
-        input.value = ''; // Limpiar el input
-        return;
-      }
-      
-      // Validar tamaño (opcional: máximo 5MB)
-      const maxSize = 5 * 1024 * 1024; // 5MB
-      if (file.size > maxSize) {
-        alert('La imagen es demasiado grande. El tamaño máximo permitido es 5MB');
-        input.value = '';
-        return;
-      }
-      
-      const reader = new FileReader();
-      
-      reader.onload = (e: ProgressEvent<FileReader>) => {
-        if (e.target?.result) {
-          this.categoryForm.imageUrl = e.target.result as string;
-          this.previewImage = e.target.result as string;
-        }
-      };
-      
-      reader.readAsDataURL(file);
-    }
-  }
-
-  saveCategory(): void {
-    if (!this.categoryForm.name?.trim()) {
-      alert('El nombre de la categoría es requerido');
-      return;
-    }
-
-    if (!this.categoryForm.imageUrl?.trim()) {
-      alert('La imagen de la categoría es requerida');
-      return;
-    }
-
-    if (this.isEditing && this.categoryForm.id) {
-      // Actualizar categoría existente
-      this.catalogService.updateCategory(this.categoryForm.id, {
-        name: this.categoryForm.name,
-        description: this.categoryForm.description,
-        imageUrl: this.categoryForm.imageUrl,
-        slug: this.catalogService.generateSlug(this.categoryForm.name),
-        active: this.categoryForm.active
-      });
-    } else {
-      // Crear nueva categoría
-      this.catalogService.addCategory({
-        name: this.categoryForm.name!,
-        description: this.categoryForm.description,
-        imageUrl: this.categoryForm.imageUrl!,
-        slug: this.catalogService.generateSlug(this.categoryForm.name!),
-        active: this.categoryForm.active ?? true
-      });
-    }
-
-    this.loadCategories();
-    this.closeModal();
-  }
-
-  deleteCategory(category: Category): void {
-    const confirmDelete = confirm(
-      `¿Estás seguro de que deseas eliminar la categoría "${category.name}"?\n\n` +
-      'Si hay productos asociados, la categoría se marcará como inactiva en lugar de eliminarse.'
+  get filteredCategories(): Category[] {
+    const term = this.searchTerm?.toLowerCase().trim() || '';
+    let list = this.categories;
+    if (this.filterEstado === 'activo') list = list.filter((c) => c.active !== false);
+    if (this.filterEstado === 'inactivo') list = list.filter((c) => c.active === false);
+    if (!term) return list;
+    return list.filter(
+      (c) =>
+        c.name.toLowerCase().includes(term) ||
+        (c.description && c.description.toLowerCase().includes(term)) ||
+        (c.slug && c.slug.toLowerCase().includes(term))
     );
+  }
 
-    if (confirmDelete) {
-      this.catalogService.deleteCategory(category.id);
-      this.loadCategories();
+  categoryCode(index: number): string {
+    return String(index + 1).padStart(3, '0');
+  }
+
+  getProductCount(category: Category): number {
+    return this.catalogService.getProductsByCategory(category.id, false).length;
+  }
+
+  openCreateForm(): void {
+    this.router.navigate(['/admin/categorias/crear']);
+  }
+
+  openEditForm(category: Category): void {
+    this.router.navigate(['/admin/categorias/editar', category.id]);
+  }
+
+  setCategoryActive(category: Category, active: boolean): void {
+    const action = active ? 'activar' : 'desactivar';
+    let message = `¿Deseas ${action} la categoría "${category.name}"?`;
+    if (!active) {
+      message += '\n\nTen en cuenta que al desactivar una categoría, los productos que pertenecen a ella también se deshabilitarán.';
     }
-  }
-
-  toggleCategoryStatus(category: Category): void {
-    this.catalogService.updateCategory(category.id, {
-      active: !category.active
+    this.notification.confirm('Confirmar', message).then((ok) => {
+      if (ok) {
+        this.catalogService.updateCategory(category.id, { active });
+        if (!active) {
+          this.deactivateProductsInCategory(category.id);
+        }
+        this.loadCategories();
+        this.notification.showMessage(`Categoría "${category.name}" ${active ? 'activada' : 'desactivada'}.`, 'success');
+      }
     });
-    this.loadCategories();
   }
 
-  trackById(index: number, category: Category): string {
+  /** Deshabilita todos los productos de la categoría. */
+  private deactivateProductsInCategory(categoryId: string): void {
+    const products = this.catalogService.getProductsByCategory(categoryId, false);
+    products.forEach((p) => this.catalogService.updateProduct(p.id, { active: false }));
+  }
+
+  trackById(_index: number, category: Category): string {
     return category.id;
   }
 }

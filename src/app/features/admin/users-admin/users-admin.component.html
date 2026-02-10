@@ -1,0 +1,149 @@
+<div class="users-admin-container">
+  <div class="header-section">
+    <div class="header-top">
+      <h1 class="page-title title-centered">{{ isEditingUser ? 'Editar usuario' : 'Crear usuario' }}</h1>
+      <div class="header-actions">
+        <button type="button" class="btn btn-save" (click)="save()">Guardar</button>
+        <button type="button" class="btn btn-cancel" (click)="cancel()">Cancelar</button>
+      </div>
+    </div>
+    <p class="page-subtitle text-black">Solo Gerencia puede crear usuarios.</p>
+  </div>
+
+  <div class="form-card card">
+    <!-- Sección 1: Datos del usuario -->
+    <div class="form-section">
+      <h2 class="section-title title-centered">Datos del usuario</h2>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="fullName">Nombre completo:</label>
+          <input
+            type="text"
+            id="fullName"
+            [(ngModel)]="fullName"
+            placeholder="Ej: Juan Pérez"
+            class="form-input"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="username">Username:</label>
+          <input
+            type="text"
+            id="username"
+            [(ngModel)]="username"
+            placeholder="Ej: jperez"
+            class="form-input"
+          />
+          <span class="field-hint">Debe ser único. Sin espacios.</span>
+        </div>
+
+        <div class="form-group">
+          <label for="phone">Teléfono:</label>
+          <input
+            type="text"
+            id="phone"
+            [(ngModel)]="phone"
+            placeholder="Ej: +502 1234-5678"
+            class="form-input"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="role">Rol:</label>
+          <select id="role" [(ngModel)]="role" class="form-select">
+            <option *ngFor="let r of roles" [value]="r.value">{{ r.label }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="status">Estado:</label>
+          <select id="status" [(ngModel)]="status" class="form-select">
+            <option *ngFor="let s of statusOptions" [value]="s.value">{{ s.label }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Imagen de perfil:</label>
+        <div class="image-upload-row">
+          <div class="image-upload-section">
+            <input
+              type="file"
+              id="profileImage"
+              (change)="onImageSelect($event)"
+              accept=".jpg,.jpeg,.png,image/jpeg,image/jpg,image/png"
+              class="file-input"
+            />
+            <label for="profileImage" class="file-label">
+              <span class="upload-icon" aria-hidden="true">↑</span>
+              Selecciona una imagen dentro del equipo
+            </label>
+            <p class="file-hint">Solo .jpg, .jpeg o .png</p>
+          </div>
+          <div class="image-preview-box" [class.has-image]="profileImage">
+            <img *ngIf="profileImage" [src]="profileImage" alt="Vista previa" class="preview-img" />
+            <span *ngIf="!profileImage" class="preview-placeholder">Vista previa</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sección 2: Seguridad (solo al crear; al editar se usa "Cambiar contraseña" del listado) -->
+    <div class="form-section" *ngIf="!isEditingUser">
+      <h2 class="section-title title-centered">Seguridad</h2>
+
+      <div class="form-group password-row-wrap">
+        <label>Contraseña temporal:</label>
+        <div class="password-row">
+          <span class="password-value">{{ temporaryPassword ? (showPassword ? temporaryPassword : '••••••••••••') : '—' }}</span>
+          <div class="password-buttons">
+            <button type="button" class="btn-icon" (click)="showPassword = !showPassword" [title]="showPassword ? 'Ocultar' : 'Mostrar'" [disabled]="!temporaryPassword">
+              {{ showPassword ? 'Ocultar' : 'Mostrar' }}
+            </button>
+            <button type="button" class="btn-icon" (click)="copyPassword()" title="Copiar" [disabled]="!temporaryPassword">
+              Copiar
+            </button>
+            <button type="button" class="btn-icon btn-regenerate" (click)="regeneratePassword()" title="Regenerar">
+              Regenerar
+            </button>
+            <button type="button" class="btn btn-generate" (click)="generatePassword()">
+              Generar contraseña
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sección 3: Permisos visibles -->
+    <div class="form-section form-section-permissions">
+      <h2 class="section-title title-centered">Permisos visibles</h2>
+
+      <div class="permissions-grid">
+        <div class="permission-column">
+          <h3 class="permission-role-title">Vendedor</h3>
+          <ul class="permission-list">
+            <li *ngFor="let p of vendedorPermissions" class="permission-item">
+              <span class="permission-icon" [class.allowed]="p.allowed" [class.denied]="!p.allowed">
+                {{ p.allowed ? '✓' : '✕' }}
+              </span>
+              <span class="permission-label">{{ p.label }}</span>
+            </li>
+          </ul>
+        </div>
+        <div class="permission-column">
+          <h3 class="permission-role-title">Administrador</h3>
+          <ul class="permission-list">
+            <li *ngFor="let p of adminPermissions" class="permission-item">
+              <span class="permission-icon" [class.allowed]="p.allowed" [class.denied]="!p.allowed">
+                {{ p.allowed ? '✓' : '✕' }}
+              </span>
+              <span class="permission-label">{{ p.label }}</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

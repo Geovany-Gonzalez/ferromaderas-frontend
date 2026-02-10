@@ -54,14 +54,54 @@ export const routes: Routes = [
           import('./features/admin/dashboard/dashboard.component').then(m => m.DashboardComponent),
       },
       {
+        path: 'productos/crear',
+        loadComponent: () =>
+          import('./features/admin/product-form/product-form.component').then(m => m.ProductFormComponent),
+      },
+      {
+        path: 'productos/editar/:id',
+        loadComponent: () =>
+          import('./features/admin/product-form/product-form.component').then(m => m.ProductFormComponent),
+      },
+      {
+        path: 'productos',
+        loadComponent: () =>
+          import('./features/admin/products-admin/products-admin.component').then(m => m.ProductsAdminComponent),
+      },
+      {
+        path: 'categorias/editar/:id',
+        loadComponent: () =>
+          import('./features/admin/category-form/category-form.component').then(m => m.CategoryFormComponent),
+      },
+      {
+        path: 'categorias/crear',
+        loadComponent: () =>
+          import('./features/admin/category-form/category-form.component').then(m => m.CategoryFormComponent),
+      },
+      {
         path: 'categorias',
         loadComponent: () =>
           import('./features/admin/categories-admin/categories-admin.component').then(m => m.CategoriesAdminComponent),
       },
       {
+        path: 'destacados',
+        loadComponent: () =>
+          import('./features/admin/featured-admin/featured-admin.component').then(m => m.FeaturedAdminComponent),
+      },
+      {
         path: 'politicas',
         loadComponent: () =>
           import('./features/admin/policies-admin/policies-admin').then(m => m.PoliciesAdminComponent),
+      },
+      {
+        path: 'usuarios/crear',
+        loadComponent: () =>
+          import('./features/admin/users-admin/users-admin.component').then(m => m.UsersAdminComponent),
+      },
+      {
+        path: 'usuarios',
+        loadComponent: () =>
+          import('./features/admin/user-list/user-list.component').then(m => m.UserListComponent),
       },
       // Rutas futuras para otras secciones administrativas
       // {

@@ -1,0 +1,96 @@
+<div class="product-form-container">
+  <a [routerLink]="['/admin/productos']" class="back-link">← Volver al listado</a>
+
+  <div class="header-section">
+    <h1 class="page-title">{{ isEditing ? 'Editar producto' : 'Crear producto' }}</h1>
+    <p class="page-subtitle">Completa los datos del producto para el catálogo.</p>
+  </div>
+
+  <div class="form-card card">
+    <div class="form-section">
+      <h2 class="section-title">Sección 1: Datos del producto</h2>
+      <div class="form-group">
+        <label for="productCode">Código interno:</label>
+        <input
+          type="text"
+          id="productCode"
+          [value]="productForm.code"
+          [readonly]="true"
+          class="form-input form-input-readonly"
+          placeholder="Se asigna automáticamente"
+        />
+        <p class="field-hint" *ngIf="!isEditing">El código se genera automáticamente al guardar.</p>
+      </div>
+      <div class="form-group">
+        <label for="productName">Nombre del producto:</label>
+        <input type="text" id="productName" [(ngModel)]="productForm.name" placeholder="Ej: Cemento UGC progreso" class="form-input" />
+      </div>
+      <div class="form-group">
+        <label for="productCategory">Categoría:</label>
+        <select id="productCategory" [(ngModel)]="productForm.categoryId" class="form-select">
+          <option value="">Selecciona una categoría</option>
+          <option *ngFor="let cat of categories" [value]="cat.id">{{ cat.name }}</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="productPrice">Precio (Q):</label>
+        <input type="number" id="productPrice" [(ngModel)]="productForm.price" min="0" step="0.01" placeholder="0.00" class="form-input" />
+      </div>
+      <div class="form-group">
+        <label for="productDescription">Descripción (opcional):</label>
+        <textarea id="productDescription" [(ngModel)]="productForm.description" placeholder="Descripción del producto..." class="form-textarea" rows="3"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="checkbox-label">
+          <input type="checkbox" [(ngModel)]="productForm.featured" [disabled]="!canMarkAsFeatured" />
+          Producto destacado
+        </label>
+        <p class="field-hint" *ngIf="!canMarkAsFeatured && !productForm.featured">
+          Ya hay {{ FEATURED_LIMIT }} destacados. Quita uno en <a routerLink="/admin/destacados">Destacados</a> para poder agregar este.
+        </p>
+      </div>
+      <div class="form-group" *ngIf="isEditing">
+        <label for="productStatus">Estado:</label>
+        <select id="productStatus" [(ngModel)]="productForm.active" class="form-select">
+          <option [ngValue]="true">Activo</option>
+          <option [ngValue]="false">Inactivo</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h2 class="section-title">Sección 2: Imagen del producto</h2>
+      <div class="form-group">
+        <label>Imagen:</label>
+        <div class="image-upload-section">
+          <input type="file" id="imageFile" (change)="onImageSelect($event)" accept=".png,.jpg,.jpeg" class="file-input" />
+          <label for="imageFile" class="file-label">
+            <img src="/assets/icons/Agregar.png" alt="Subir" class="upload-icon" />
+            Selecciona una imagen dentro del equipo
+          </label>
+          <p class="file-hint">Formatos permitidos: .png, .jpg, .jpeg</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h2 class="section-title">Sección 3: Vista previa</h2>
+      <div class="preview-section">
+        <div class="preview-card" *ngIf="previewImage">
+          <div class="preview-image-wrap">
+            <img [src]="previewImage" [alt]="productForm.name || 'Vista previa'" class="preview-image" />
+          </div>
+          <p class="preview-name">{{ productForm.name || 'Nombre del producto' }}</p>
+        </div>
+        <div class="preview-placeholder" *ngIf="!previewImage">
+          <p>La vista previa aparecerá aquí</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" (click)="saveProduct()" class="btn btn-save">Guardar</button>
+      <button type="button" (click)="backToList()" class="btn btn-cancel">Cancelar</button>
+    </div>
+  </div>
+</div>

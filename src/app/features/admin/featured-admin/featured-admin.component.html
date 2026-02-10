@@ -1,0 +1,85 @@
+<div class="featured-admin-container">
+  <div class="section-block">
+    <h2 class="section-title">Productos destacados</h2>
+    <p class="section-desc">
+      ¡Solo puedes tener {{ featuredLimit }} productos destacados! Estos aparecerán en la página de inicio.
+    </p>
+    <div class="limit-warning" *ngIf="atFeaturedLimit">
+      Has alcanzado el límite de {{ featuredLimit }} destacados. Quita uno para agregar otro.
+    </div>
+    <div class="featured-grid" *ngIf="featuredProducts.length > 0">
+      <div class="featured-card" *ngFor="let p of featuredProducts; trackBy: trackById">
+        <div class="card-image-wrap">
+          <img [src]="p.imageUrl" [alt]="p.name" class="card-image" />
+        </div>
+        <div class="card-body">
+          <span class="card-code">Código {{ p.code }}</span>
+          <h3 class="card-name">{{ p.name }}</h3>
+          <p class="card-category">{{ getCategoryName(p.categoryId) }}</p>
+          <p class="card-price">Q{{ p.price }}</p>
+          <button type="button" class="btn-unstar" (click)="removeFromFeatured(p)" title="Quitar de destacados">
+            <svg class="star-icon filled" viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+            Quitar
+          </button>
+        </div>
+      </div>
+    </div>
+    <p class="empty-hint" *ngIf="featuredProducts.length === 0">Aún no hay productos destacados. Busca y agrega abajo.</p>
+  </div>
+
+  <div class="section-block">
+    <h2 class="section-title">Agregar a destacados</h2>
+    <p class="section-desc">¿Qué estás buscando?</p>
+    <div class="toolbar">
+      <div class="search-wrap">
+        <svg class="icon search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" class="search-input" placeholder="Ej: PVC 1/2, cemento, pintura..." [(ngModel)]="searchTerm" />
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="products-table">
+        <thead>
+          <tr>
+            <th>CÓDIGO</th>
+            <th>NOMBRE</th>
+            <th>CATEGORÍA</th>
+            <th>PRECIO</th>
+            <th>ACCIÓN</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let p of nonFeaturedProducts; trackBy: trackById">
+            <td class="col-code">{{ p.code }}</td>
+            <td class="col-name">
+              <span class="product-name-cell">{{ p.name }}</span>
+            </td>
+            <td class="col-category">{{ getCategoryName(p.categoryId) }}</td>
+            <td class="col-price">Q{{ p.price }}</td>
+            <td class="actions-cell">
+              <button
+                type="button"
+                class="btn-add-featured"
+                (click)="addToFeatured(p)"
+                [disabled]="atFeaturedLimit"
+                [title]="atFeaturedLimit ? 'Límite alcanzado. Quita un destacado primero.' : 'Agregar a destacados'"
+              >
+                <svg class="star-icon outline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
+                Destacar
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p *ngIf="nonFeaturedProducts.length === 0" class="empty-message">
+        {{ searchTerm ? 'No hay productos que coincidan con la búsqueda.' : 'No hay más productos para agregar a destacados.' }}
+      </p>
+    </div>
+  </div>
+</div>

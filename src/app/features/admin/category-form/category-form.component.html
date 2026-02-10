@@ -1,0 +1,64 @@
+<div class="category-form-container">
+  <a [routerLink]="['/admin/categorias']" class="back-link">← Volver al listado</a>
+
+  <div class="header-section">
+    <h1 class="page-title">{{ isEditing ? 'Editar categoría' : 'Crear categoría' }}</h1>
+    <p class="page-subtitle">Las categorías se muestran en burbujas en el catálogo.</p>
+  </div>
+
+  <div class="form-card card">
+    <div class="form-section">
+      <h2 class="section-title">Sección 1: Datos de la categoría</h2>
+      <div class="form-group">
+        <label for="categoryName">Nombre de la categoría:</label>
+        <input type="text" id="categoryName" [(ngModel)]="categoryForm.name" placeholder="Ej: Cemento, PVC, Pintura..." class="form-input" />
+      </div>
+      <div class="form-group">
+        <label for="categoryDescription">Descripción breve:</label>
+        <textarea id="categoryDescription" [(ngModel)]="categoryForm.description" placeholder="Descripción opcional de la categoría..." class="form-textarea" rows="3"></textarea>
+      </div>
+      <div class="form-group" *ngIf="isEditing">
+        <label for="categoryStatus">Estado:</label>
+        <select id="categoryStatus" [(ngModel)]="categoryForm.active" class="form-select">
+          <option [ngValue]="true">Activa</option>
+          <option [ngValue]="false">Inactiva</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h2 class="section-title">Sección 2: Imagen de la categoría</h2>
+      <div class="form-group">
+        <label>Imagen de perfil:</label>
+        <div class="image-upload-section">
+          <input type="file" id="imageFile" (change)="onImageSelect($event)" accept=".png,.jpg,.jpeg" class="file-input" />
+          <label for="imageFile" class="file-label">
+            <img src="/assets/icons/Agregar.png" alt="Subir" class="upload-icon" />
+            Selecciona una imagen dentro del equipo
+          </label>
+          <p class="file-hint">Formatos permitidos: .png, .jpg, .jpeg</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h2 class="section-title">Sección 3: Vista previa</h2>
+      <div class="preview-section">
+        <div class="preview-card" *ngIf="previewImage">
+          <div class="preview-image-wrap">
+            <img [src]="previewImage" [alt]="categoryForm.name || 'Vista previa'" class="preview-image" />
+          </div>
+          <p class="preview-name">{{ categoryForm.name || 'Nombre de categoría' }}</p>
+        </div>
+        <div class="preview-placeholder" *ngIf="!previewImage">
+          <p>La vista previa aparecerá aquí</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" (click)="saveCategory()" class="btn btn-save">Guardar</button>
+      <button type="button" (click)="backToList()" class="btn btn-cancel">Cancelar</button>
+    </div>
+  </div>
+</div>

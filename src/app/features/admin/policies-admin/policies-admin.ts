@@ -2,6 +2,7 @@ import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Policy, PolicyPage, PolicyService } from '../../../core/services/policy';
+import { NotificationService } from '../../../core/services/notification.service';
 
 @Component({
   selector: 'app-policies-admin',
@@ -13,6 +14,7 @@ import { Policy, PolicyPage, PolicyService } from '../../../core/services/policy
 export class PoliciesAdminComponent implements OnInit {
   private policyService = inject(PolicyService);
   private cdr = inject(ChangeDetectorRef);
+  private notification = inject(NotificationService);
 
   public policyPage: PolicyPage = { title: '', subtitle: '', policies: [] };
   public hasUnsavedChanges = false;
@@ -87,7 +89,7 @@ export class PoliciesAdminComponent implements OnInit {
     this.savedSnapshot = JSON.stringify(copy);
     this.hasUnsavedChanges = false;
     this.cdr.markForCheck();
-    alert('Políticas guardadas. El sitio público se ha actualizado.');
+    this.notification.showMessage('Políticas guardadas. El sitio público se ha actualizado.', 'success');
   }
 
   goPreview(): void {
@@ -106,7 +108,7 @@ export class PoliciesAdminComponent implements OnInit {
     if (!file) return;
     const ext = (file.name.split('.').pop() || '').toLowerCase();
     if (!['jpg', 'jpeg', 'png'].includes(ext)) {
-      alert('Solo se permiten imágenes JPG, JPEG o PNG.');
+      this.notification.showMessage('Solo se permiten imágenes JPG, JPEG o PNG.', 'error');
       input.value = '';
       return;
     }

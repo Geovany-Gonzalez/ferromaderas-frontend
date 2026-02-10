@@ -7,4 +7,5 @@ export interface Product {
   categoryId: string;
   featured?: boolean;
   description?: string;
+  active?: boolean;
 }
