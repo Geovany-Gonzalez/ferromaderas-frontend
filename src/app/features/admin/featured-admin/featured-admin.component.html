@@ -54,13 +54,13 @@
         </thead>
         <tbody>
           <tr *ngFor="let p of nonFeaturedProducts; trackBy: trackById">
-            <td class="col-code">{{ p.code }}</td>
-            <td class="col-name">
+            <td class="col-code" data-label="Código">{{ p.code }}</td>
+            <td class="col-name" data-label="Nombre">
               <span class="product-name-cell">{{ p.name }}</span>
             </td>
-            <td class="col-category">{{ getCategoryName(p.categoryId) }}</td>
-            <td class="col-price">Q{{ p.price }}</td>
-            <td class="actions-cell">
+            <td class="col-category" data-label="Categoría">{{ getCategoryName(p.categoryId) }}</td>
+            <td class="col-price" data-label="Precio">Q{{ p.price }}</td>
+            <td class="actions-cell" data-label="Acción">
               <button
                 type="button"
                 class="btn-add-featured"

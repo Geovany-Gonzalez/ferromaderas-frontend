@@ -33,7 +33,7 @@ export class NotificationService {
     this.toast$.next({ visible: true, message, type });
     setTimeout(() => {
       this.toast$.next({ visible: false, message: '', type: 'info' });
-    }, 4000);
+    }, 5000);
   }
 
   closeToast(): void {

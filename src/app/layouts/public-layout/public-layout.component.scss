@@ -1,4 +1,4 @@
-.main{ position:relative; min-height: calc(100vh - 72px); padding-top: 18px; }
+.main{ position:relative; min-height: calc(100vh - 72px); padding-top: 18px; padding-bottom: 24px; }
 .float{
   position: fixed;
   right: 24px;
@@ -37,17 +37,20 @@
 }
 
 @media (max-width: 640px){
+  .main{
+    padding-bottom: 100px; /* Espacio para que el chatbot no tape botones */
+  }
   .float{
     width: 56px;
     height: 56px;
-    right: 16px;
+    right: 12px;
   }
   .float img{
     width: 30px;
     height: 30px;
   }
   .bot{
-    bottom: 20px;
+    bottom: 16px;
     width: 56px;
     height: 56px;
   }

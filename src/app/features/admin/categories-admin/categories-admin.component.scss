@@ -588,7 +588,85 @@
 // Responsive Design
 @media (max-width: 768px) {
   .categories-admin-container {
-    padding: 1rem;
+    padding: 0 0.5rem;
+  }
+
+  .list-title {
+    font-size: 1.1rem;
+    padding: 0.875rem 1rem;
+  }
+
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0.75rem;
+  }
+
+  .search-wrap {
+    max-width: none;
+    min-width: 0;
+  }
+
+  .table-wrap {
+    overflow: visible;
+  }
+
+  .categories-table {
+    display: block;
+
+    thead {
+      display: none;
+    }
+
+    tbody tr {
+      display: block;
+      padding: 1rem;
+      margin: 0 0.5rem 0.5rem;
+      background: #f8fafc;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+    }
+
+    td {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 0.5rem 0;
+      border: none;
+      gap: 0.5rem;
+
+      &::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #64748b;
+        flex-shrink: 0;
+      }
+    }
+
+    .col-desc {
+      flex-direction: column;
+      align-items: stretch;
+
+      &::before {
+        align-self: flex-start;
+      }
+    }
+
+    .actions-cell {
+      justify-content: flex-end;
+      padding-top: 0.75rem;
+      border-top: 1px solid #e2e8f0;
+      margin-top: 0.5rem;
+
+      &::before {
+        display: none;
+      }
+
+      .btn-action {
+        width: 40px;
+        height: 40px;
+      }
+    }
   }
 
   .header-section {

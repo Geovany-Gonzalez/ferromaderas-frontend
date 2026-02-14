@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { NotificationService, ToastState, ConfirmState } from '../../../core/services/notification.service';
@@ -16,11 +16,20 @@ export class AppMessagesComponent implements OnInit, OnDestroy {
   private subToast?: Subscription;
   private subConfirm?: Subscription;
 
-  constructor(private notification: NotificationService) {}
+  constructor(
+    private notification: NotificationService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
-    this.subToast = this.notification.toastState$.subscribe((t) => (this.toast = t));
-    this.subConfirm = this.notification.confirmState$.subscribe((c) => (this.confirm = c));
+    this.subToast = this.notification.toastState$.subscribe((t) => {
+      this.toast = t;
+      this.cdr.markForCheck();
+    });
+    this.subConfirm = this.notification.confirmState$.subscribe((c) => {
+      this.confirm = c;
+      this.cdr.markForCheck();
+    });
   }
 
   ngOnDestroy(): void {

@@ -37,12 +37,14 @@
   }
 
   .content-wrapper {
-    padding: 1rem;
+    padding: 0.5rem;
+    max-width: 100%;
+    width: 100%;
   }
 }
 
 @media (max-width: 480px) {
   .content-wrapper {
-    padding: 0.75rem;
+    padding: 0.5rem;
   }
 }

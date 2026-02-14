@@ -1,0 +1,125 @@
+<div class="quotations-admin-container">
+  <div class="list-section">
+    <h2 class="list-title">Listado de cotizaciones</h2>
+
+    <div class="toolbar">
+      <a [routerLink]="['/admin/dashboard']" class="btn-home" title="Inicio" aria-label="Inicio">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+      </a>
+      <div class="search-wrap">
+        <svg class="icon search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" class="search-input" placeholder="Buscar ID" [(ngModel)]="searchId" />
+      </div>
+      <div class="date-range-wrap">
+        <svg class="icon calendar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+        <input type="date" class="date-input" [(ngModel)]="fechaDesde" title="Desde" />
+        <span class="date-sep">—</span>
+        <input type="date" class="date-input" [(ngModel)]="fechaHasta" title="Hasta" />
+      </div>
+      <select class="filter-estado" [(ngModel)]="filterEstado" title="Filtrar por estado">
+        <option *ngFor="let o of statusOptions" [value]="o.value">{{ o.label }}</option>
+      </select>
+    </div>
+
+    <div class="table-wrap">
+      <table class="quotations-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>FECHA / HORA</th>
+            <th>CLIENTE</th>
+            <th>TELÉFONO</th>
+            <th>TOTAL</th>
+            <th>DIRECCIÓN</th>
+            <th>ESTADO</th>
+            <th>ACCIÓN</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let q of filteredQuotations; trackBy: trackById">
+            <td class="col-id" data-label="ID">{{ q.id }}</td>
+            <td class="col-fecha" data-label="Fecha">{{ q.fechaHora }}</td>
+            <td class="col-cliente" data-label="Cliente">{{ q.cliente }}</td>
+            <td class="col-telefono" data-label="Teléfono">{{ q.telefono }}</td>
+            <td class="col-total" data-label="Total">Q{{ q.total | number:'1.0-0' }}</td>
+            <td class="col-direccion" data-label="Dirección">{{ q.direccion }}</td>
+            <td class="col-estado" data-label="Estado">
+              <span class="badge" [ngClass]="'badge-' + q.estado">{{ statusLabel(q.estado) }}</span>
+            </td>
+            <td class="actions-cell" data-label="Acción">
+              <button type="button" class="btn-action btn-view" (click)="viewQuotation(q)" title="Ver detalle">
+                <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+              <button type="button" class="btn-action btn-refresh" (click)="changeStatus(q)" [title]="q.estado === 'cancelada' ? 'Reiniciar a Nueva' : 'Actualizar estado'" [disabled]="!canChangeStatus(q)">
+                <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="23 4 23 10 17 10"/>
+                  <polyline points="1 20 1 14 7 14"/>
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                </svg>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p *ngIf="filteredQuotations.length === 0" class="empty-message">No hay cotizaciones que coincidan con los filtros.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Ver cotización -->
+<div class="modal-overlay" *ngIf="viewModalQuotation" (click)="closeViewModal()">
+  <div class="modal-dialog modal-view" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">Cotización {{ viewModalQuotation.id }}</h3>
+      <button type="button" class="modal-close" (click)="closeViewModal()" aria-label="Cerrar">×</button>
+    </div>
+    <div class="modal-body" *ngIf="viewModalQuotation">
+      <div class="view-grid">
+        <div class="view-row">
+          <span class="view-label">Fecha</span>
+          <span class="view-value">{{ viewModalQuotation.fechaHora }}</span>
+        </div>
+        <div class="view-row">
+          <span class="view-label">Cliente</span>
+          <span class="view-value">{{ viewModalQuotation.cliente }}</span>
+        </div>
+        <div class="view-row">
+          <span class="view-label">Teléfono</span>
+          <span class="view-value">{{ viewModalQuotation.telefono }}</span>
+        </div>
+        <div class="view-row">
+          <span class="view-label">Total</span>
+          <span class="view-value">Q{{ viewModalQuotation.total | number:'1.0-0' }}</span>
+        </div>
+        <div class="view-row">
+          <span class="view-label">Dirección</span>
+          <span class="view-value">{{ viewModalQuotation.direccion }}</span>
+        </div>
+        <div class="view-row">
+          <span class="view-label">Estado</span>
+          <span class="view-value">
+            <span class="badge" [ngClass]="'badge-' + viewModalQuotation.estado">{{ statusLabel(viewModalQuotation.estado) }}</span>
+          </span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="closeViewModal()">Cerrar</button>
+      <button type="button" class="btn btn-primary" (click)="changeStatus(viewModalQuotation!); closeViewModal()">Actualizar estado</button>
+    </div>
+  </div>
+</div>

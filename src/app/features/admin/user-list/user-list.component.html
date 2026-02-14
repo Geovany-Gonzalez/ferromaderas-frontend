@@ -48,16 +48,16 @@
       </thead>
       <tbody>
         <tr *ngFor="let user of filteredUsers; trackBy: userTrackBy">
-          <td class="text-username">{{ user.username }}</td>
-          <td class="text-nombre">{{ user.nombre }}</td>
-          <td>{{ rolLabel(user.rol) }}</td>
-          <td>{{ user.ultimoAcceso }}</td>
-          <td>
+          <td class="text-username" data-label="Usuario">{{ user.username }}</td>
+          <td class="text-nombre" data-label="Nombre">{{ user.nombre }}</td>
+          <td data-label="Rol">{{ rolLabel(user.rol) }}</td>
+          <td data-label="Último acceso">{{ user.ultimoAcceso }}</td>
+          <td data-label="Estado">
             <span class="pill" [class.pill-activo]="user.estado === 'activo'" [class.pill-inactivo]="user.estado === 'inactivo'">
               {{ user.estado === 'activo' ? 'Activo' : 'Inactivo' }}
             </span>
           </td>
-          <td class="actions-cell">
+          <td class="actions-cell" data-label="Acción">
             <button type="button" class="btn-action btn-view" (click)="viewUser(user)" title="Ver">
               <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>

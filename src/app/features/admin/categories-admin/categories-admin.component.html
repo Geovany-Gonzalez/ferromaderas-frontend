@@ -44,16 +44,16 @@
         </thead>
         <tbody>
           <tr *ngFor="let category of filteredCategories; trackBy: trackById; let i = index">
-            <td class="col-code">{{ categoryCode(i) }}</td>
-            <td class="col-name">{{ category.name }}</td>
-            <td class="col-desc">{{ category.description || '—' }}</td>
-            <td class="col-count">{{ getProductCount(category) }}</td>
-            <td class="col-estado">
+            <td class="col-code" data-label="Código">{{ categoryCode(i) }}</td>
+            <td class="col-name" data-label="Nombre">{{ category.name }}</td>
+            <td class="col-desc" data-label="Descripción">{{ category.description || '—' }}</td>
+            <td class="col-count" data-label="# Productos">{{ getProductCount(category) }}</td>
+            <td class="col-estado" data-label="Estado">
               <span class="badge" [class.badge-activo]="category.active !== false" [class.badge-inactivo]="category.active === false">
                 {{ category.active !== false ? 'Activa' : 'Inactiva' }}
               </span>
             </td>
-            <td class="actions-cell">
+            <td class="actions-cell" data-label="Acción">
               <button type="button" class="btn-action btn-edit" (click)="openEditForm(category)" title="Editar">
                 <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>

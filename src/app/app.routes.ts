@@ -31,6 +31,11 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/public/policies/policies.component').then(m => m.PoliciesComponent),
       },
+      {
+        path: 'carrito',
+        loadComponent: () =>
+          import('./features/public/cart/cart.component').then(m => m.CartComponent),
+      },
     ],
   },
   {
@@ -45,7 +50,7 @@ export const routes: Routes = [
     children: [
       {
         path: '',
-        redirectTo: 'dashboard',
+        redirectTo: '/admin/dashboard',
         pathMatch: 'full',
       },
       {
@@ -89,6 +94,11 @@ export const routes: Routes = [
           import('./features/admin/featured-admin/featured-admin.component').then(m => m.FeaturedAdminComponent),
       },
       {
+        path: 'cotizaciones',
+        loadComponent: () =>
+          import('./features/admin/quotations-admin/quotations-admin.component').then(m => m.QuotationsAdminComponent),
+      },
+      {
         path: 'politicas',
         loadComponent: () =>
           import('./features/admin/policies-admin/policies-admin').then(m => m.PoliciesAdminComponent),
@@ -110,5 +120,5 @@ export const routes: Routes = [
       // },
     ],
   },
-  { path: '**', redirectTo: '' },
+  { path: '**', redirectTo: '/' },
 ];

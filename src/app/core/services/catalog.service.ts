@@ -143,6 +143,10 @@ export class CatalogService {
     return this.getProductsByCategory(category.id);
   }
 
+  getProductById(id: string): Product | undefined {
+    return this.products.find(p => p.id === id);
+  }
+
   getFeaturedProducts(limit = FEATURED_LIMIT): Product[] {
     return this.products.filter(p => p.featured && p.active !== false).slice(0, limit);
   }

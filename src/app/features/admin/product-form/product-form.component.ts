@@ -110,8 +110,8 @@ export class ProductFormComponent implements OnInit {
       this.notification.showMessage('Debes seleccionar una categoría', 'error');
       return;
     }
-    if (this.productForm.price == null || this.productForm.price < 0) {
-      this.notification.showMessage('El precio debe ser un número mayor o igual a 0', 'error');
+    if (this.productForm.price == null || this.productForm.price <= 0) {
+      this.notification.showMessage('El precio debe ser mayor a 0.', 'error');
       return;
     }
     if (!this.productForm.imageUrl?.trim()) {

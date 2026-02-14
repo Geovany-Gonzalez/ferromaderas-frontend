@@ -43,16 +43,16 @@
         </thead>
         <tbody>
           <tr *ngFor="let product of filteredProducts; trackBy: trackById">
-            <td class="col-code">{{ product.code }}</td>
-            <td class="col-category">{{ getCategoryName(product.categoryId) }}</td>
-            <td class="col-name">{{ product.name }}</td>
-            <td class="col-price">Q{{ product.price }}</td>
-            <td class="col-estado">
+            <td class="col-code" data-label="Código">{{ product.code }}</td>
+            <td class="col-category" data-label="Categoría">{{ getCategoryName(product.categoryId) }}</td>
+            <td class="col-name" data-label="Nombre">{{ product.name }}</td>
+            <td class="col-price" data-label="Precio">Q{{ product.price }}</td>
+            <td class="col-estado" data-label="Estado">
               <span class="badge" [class.badge-activo]="product.active !== false" [class.badge-inactivo]="product.active === false">
                 {{ product.active !== false ? 'Activo' : 'Inactivo' }}
               </span>
             </td>
-            <td class="actions-cell">
+            <td class="actions-cell" data-label="Acción">
               <button type="button" class="btn-action btn-edit" (click)="editProduct(product)" title="Editar">
                 <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>

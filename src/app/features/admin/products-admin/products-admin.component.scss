@@ -244,20 +244,77 @@
 }
 
 @media (max-width: 768px) {
+  .products-admin-container {
+    padding: 0 0.5rem;
+  }
+
+  .list-title {
+    font-size: 1.1rem;
+    padding: 0.875rem 1rem;
+  }
+
   .toolbar {
     flex-direction: column;
     align-items: stretch;
+    padding: 0.75rem;
   }
 
   .search-wrap {
     max-width: none;
+    min-width: 0;
   }
 
   .table-wrap {
-    overflow-x: auto;
+    overflow: visible;
   }
 
   .products-table {
-    min-width: 500px;
+    display: block;
+    min-width: 0;
+
+    thead {
+      display: none;
+    }
+
+    tbody tr {
+      display: block;
+      padding: 1rem;
+      margin: 0 0.5rem 0.5rem;
+      background: #f8fafc;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+    }
+
+    td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 0;
+      border: none;
+
+      &::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #64748b;
+        margin-right: 0.5rem;
+        flex-shrink: 0;
+      }
+    }
+
+    .actions-cell {
+      justify-content: flex-end;
+      padding-top: 0.75rem;
+      border-top: 1px solid #e2e8f0;
+      margin-top: 0.5rem;
+
+      &::before {
+        display: none;
+      }
+
+      .btn-action {
+        width: 40px;
+        height: 40px;
+      }
+    }
   }
 }

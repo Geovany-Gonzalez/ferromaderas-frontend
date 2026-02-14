@@ -1,0 +1,160 @@
+<div class="cart-page container">
+  <!-- Vista de cotización cuando se abre un link compartido -->
+  <section class="quote-view-section card" *ngIf="showQuoteView && quoteData">
+    <div class="quote-header">Cotización {{ quoteData.id }}</div>
+    <div class="quote-body">
+      <table class="cart-table">
+        <thead>
+          <tr>
+            <th>CÓDIGO</th>
+            <th>PRODUCTO</th>
+            <th>PRECIO</th>
+            <th>CANTIDAD</th>
+            <th>SUBTOTAL</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let line of quoteData.lines; trackBy: trackById">
+            <td class="col-code" data-label="Código">{{ line.product.code }}</td>
+            <td class="col-product" data-label="Producto">
+              <img [src]="line.product.imageUrl || '/assets/icons/logo.png'" [alt]="line.product.name" class="product-thumb" />
+              <span>{{ line.product.name }}</span>
+            </td>
+            <td class="col-price" data-label="Precio">Q{{ line.product.price }}</td>
+            <td class="col-qty" data-label="Cantidad">{{ line.qty }}</td>
+            <td class="col-subtotal" data-label="Subtotal">Q{{ line.product.price * line.qty }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="quote-total">Total: Q{{ quoteData.total | number:'1.0-0' }}</div>
+      <div class="quote-client" *ngIf="quoteData.nombre || quoteData.telefono || quoteData.direccion || quoteData.nota">
+        <h3>Datos del cliente</h3>
+        <p *ngIf="quoteData.nombre"><strong>Nombre:</strong> {{ quoteData.nombre }}</p>
+        <p *ngIf="quoteData.telefono"><strong>Teléfono:</strong> +502 {{ quoteData.telefono }}</p>
+        <p *ngIf="quoteData.direccion"><strong>Dirección:</strong> {{ quoteData.direccion }}</p>
+        <p *ngIf="quoteData.nota"><strong>Nota:</strong> {{ quoteData.nota }}</p>
+      </div>
+    </div>
+    <div class="quote-actions">
+      <a routerLink="/carrito" class="btn btn-primary">Ir al carrito</a>
+    </div>
+  </section>
+
+  <section class="cart-header card" *ngIf="!showQuoteView">
+    <div class="cart-title-wrap">
+      <img src="/assets/icons/Carrito-compras.png" alt="Carrito" class="cart-icon" />
+      <h1 class="cart-title">Mi carrito</h1>
+    </div>
+    <p class="cart-desc">
+      Ajustá cantidades y enviá por WhatsApp para confirmar
+      <span class="check-icon">✓</span>
+    </p>
+  </section>
+
+  <ng-container *ngIf="!showQuoteView && !showTrackingForm; else trackingForm">
+    <section class="cart-table-section card" *ngIf="!isEmpty()">
+      <table class="cart-table">
+        <thead>
+          <tr>
+            <th>CÓDIGO</th>
+            <th>PRODUCTO</th>
+            <th>PRECIO</th>
+            <th>CANTIDAD</th>
+            <th>SUBTOTAL</th>
+            <th>ACCIÓN</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let line of items(); trackBy: trackById">
+            <td class="col-code" data-label="Código">{{ line.product.code }}</td>
+            <td class="col-product" data-label="Producto">
+              <img [src]="line.product.imageUrl || '/assets/icons/logo.png'" [alt]="line.product.name" class="product-thumb" />
+              <span>{{ line.product.name }}</span>
+            </td>
+            <td class="col-price" data-label="Precio">Q{{ line.product.price }}</td>
+            <td class="col-qty" data-label="Cantidad">
+              <button type="button" class="qty-btn" (click)="subtractQty(line.product.id)" aria-label="Menos">−</button>
+              <span class="qty-value">{{ line.qty }}</span>
+              <button type="button" class="qty-btn" (click)="addQty(line.product.id)" aria-label="Más">+</button>
+            </td>
+            <td class="col-subtotal" data-label="Subtotal">Q{{ line.product.price * line.qty }}</td>
+            <td class="col-action" data-label="Acción">
+              <button type="button" class="btn-remove" (click)="remove(line.product.id)" title="Quitar del carrito" aria-label="Quitar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  <line x1="10" y1="11" x2="10" y2="17"/>
+                  <line x1="14" y1="11" x2="14" y2="17"/>
+                </svg>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="cart-footer">
+        <div class="total-row">
+          <span class="total-label">Total:</span>
+          <span class="total-value">Q{{ total() | number:'1.0-0' }}</span>
+        </div>
+        <div class="cart-actions">
+          <button type="button" class="btn btn-secondary" (click)="copyLink()">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+            </svg>
+            Copiar link
+          </button>
+          <button type="button" class="btn btn-primary" (click)="openTrackingForm()">
+            <img src="/assets/icons/Whatsapp.png" alt="WhatsApp" class="whatsapp-icon" />
+            Preparar WhatsApp
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section class="empty-cart card" *ngIf="isEmpty()">
+      <p>Tu carrito está vacío.</p>
+      <a routerLink="/categorias" class="btn btn-primary">Ver productos</a>
+    </section>
+  </ng-container>
+
+  <ng-template #trackingForm>
+    <section class="tracking-section card" *ngIf="!showQuoteView">
+      <div class="tracking-header">Datos para seguimiento</div>
+      <p class="tracking-desc">
+        ¡Ayudanos con estos datos para darte el mejor seguimiento!
+        <span class="check-icon">✓</span>
+      </p>
+      <div class="tracking-form">
+        <div class="form-row">
+          <label>Nombre</label>
+          <input type="text" [(ngModel)]="trackingData.nombre" placeholder="Tu nombre" />
+        </div>
+        <div class="form-row">
+          <label>Teléfono / WhatsApp</label>
+          <div class="phone-input-wrap">
+            <span class="phone-prefix">
+              <img src="https://flagcdn.com/w20/gt.png" alt="GT" class="flag-img" width="20" height="15" /> +502
+            </span>
+            <input type="tel" [(ngModel)]="trackingData.telefono" placeholder="1234-5678" maxlength="12" />
+          </div>
+        </div>
+        <div class="form-row">
+          <label>Dirección</label>
+          <input type="text" [(ngModel)]="trackingData.direccion" placeholder="Dirección de entrega" />
+        </div>
+        <div class="form-row">
+          <label>Nota</label>
+          <input type="text" [(ngModel)]="trackingData.nota" placeholder="Comentarios adicionales" />
+        </div>
+      </div>
+      <div class="tracking-actions">
+        <button type="button" class="btn btn-outline" (click)="closeTrackingForm()">Volver al carrito</button>
+        <button type="button" class="btn btn-whatsapp" (click)="sendToWhatsApp()">
+          <img src="/assets/icons/Whatsapp.png" alt="WhatsApp" class="whatsapp-icon" />
+          Enviar Cotización a Whatsapp
+        </button>
+      </div>
+    </section>
+  </ng-template>
+</div>
