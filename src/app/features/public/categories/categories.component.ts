@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { CatalogService } from '../../../core/services/catalog.service';
 import { Category } from '../../../core/models/category.model';
+import { WHATSAPP_CONTACT_URL } from '../../../core/constants/whatsapp';
 
 @Component({
   selector: 'app-categories',
@@ -12,6 +13,7 @@ import { Category } from '../../../core/models/category.model';
   styleUrls: ['./categories.component.scss']
 })
 export class CategoriesComponent implements OnInit {
+  readonly whatsAppUrl = WHATSAPP_CONTACT_URL;
   categories: Category[] = [];
 
   constructor(

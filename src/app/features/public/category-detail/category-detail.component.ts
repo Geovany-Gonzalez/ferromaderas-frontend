@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CatalogService } from '../../../core/services/catalog.service';
+import { WHATSAPP_CONTACT_URL } from '../../../core/constants/whatsapp';
 import { CartService } from '../../../core/services/cart.service';
 import { Category } from '../../../core/models/category.model';
 import { Product } from '../../../core/models/product.model';
@@ -16,6 +17,7 @@ import { ProductCardComponent } from '../../../shared/components/product-card/pr
   styleUrls: ['./category-detail.component.scss']
 })
 export class CategoryDetailComponent implements OnInit {
+  readonly whatsAppUrl = WHATSAPP_CONTACT_URL;
   category: Category | null = null;
   products: Product[] = [];
   searchTerm: string = '';
