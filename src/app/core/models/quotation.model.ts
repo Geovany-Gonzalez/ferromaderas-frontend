@@ -13,4 +13,7 @@ export interface Quotation {
   total: number;
   direccion: string;
   estado: QuotationStatus;
+  /** Vendedor asignado para dar seguimiento */
+  vendedorId?: string;
+  vendedorNombre?: string;
 }

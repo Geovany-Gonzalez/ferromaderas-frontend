@@ -1,61 +1,7 @@
 .main{ position:relative; min-height: calc(100vh - 72px); padding-top: 18px; padding-bottom: 24px; }
-.float{
-  position: fixed;
-  right: 24px;
-  width: 64px; 
-  height: 64px;
-  border-radius: 999px;
-  border: 0;
-  display:flex; 
-  align-items:center; 
-  justify-content:center;
-  background: #fff;
-  box-shadow: var(--shadow);
-  cursor:pointer;
-  transition: transform 0.3s;
-}
-.float:hover{
-  transform: scale(1.1);
-}
-.float img{
-  width: 36px; 
-  height: 36px;
-}
-.bot{ 
-  bottom: 20px;
-  background: transparent;
-  box-shadow: none;
-  border-radius: 16px;
-  padding: 0;
-  overflow: hidden;
-  border: none;
-}
-.bot img{
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
 
 @media (max-width: 640px){
   .main{
     padding-bottom: 100px; /* Espacio para que el chatbot no tape botones */
-  }
-  .float{
-    width: 56px;
-    height: 56px;
-    right: 12px;
-  }
-  .float img{
-    width: 30px;
-    height: 30px;
-  }
-  .bot{
-    bottom: 16px;
-    width: 56px;
-    height: 56px;
-  }
-  .bot img{
-    width: 100%;
-    height: 100%;
   }
 }

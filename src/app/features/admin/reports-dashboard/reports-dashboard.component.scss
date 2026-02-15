@@ -1,0 +1,256 @@
+.reports-dashboard {
+  padding: 2rem;
+  background: #f9fafb;
+  min-height: calc(100vh - 80px);
+}
+
+.reports-header {
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e5e7eb;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+
+  h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #1e3a8a;
+    margin: 0;
+  }
+}
+
+.search-bar {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+
+  .search-input {
+    width: 280px;
+    padding: 0.6rem 1rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.2s;
+
+    &:focus {
+      border-color: #1e3a8a;
+    }
+  }
+
+  .search-btn {
+    padding: 0.6rem 1.25rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: white;
+    background: #1e3a8a;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+
+    &:hover {
+      background: #1e40af;
+    }
+  }
+}
+
+.report-section {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e5e7eb;
+  scroll-margin-top: 1rem;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.5rem;
+  margin: 0 -1.5rem 1rem -1.5rem;
+  background: #1e3a8a;
+  border-radius: 8px 8px 0 0;
+
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: white;
+    margin: 0;
+  }
+}
+
+.btn-pdf {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: white;
+  background: #dc2626;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:hover {
+    background: #b91c1c;
+  }
+}
+
+.chart-container {
+  margin-bottom: 1rem;
+}
+
+.chart-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.stats-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.mini-stat {
+  background: #f3f4f6;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 100px;
+
+  .mini-stat-label {
+    font-size: 0.75rem;
+    color: #6b7280;
+  }
+
+  .mini-stat-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1e3a8a;
+  }
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+.empty-hint {
+  padding: 1rem;
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.report-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+
+  th,
+  td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  th {
+    background: #f9fafb;
+    font-weight: 600;
+    color: #374151;
+  }
+
+  tbody tr:hover {
+    background: #f9fafb;
+  }
+}
+
+.conversion-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+.conv-card {
+  background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+  color: white;
+  padding: 2rem;
+  border-radius: 8px;
+  text-align: center;
+
+  .conv-value {
+    display: block;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+  }
+
+  .conv-label {
+    font-size: 0.875rem;
+    opacity: 0.9;
+  }
+}
+
+.conv-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.conv-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background: #f9fafb;
+  border-radius: 6px;
+  font-size: 0.9rem;
+
+  &.conv-cancel {
+    color: #dc2626;
+  }
+
+  strong {
+    color: #1e3a8a;
+  }
+}
+
+@media (max-width: 768px) {
+  .reports-dashboard {
+    padding: 1rem;
+  }
+
+  .reports-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-bar {
+    .search-input {
+      width: 100%;
+    }
+  }
+
+  .conversion-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .section-header {
+    margin-left: -1rem;
+    margin-right: -1rem;
+    padding-left: 1rem;
+  }
+
+  .report-table th,
+  .report-table td {
+    padding: 0.5rem;
+    font-size: 0.8rem;
+  }
+}

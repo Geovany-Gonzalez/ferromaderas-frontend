@@ -19,19 +19,20 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
   userName: string = 'Usuario1';
   isMenuOpen: boolean = false;
   private lastScrollTop: number = 0;
-  
+
   menuItems: MenuItem[] = [
     { label: 'Productos', route: '/admin/productos' },
     { label: 'Categorías', route: '/admin/categorias' },
     { label: 'Destacados', route: '/admin/destacados' },
     { label: 'Cotizaciones', route: '/admin/cotizaciones' },
+    { label: 'Reportes', route: '/admin/reportes' },
     { label: 'Políticas', route: '/admin/politicas' },
     { label: 'Usuarios', route: '/admin/usuarios' },
   ];
 
   ngOnInit(): void {
-    // Detectar si es mobile al cargar
     this.checkScreenSize();
+    localStorage.setItem('ferromaderas_admin_user', this.userName);
   }
 
   ngOnDestroy(): void {

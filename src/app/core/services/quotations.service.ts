@@ -33,9 +33,9 @@ export class QuotationsService {
   private getDefaultData(): Quotation[] {
     return [
       { id: '001', fechaHora: '10/01/2026', cliente: 'Juan Perez', telefono: '55852563', total: 1540, direccion: 'El bosque 11-14', estado: 'nueva' },
-      { id: '002', fechaHora: '02/02/2026', cliente: 'Raul Molina', telefono: '56987852', total: 150, direccion: 'San Lorenzo 10-1', estado: 'en_seguimiento' },
-      { id: '003', fechaHora: '10/02/2026', cliente: 'Karla Ramos', telefono: '87569875', total: 3000, direccion: 'Cerro corado 3-20', estado: 'confirmada' },
-      { id: '004', fechaHora: '20/02/2026', cliente: 'Melany Díaz', telefono: '56987852', total: 1120, direccion: 'Colonia Lupita 20-1', estado: 'cerrada' },
+      { id: '002', fechaHora: '02/02/2026', cliente: 'Raul Molina', telefono: '56987852', total: 150, direccion: 'San Lorenzo 10-1', estado: 'en_seguimiento', vendedorId: '1', vendedorNombre: 'Juan Perez' },
+      { id: '003', fechaHora: '10/02/2026', cliente: 'Karla Ramos', telefono: '87569875', total: 3000, direccion: 'Cerro corado 3-20', estado: 'confirmada', vendedorId: '2', vendedorNombre: 'Pedro Catalan' },
+      { id: '004', fechaHora: '20/02/2026', cliente: 'Melany Díaz', telefono: '56987852', total: 1120, direccion: 'Colonia Lupita 20-1', estado: 'cerrada', vendedorId: '2', vendedorNombre: 'Pedro Catalan' },
       { id: '005', fechaHora: '21/02/2026', cliente: 'Javier Mileni', telefono: '69854258', total: 1520, direccion: 'Llano de ánimas 20-1', estado: 'cancelada' },
     ];
   }
@@ -62,5 +62,26 @@ export class QuotationsService {
     this.quotations.unshift(q);
     this.save();
     return q;
+  }
+
+  assignVendedor(id: string, vendedorId: string, vendedorNombre: string): Quotation | null {
+    const idx = this.quotations.findIndex((q) => q.id === id);
+    if (idx < 0) return null;
+    this.quotations[idx] = {
+      ...this.quotations[idx],
+      vendedorId,
+      vendedorNombre,
+      estado: this.quotations[idx].estado === 'nueva' ? 'en_seguimiento' : this.quotations[idx].estado,
+    };
+    this.save();
+    return this.quotations[idx];
+  }
+
+  unassignVendedor(id: string): Quotation | null {
+    const idx = this.quotations.findIndex((q) => q.id === id);
+    if (idx < 0) return null;
+    this.quotations[idx] = { ...this.quotations[idx], vendedorId: undefined, vendedorNombre: undefined };
+    this.save();
+    return this.quotations[idx];
   }
 }

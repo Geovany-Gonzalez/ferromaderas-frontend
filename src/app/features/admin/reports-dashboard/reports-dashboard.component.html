@@ -1,0 +1,185 @@
+<div class="reports-dashboard">
+  <header class="reports-header">
+    <h1>Dashboard de Reportes</h1>
+    <div class="search-bar">
+      <input
+        type="search"
+        class="search-input"
+        placeholder="Buscar reportes..."
+        [(ngModel)]="searchTerm"
+        (ngModelChange)="onSearchChange()"
+      />
+      <button type="button" class="search-btn" (click)="scrollToFirstMatch()" *ngIf="searchTerm">
+        Ir al resultado
+      </button>
+    </div>
+  </header>
+
+  <!-- Estado de cotizaciones -->
+  <section id="estado-cotizaciones" class="report-section" #reportContent>
+    <div class="section-header">
+      <h2>Estado de cotizaciones</h2>
+      <button type="button" class="btn-pdf exclude-from-pdf" (click)="exportPdf('estado-cotizaciones')">
+        Exportar PDF
+      </button>
+    </div>
+    <div class="chart-container">
+      <div class="chart-wrapper" style="height: 220px;">
+        <canvas baseChart [type]="'bar'" [data]="barChartEstadoData" [options]="barChartEstadoOptions"></canvas>
+      </div>
+    </div>
+    <div class="stats-row">
+      <div *ngFor="let e of estadoCotizaciones" class="mini-stat">
+        <span class="mini-stat-label">{{ e.label }}</span>
+        <span class="mini-stat-value">{{ e.count }}</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Productos más cotizados -->
+  <section id="productos-cotizados" class="report-section">
+    <div class="section-header">
+      <h2>Productos más cotizados</h2>
+      <button type="button" class="btn-pdf exclude-from-pdf" (click)="exportPdf('productos-cotizados')">
+        Exportar PDF
+      </button>
+    </div>
+    <div class="table-wrap">
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Código</th>
+            <th>Producto</th>
+            <th>Veces cotizado</th>
+            <th>%</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let p of productosMasCotizados; let i = index">
+            <td>{{ i + 1 }}</td>
+            <td>{{ p.codigo }}</td>
+            <td>{{ p.nombre }}</td>
+            <td>{{ p.vecesCotizado }}</td>
+            <td>{{ p.porcentaje }}%</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Vendedores - cotizaciones completadas -->
+  <section id="vendedores" class="report-section">
+    <div class="section-header">
+      <h2>Vendedores con más cotizaciones completadas</h2>
+      <button type="button" class="btn-pdf exclude-from-pdf" (click)="exportPdf('vendedores')">
+        Exportar PDF
+      </button>
+    </div>
+    <div class="table-wrap">
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Vendedor</th>
+            <th>Cotizaciones completadas</th>
+            <th>Monto total (Q)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let v of vendedoresRanking; let i = index">
+            <td>{{ i + 1 }}</td>
+            <td>{{ v.nombre }}</td>
+            <td>{{ v.cotizacionesCompletadas }}</td>
+            <td>Q{{ v.montoTotal | number }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <p *ngIf="vendedoresRanking.length === 0" class="empty-hint">Asigna vendedores a cotizaciones confirmadas o cerradas para ver el ranking.</p>
+    </div>
+  </section>
+
+  <!-- Conversión de cotizaciones -->
+  <section id="conversion" class="report-section">
+    <div class="section-header">
+      <h2>Conversión de cotizaciones</h2>
+      <button type="button" class="btn-pdf exclude-from-pdf" (click)="exportPdf('conversion')">
+        Exportar PDF
+      </button>
+    </div>
+    <div class="conversion-grid">
+      <div class="conv-card">
+        <span class="conv-value">{{ tasaConversion }}%</span>
+        <span class="conv-label">Tasa de conversión</span>
+      </div>
+      <div class="conv-detail">
+        <div class="conv-row"><span>Nuevas</span><strong>{{ totalNuevas }}</strong></div>
+        <div class="conv-row"><span>En seguimiento</span><strong>{{ totalEnSeguimiento }}</strong></div>
+        <div class="conv-row"><span>Confirmadas</span><strong>{{ totalConfirmadas }}</strong></div>
+        <div class="conv-row"><span>Cerradas</span><strong>{{ totalCerradas }}</strong></div>
+        <div class="conv-row conv-cancel"><span>Canceladas</span><strong>{{ totalCanceladas }}</strong></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Ventas por período -->
+  <section id="ventas-periodo" class="report-section">
+    <div class="section-header">
+      <h2>Ventas por período</h2>
+      <button type="button" class="btn-pdf exclude-from-pdf" (click)="exportPdf('ventas-periodo')">
+        Exportar PDF
+      </button>
+    </div>
+    <div class="chart-container">
+      <div class="chart-wrapper" style="height: 220px;">
+        <canvas baseChart [type]="'line'" [data]="lineChartVentasData" [options]="lineChartVentasOptions"></canvas>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th>Mes</th>
+            <th>Monto (Q)</th>
+            <th>Cotizaciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let v of ventasPorMes">
+            <td>{{ v.mes }}</td>
+            <td>Q{{ v.monto | number }}</td>
+            <td>{{ v.cantidad }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Chatbot - preguntas frecuentes -->
+  <section id="chatbot-faq" class="report-section">
+    <div class="section-header">
+      <h2>Chatbot - Preguntas más frecuentes</h2>
+      <button type="button" class="btn-pdf exclude-from-pdf" (click)="exportPdf('chatbot-faq')">
+        Exportar PDF
+      </button>
+    </div>
+    <div class="table-wrap">
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Pregunta</th>
+            <th>Veces</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let p of preguntasFrecuentes; let i = index">
+            <td>{{ i + 1 }}</td>
+            <td>{{ p.pregunta }}</td>
+            <td>{{ p.veces }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>

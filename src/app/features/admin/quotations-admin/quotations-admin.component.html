@@ -30,6 +30,10 @@
       <select class="filter-estado" [(ngModel)]="filterEstado" title="Filtrar por estado">
         <option *ngFor="let o of statusOptions" [value]="o.value">{{ o.label }}</option>
       </select>
+      <select class="filter-estado" [(ngModel)]="filterVendedor" title="Filtrar por vendedor">
+        <option value="">Vendedor</option>
+        <option *ngFor="let v of vendedores" [value]="v.id">{{ v.nombre }}</option>
+      </select>
     </div>
 
     <div class="table-wrap">
@@ -42,6 +46,7 @@
             <th>TELÉFONO</th>
             <th>TOTAL</th>
             <th>DIRECCIÓN</th>
+            <th>VENDEDOR</th>
             <th>ESTADO</th>
             <th>ACCIÓN</th>
           </tr>
@@ -54,6 +59,10 @@
             <td class="col-telefono" data-label="Teléfono">{{ q.telefono }}</td>
             <td class="col-total" data-label="Total">Q{{ q.total | number:'1.0-0' }}</td>
             <td class="col-direccion" data-label="Dirección">{{ q.direccion }}</td>
+            <td class="col-vendedor" data-label="Vendedor">
+              <span *ngIf="q.vendedorNombre; else sinVendedor">{{ q.vendedorNombre }}</span>
+              <ng-template #sinVendedor><span class="text-muted">—</span></ng-template>
+            </td>
             <td class="col-estado" data-label="Estado">
               <span class="badge" [ngClass]="'badge-' + q.estado">{{ statusLabel(q.estado) }}</span>
             </td>
@@ -93,6 +102,10 @@
           <span class="view-label">Fecha</span>
           <span class="view-value">{{ viewModalQuotation.fechaHora }}</span>
         </div>
+        <div class="view-row" *ngIf="viewModalQuotation.vendedorNombre">
+          <span class="view-label">Vendedor asignado</span>
+          <span class="view-value">{{ viewModalQuotation.vendedorNombre }}</span>
+        </div>
         <div class="view-row">
           <span class="view-label">Cliente</span>
           <span class="view-value">{{ viewModalQuotation.cliente }}</span>
@@ -115,6 +128,21 @@
             <span class="badge" [ngClass]="'badge-' + viewModalQuotation.estado">{{ statusLabel(viewModalQuotation.estado) }}</span>
           </span>
         </div>
+      </div>
+      <div class="assign-section">
+        <h4 class="assign-title">Asignar vendedor para seguimiento</h4>
+        <div class="assign-row">
+          <select [(ngModel)]="assignVendedorId" class="assign-select">
+            <option value="">Seleccionar vendedor</option>
+            <option *ngFor="let v of vendedores" [value]="v.id">{{ v.nombre }}</option>
+          </select>
+          <button type="button" class="btn btn-assign" (click)="onAssignInModal()" [disabled]="!assignVendedorId">
+            Asignar
+          </button>
+        </div>
+        <button *ngIf="viewModalQuotation.vendedorId" type="button" class="btn btn-unassign" (click)="unassignVendedor(viewModalQuotation)">
+          Quitar vendedor
+        </button>
       </div>
     </div>
     <div class="modal-footer">

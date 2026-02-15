@@ -1,0 +1,40 @@
+<div class="chatbot-wrapper">
+  <button type="button" class="chatbot-toggle" (click)="toggle()" aria-label="Abrir chatbot">
+    <img src="/assets/icons/Chatbot.png" alt="Chatbot" />
+  </button>
+
+  <div class="chatbot-panel" [class.open]="isOpen">
+    <div class="chatbot-header">
+      <h3>Asistente Ferromaderas</h3>
+      <button type="button" class="chatbot-close" (click)="toggle()" aria-label="Cerrar">×</button>
+    </div>
+
+    <div class="chatbot-messages">
+      <div *ngFor="let msg of messages" class="msg" [ngClass]="'msg-' + msg.type">
+        <div class="msg-bubble">
+          <span class="msg-text">{{ msg.text }}</span>
+          <div *ngIf="msg.options && msg.type === 'bot'" class="msg-options">
+            <button
+              *ngFor="let opt of msg.options"
+              type="button"
+              class="opt-btn"
+              (click)="selectOption(opt)"
+            >
+              {{ opt.text }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chatbot-input">
+      <input
+        type="text"
+        [(ngModel)]="customInput"
+        placeholder="Escribe tu pregunta..."
+        (keydown.enter)="sendCustom()"
+      />
+      <button type="button" class="send-btn" (click)="sendCustom()">Enviar</button>
+    </div>
+  </div>
+</div>

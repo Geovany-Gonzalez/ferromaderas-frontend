@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { QuotationsService } from '../../../core/services/quotations.service';
+import { VendedoresService, Vendedor } from '../../../core/services/vendedores.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { Quotation, QuotationStatus } from '../../../core/models/quotation.model';
 
@@ -15,13 +16,18 @@ import { Quotation, QuotationStatus } from '../../../core/models/quotation.model
 })
 export class QuotationsAdminComponent implements OnInit {
   quotations: Quotation[] = [];
+  vendedores: Vendedor[] = [];
   searchId = '';
   filterEstado: QuotationStatus | '' = '';
   fechaDesde = '';
   fechaHasta = '';
+  filterVendedor = '';
 
   /** Modal ver detalle */
   viewModalQuotation: Quotation | null = null;
+
+  /** Vendedor seleccionado para asignar (en modal o tabla) */
+  assignVendedorId: string = '';
 
   statusOptions: { value: QuotationStatus | ''; label: string }[] = [
     { value: '', label: 'Estado' },
@@ -34,25 +40,51 @@ export class QuotationsAdminComponent implements OnInit {
 
   constructor(
     private quotationsService: QuotationsService,
+    private vendedoresService: VendedoresService,
     private notification: NotificationService
   ) {}
 
   ngOnInit(): void {
     this.quotations = this.quotationsService.getAll();
+    this.vendedores = this.vendedoresService.getAll();
   }
 
   get filteredQuotations(): Quotation[] {
     return this.quotations.filter((q) => {
       const matchId = !this.searchId || q.id.toLowerCase().includes(this.searchId.toLowerCase());
       const matchEstado = !this.filterEstado || q.estado === this.filterEstado;
+      const matchVendedor = !this.filterVendedor || (q.vendedorId === this.filterVendedor);
       let matchFecha = true;
       if (this.fechaDesde || this.fechaHasta) {
         const d = this.parseFecha(q.fechaHora);
         if (this.fechaDesde && d < this.parseFecha(this.fechaDesde)) matchFecha = false;
         if (this.fechaHasta && d > this.parseFecha(this.fechaHasta)) matchFecha = false;
       }
-      return matchId && matchEstado && matchFecha;
+      return matchId && matchEstado && matchVendedor && matchFecha;
     });
+  }
+
+  assignVendedor(q: Quotation, vendedorId: string): void {
+    if (!vendedorId) return;
+    const v = this.vendedores.find((x) => x.id === vendedorId);
+    if (!v) return;
+    this.quotationsService.assignVendedor(q.id, v.id, v.nombre);
+    this.quotations = this.quotationsService.getAll();
+    this.viewModalQuotation = this.quotations.find((x) => x.id === q.id) ?? null;
+    this.notification.showMessage(`Vendedor ${v.nombre} asignado a cotización ${q.id}.`, 'success');
+  }
+
+  unassignVendedor(q: Quotation): void {
+    this.quotationsService.unassignVendedor(q.id);
+    this.quotations = this.quotationsService.getAll();
+    this.viewModalQuotation = this.quotations.find((x) => x.id === q.id) ?? null;
+    this.notification.showMessage(`Vendedor desasignado de cotización ${q.id}.`, 'success');
+  }
+
+  onAssignInModal(): void {
+    if (!this.viewModalQuotation || !this.assignVendedorId) return;
+    this.assignVendedor(this.viewModalQuotation, this.assignVendedorId);
+    this.assignVendedorId = '';
   }
 
   /** Acepta DD/MM/YYYY o YYYY-MM-DD (del input type="date"). */
@@ -82,6 +114,7 @@ export class QuotationsAdminComponent implements OnInit {
 
   viewQuotation(q: Quotation): void {
     this.viewModalQuotation = q;
+    this.assignVendedorId = q.vendedorId ?? '';
   }
 
   closeViewModal(): void {
