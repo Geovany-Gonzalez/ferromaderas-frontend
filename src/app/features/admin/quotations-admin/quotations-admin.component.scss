@@ -1,5 +1,8 @@
 .quotations-admin-container {
   margin: 0 auto;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .list-section {
@@ -26,6 +29,7 @@
   background: #fff;
   border: 1px solid #e2e8f0;
   border-top: none;
+  min-width: 0;
 }
 
 .btn-home {
@@ -292,6 +296,7 @@
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
   max-width: 440px;
   width: 100%;
+  min-width: 0;
   max-height: 90vh;
   overflow: auto;
 }
@@ -343,6 +348,7 @@
   padding: 0.5rem 0;
   border-bottom: 1px solid #e2e8f0;
   gap: 1rem;
+  min-width: 0;
 
   &:last-child {
     border-bottom: none;
@@ -360,6 +366,9 @@
   color: #0b1020;
   font-size: 1rem;
   text-align: right;
+  min-width: 0;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .assign-section {
@@ -468,6 +477,28 @@
 
 /* Responsive */
 @media (max-width: 768px) {
+  .modal-overlay {
+    padding: 0.5rem;
+  }
+
+  .modal-dialog {
+    max-width: 100%;
+  }
+
+  .modal-body {
+    padding: 1rem;
+  }
+
+  .view-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.25rem;
+  }
+
+  .view-value {
+    text-align: left;
+  }
+
   .quotations-admin-container {
     padding: 0;
     width: 100%;
@@ -489,20 +520,29 @@
   .toolbar {
     flex-direction: column;
     align-items: stretch;
-    padding: 0.75rem 1rem;
+    padding: 0.75rem;
+    gap: 0.5rem;
+  }
+
+  .btn-home {
+    align-self: flex-start;
   }
 
   .search-wrap {
     max-width: none;
     min-width: 0;
+    width: 100%;
   }
 
   .date-range-wrap {
-    flex-direction: column;
-    align-items: stretch;
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: 100%;
+    gap: 0.5rem;
 
     .date-input {
-      width: 100%;
+      flex: 1;
+      min-width: 120px;
     }
 
     .date-sep {
@@ -512,12 +552,14 @@
 
   .filter-estado {
     width: 100%;
+    max-width: none;
   }
 
   .table-wrap {
     overflow: visible;
-    padding: 0 0 1rem 0;
+    padding: 0;
     width: 100%;
+    border-radius: 0 0 8px 8px;
   }
 
   .quotations-table {
@@ -552,6 +594,8 @@
       padding: 0.5rem 0;
       border: none;
       gap: 0.5rem;
+      word-break: break-word;
+      min-width: 0;
 
       &::before {
         content: attr(data-label);

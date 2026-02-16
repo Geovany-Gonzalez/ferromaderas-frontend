@@ -21,6 +21,7 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
   private lastScrollTop: number = 0;
 
   menuItems: MenuItem[] = [
+    { label: 'Inicio', route: '/admin/dashboard' },
     { label: 'Productos', route: '/admin/productos' },
     { label: 'Categorías', route: '/admin/categorias' },
     { label: 'Destacados', route: '/admin/destacados' },

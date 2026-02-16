@@ -1,5 +1,6 @@
 import { Component, OnInit, AfterViewChecked, inject, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { DomSanitizer } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { BaseChartDirective } from 'ng2-charts';
@@ -40,10 +41,18 @@ interface PreguntaFrecuente {
 })
 export class ReportsDashboardComponent implements OnInit, AfterViewChecked {
   @ViewChild('reportContent') reportContent!: ElementRef<HTMLElement>;
+  @ViewChild('pdfFrame') pdfFrame!: ElementRef<HTMLIFrameElement>;
 
   private quotationsService = inject(QuotationsService);
   private chatbotService = inject(ChatbotService);
   private route = inject(ActivatedRoute);
+  private sanitizer = inject(DomSanitizer);
+
+  showPdfPreview = false;
+  pdfBlobUrl: unknown = null;
+  private currentPdfBlob: Blob | null = null;
+  private currentPdfSectionId = '';
+  private currentBlobUrl = '';
 
   private hasScrolledToHash = false;
 
@@ -288,9 +297,45 @@ export class ReportsDashboardComponent implements OnInit, AfterViewChecked {
     return this.sectionTitles.find((s) => s.id === sectionId)?.title ?? sectionId;
   }
 
-  async exportPdf(sectionId: string): Promise<void> {
+  async openPdfPreview(sectionId: string): Promise<void> {
+    const blob = await this.generatePdfBlob(sectionId);
+    if (!blob) return;
+    if (this.currentBlobUrl) URL.revokeObjectURL(this.currentBlobUrl);
+    this.currentPdfBlob = blob;
+    this.currentPdfSectionId = sectionId;
+    this.currentBlobUrl = URL.createObjectURL(blob);
+    this.pdfBlobUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.currentBlobUrl);
+    this.showPdfPreview = true;
+  }
+
+  closePdfPreview(): void {
+    this.showPdfPreview = false;
+    if (this.currentBlobUrl) {
+      URL.revokeObjectURL(this.currentBlobUrl);
+      this.currentBlobUrl = '';
+    }
+    this.pdfBlobUrl = null;
+    this.currentPdfBlob = null;
+  }
+
+  printPdf(): void {
+    const frame = this.pdfFrame?.nativeElement;
+    if (frame?.contentWindow) frame.contentWindow.print();
+  }
+
+  savePdf(): void {
+    if (!this.currentPdfBlob) return;
+    const url = URL.createObjectURL(this.currentPdfBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `reporte-${this.currentPdfSectionId}-${new Date().toISOString().slice(0, 10)}.pdf`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  private async generatePdfBlob(sectionId: string): Promise<Blob | null> {
     const el = document.getElementById(sectionId);
-    if (!el) return;
+    if (!el) return null;
     const excludeEls = el.querySelectorAll('.exclude-from-pdf');
     excludeEls.forEach((e) => ((e as HTMLElement).style.visibility = 'hidden'));
     try {
@@ -359,10 +404,10 @@ export class ReportsDashboardComponent implements OnInit, AfterViewChecked {
         }
       }
 
-      const nombreArchivo = `reporte-${sectionId}-${new Date().toISOString().slice(0, 10)}.pdf`;
-      doc.save(nombreArchivo);
+      return doc.output('blob');
     } catch (err) {
-      console.error('Error al exportar PDF:', err);
+      console.error('Error al generar PDF:', err);
+      return null;
     } finally {
       excludeEls.forEach((e) => ((e as HTMLElement).style.visibility = ''));
     }

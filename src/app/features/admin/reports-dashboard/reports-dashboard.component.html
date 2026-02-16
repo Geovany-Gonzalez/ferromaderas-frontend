@@ -19,8 +19,8 @@
   <section id="estado-cotizaciones" class="report-section" #reportContent>
     <div class="section-header">
       <h2>Estado de cotizaciones</h2>
-      <button type="button" class="btn-pdf exclude-from-pdf" (click)="exportPdf('estado-cotizaciones')">
-        Exportar PDF
+      <button type="button" class="btn-pdf exclude-from-pdf" (click)="openPdfPreview('estado-cotizaciones')">
+        Vista previa
       </button>
     </div>
     <div class="chart-container">
@@ -40,8 +40,8 @@
   <section id="productos-cotizados" class="report-section">
     <div class="section-header">
       <h2>Productos más cotizados</h2>
-      <button type="button" class="btn-pdf exclude-from-pdf" (click)="exportPdf('productos-cotizados')">
-        Exportar PDF
+      <button type="button" class="btn-pdf exclude-from-pdf" (click)="openPdfPreview('productos-cotizados')">
+        Vista previa
       </button>
     </div>
     <div class="table-wrap">
@@ -72,8 +72,8 @@
   <section id="vendedores" class="report-section">
     <div class="section-header">
       <h2>Vendedores con más cotizaciones completadas</h2>
-      <button type="button" class="btn-pdf exclude-from-pdf" (click)="exportPdf('vendedores')">
-        Exportar PDF
+      <button type="button" class="btn-pdf exclude-from-pdf" (click)="openPdfPreview('vendedores')">
+        Vista previa
       </button>
     </div>
     <div class="table-wrap">
@@ -103,8 +103,8 @@
   <section id="conversion" class="report-section">
     <div class="section-header">
       <h2>Conversión de cotizaciones</h2>
-      <button type="button" class="btn-pdf exclude-from-pdf" (click)="exportPdf('conversion')">
-        Exportar PDF
+      <button type="button" class="btn-pdf exclude-from-pdf" (click)="openPdfPreview('conversion')">
+        Vista previa
       </button>
     </div>
     <div class="conversion-grid">
@@ -126,8 +126,8 @@
   <section id="ventas-periodo" class="report-section">
     <div class="section-header">
       <h2>Ventas por período</h2>
-      <button type="button" class="btn-pdf exclude-from-pdf" (click)="exportPdf('ventas-periodo')">
-        Exportar PDF
+      <button type="button" class="btn-pdf exclude-from-pdf" (click)="openPdfPreview('ventas-periodo')">
+        Vista previa
       </button>
     </div>
     <div class="chart-container">
@@ -159,8 +159,8 @@
   <section id="chatbot-faq" class="report-section">
     <div class="section-header">
       <h2>Chatbot - Preguntas más frecuentes</h2>
-      <button type="button" class="btn-pdf exclude-from-pdf" (click)="exportPdf('chatbot-faq')">
-        Exportar PDF
+      <button type="button" class="btn-pdf exclude-from-pdf" (click)="openPdfPreview('chatbot-faq')">
+        Vista previa
       </button>
     </div>
     <div class="table-wrap">
@@ -182,4 +182,19 @@
       </table>
     </div>
   </section>
+</div>
+
+<!-- Modal vista previa PDF -->
+<div class="pdf-preview-overlay" *ngIf="showPdfPreview" (click)="closePdfPreview()">
+  <div class="pdf-preview-modal" (click)="$event.stopPropagation()">
+    <div class="pdf-preview-header">
+      <h3>Vista previa del reporte</h3>
+      <div class="pdf-preview-actions">
+        <button type="button" class="btn-print" (click)="printPdf()">Imprimir</button>
+        <button type="button" class="btn-save" (click)="savePdf()">Guardar</button>
+        <button type="button" class="btn-close" (click)="closePdfPreview()" aria-label="Cerrar">×</button>
+      </div>
+    </div>
+    <iframe #pdfFrame class="pdf-preview-frame" [src]="pdfBlobUrl" *ngIf="pdfBlobUrl"></iframe>
+  </div>
 </div>

@@ -11,27 +11,31 @@ import { ChartConfiguration, ChartData, ChartType } from 'chart.js';
   styleUrl: './dashboard.component.scss',
 })
 export class DashboardComponent implements OnInit {
-  // Estadísticas principales
-  totalVentas: string = '2.089.201';
-  totalProductos: string = '104.475';
+  /** Estadísticas del sitio web */
+  visitasTotales = 12480;
+  vistasPagina = 38420;
+  paginasSesion = 3.1;
+  rebotePorcentaje = 42;
 
-  // Configuración del gráfico de barras (Ventas por categoría)
+  /** Páginas más visitadas */
+  paginasMasVisitadas: { pagina: string; vistas: number }[] = [
+    { pagina: 'Inicio', vistas: 8520 },
+    { pagina: 'Categorías', vistas: 6120 },
+    { pagina: 'Carrito', vistas: 3240 },
+    { pagina: 'Ubicación', vistas: 2180 },
+    { pagina: 'Políticas', vistas: 960 },
+  ];
+
+  /** Gráfico: Visitas por día (última semana) */
   public barChartType: ChartType = 'bar';
   public barChartData: ChartData<'bar'> = {
-    labels: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio'],
+    labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
     datasets: [
       {
-        data: [380, 420, 390, 410, 380, 400],
-        label: 'Entradas',
-        backgroundColor: '#4ade80',
-        borderColor: '#22c55e',
-        borderWidth: 1,
-      },
-      {
-        data: [280, 320, 290, 310, 280, 300],
-        label: 'Canceladas',
-        backgroundColor: '#f87171',
-        borderColor: '#ef4444',
+        data: [1420, 1680, 1520, 1890, 2100, 1840, 2030],
+        label: 'Visitas',
+        backgroundColor: '#1e3a8a',
+        borderColor: '#1e40af',
         borderWidth: 1,
       },
     ],
@@ -41,88 +45,26 @@ export class DashboardComponent implements OnInit {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: {
-        display: true,
-        position: 'top',
-      },
+      legend: { display: false },
       title: {
-        display: false,
+        display: true,
+        text: 'Visitas por día (última semana)',
+        font: { size: 14 },
       },
     },
     scales: {
-      y: {
-        beginAtZero: true,
-        max: 500,
-        ticks: {
-          stepSize: 100,
-        },
-      },
+      y: { beginAtZero: true },
     },
   };
 
-  // Configuración del gráfico de líneas (Ventas del año)
-  public lineChartType: ChartType = 'line';
-  public lineChartData: ChartData<'line'> = {
-    labels: [
-      '1 ene 2022',
-      '1 mar 2022',
-      '1 may 2022',
-      '1 jul 2022',
-      '1 sep 2022',
-      '1 nov 2022',
-      '1 ene 2023',
-      '1 mar 2023',
-      '1 may 2023',
-      '1 jul 2023',
-      '1 sep 2023',
-      '1 nov 2023',
-    ],
-    datasets: [
-      {
-        data: [120, 150, 180, 200, 190, 170, 160, 180, 220, 210, 190, 170],
-        label: 'Ventas del año',
-        borderColor: '#3b82f6',
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-        tension: 0.4,
-        fill: true,
-      },
-    ],
-  };
-
-  public lineChartOptions: ChartConfiguration['options'] = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        display: false,
-      },
-      title: {
-        display: true,
-        text: 'Ventas del año',
-        font: {
-          size: 14,
-        },
-      },
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        max: 250,
-        ticks: {
-          stepSize: 50,
-        },
-      },
-    },
-  };
-
-  // Configuración del gráfico de dona (Productos más vendidos)
+  /** Gráfico: Dispositivos */
   public doughnutChartType: ChartType = 'doughnut';
   public doughnutChartData: ChartData<'doughnut'> = {
-    labels: ['Madera', 'Metal', 'Plástico', 'Otros'],
+    labels: ['Móvil', 'Escritorio', 'Tablet'],
     datasets: [
       {
-        data: [74.5, 15.2, 6.8, 3.5],
-        backgroundColor: ['#f97316', '#06b6d4', '#8b5cf6', '#eab308'],
+        data: [58, 35, 7],
+        backgroundColor: ['#1e3a8a', '#3b82f6', '#93c5fd'],
         borderWidth: 2,
         borderColor: '#ffffff',
       },
@@ -136,22 +78,49 @@ export class DashboardComponent implements OnInit {
       legend: {
         display: true,
         position: 'right',
-        labels: {
-          usePointStyle: true,
-          padding: 15,
-        },
+        labels: { usePointStyle: true, padding: 15 },
       },
       title: {
         display: true,
-        text: 'Desde qué dispositivos ingresan los usuarios',
-        font: {
-          size: 12,
-        },
+        text: 'Dispositivos de acceso',
+        font: { size: 12 },
       },
     },
   };
 
+  /** Gráfico: Tráfico por mes */
+  public lineChartType: ChartType = 'line';
+  public lineChartData: ChartData<'line'> = {
+    labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+    datasets: [
+      {
+        data: [2800, 3200, 4100, 3800, 4500, 5200, 4800, 5100, 5900, 6200, 5800, 6700],
+        label: 'Visitas',
+        borderColor: '#1e3a8a',
+        backgroundColor: 'rgba(30, 58, 138, 0.1)',
+        tension: 0.4,
+        fill: true,
+      },
+    ],
+  };
+
+  public lineChartOptions: ChartConfiguration['options'] = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      title: {
+        display: true,
+        text: 'Tráfico mensual',
+        font: { size: 14 },
+      },
+    },
+    scales: {
+      y: { beginAtZero: true },
+    },
+  };
+
   ngOnInit(): void {
-    // Aquí se pueden cargar datos desde un servicio
+    // Conectar con analytics real cuando exista backend
   }
 }
