@@ -1,12 +1,25 @@
-import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { AuthService } from '../../../core/services/auth.service';
 
 interface MenuItem {
   label: string;
   route: string;
-  icon?: string;
+  permission?: string;
+  adminOnly?: boolean;
 }
+
+const ALL_MENU_ITEMS: MenuItem[] = [
+  { label: 'Inicio', route: '/admin/dashboard' },
+  { label: 'Productos', route: '/admin/productos', permission: 'manage_products' },
+  { label: 'Categorías', route: '/admin/categorias', permission: 'manage_categories' },
+  { label: 'Destacados', route: '/admin/destacados', permission: 'manage_featured' },
+  { label: 'Cotizaciones', route: '/admin/cotizaciones', permission: 'view_quotes' },
+  { label: 'Reportes', route: '/admin/reportes', permission: 'view_quotes' },
+  { label: 'Políticas', route: '/admin/politicas', adminOnly: true },
+  { label: 'Usuarios', route: '/admin/usuarios', permission: 'manage_users' },
+];
 
 @Component({
   selector: 'app-admin-sidebar',
@@ -16,24 +29,24 @@ interface MenuItem {
   styleUrl: './admin-sidebar.component.scss',
 })
 export class AdminSidebarComponent implements OnInit, OnDestroy {
-  userName: string = 'Usuario1';
-  isMenuOpen: boolean = false;
-  private lastScrollTop: number = 0;
+  isMenuOpen = false;
+  private lastScrollTop = 0;
 
-  menuItems: MenuItem[] = [
-    { label: 'Inicio', route: '/admin/dashboard' },
-    { label: 'Productos', route: '/admin/productos' },
-    { label: 'Categorías', route: '/admin/categorias' },
-    { label: 'Destacados', route: '/admin/destacados' },
-    { label: 'Cotizaciones', route: '/admin/cotizaciones' },
-    { label: 'Reportes', route: '/admin/reportes' },
-    { label: 'Políticas', route: '/admin/politicas' },
-    { label: 'Usuarios', route: '/admin/usuarios' },
-  ];
+  userName = computed(() => this.auth.currentUser()?.name ?? 'Usuario');
+  menuItems = computed(() => {
+    const user = this.auth.currentUser();
+    if (!user) return [];
+    return ALL_MENU_ITEMS.filter((item) => {
+      if (item.permission) return this.auth.hasPermission(item.permission);
+      if (item.adminOnly) return this.auth.hasRole('administrador');
+      return true;
+    });
+  });
+
+  constructor(private readonly auth: AuthService) {}
 
   ngOnInit(): void {
     this.checkScreenSize();
-    localStorage.setItem('ferromaderas_admin_user', this.userName);
   }
 
   ngOnDestroy(): void {

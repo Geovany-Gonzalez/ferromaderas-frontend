@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { NotificationService } from '../../../core/services/notification.service';
+import { UsersService } from '../../../core/services/users.service';
 
 export type UserRole = 'vendedor' | 'administrador';
 
@@ -21,15 +22,15 @@ export interface RolePermission {
 export class UsersAdminComponent {
   fullName = '';
   username = '';
+  email = '';
   phone = '';
   role: UserRole = 'vendedor';
   status: 'activo' | 'inactivo' = 'activo';
   profileImage: string | null = null;
-  /** Contraseña en claro solo en memoria; el backend debe hashearla antes de guardar (ej. bcrypt). */
   temporaryPassword = '';
   showPassword = false;
-  /** true cuando se llega desde "Editar" en el listado */
   isEditingUser = false;
+  editingUserId: string | null = null;
 
   roles: { value: UserRole; label: string }[] = [
     { value: 'vendedor', label: 'Vendedor' },
@@ -60,14 +61,26 @@ export class UsersAdminComponent {
 
   constructor(
     private router: Router,
-    private notification: NotificationService
+    private notification: NotificationService,
+    private usersService: UsersService
   ) {
-    const state = this.router.getCurrentNavigation()?.extras?.state as { editingUser?: { nombre: string; username: string; rol: UserRole; estado: 'activo' | 'inactivo' } } | undefined;
+    const state = this.router.getCurrentNavigation()?.extras?.state as {
+      editingUser?: {
+        id: string;
+        nombre: string;
+        username: string;
+        email?: string;
+        rol: UserRole;
+        estado: 'activo' | 'inactivo';
+      };
+    } | undefined;
     if (state?.editingUser) {
       const u = state.editingUser;
       this.isEditingUser = true;
+      this.editingUserId = u.id;
       this.fullName = u.nombre;
       this.username = u.username;
+      this.email = u.email ?? '';
       this.role = u.rol;
       this.status = u.estado;
     }
@@ -118,17 +131,63 @@ export class UsersAdminComponent {
       return;
     }
     if (!this.username?.trim()) {
-      this.notification.showMessage('El username es requerido.', 'error');
+      this.notification.showMessage('El usuario es requerido.', 'error');
       return;
     }
-    if (!this.isEditingUser && !this.temporaryPassword) {
-      this.notification.showMessage('Genere una contraseña temporal antes de guardar.', 'error');
-      return;
+    if (this.isEditingUser) {
+      this.usersService
+        .update(this.editingUserId!, {
+          name: this.fullName,
+          email: this.email?.trim() || undefined,
+          phone: this.phone || undefined,
+          role: this.role,
+          status: this.status,
+        })
+        .subscribe({
+          next: () => {
+            this.notification.showMessage('Usuario actualizado.', 'success');
+            this.router.navigate(['/admin/usuarios']);
+          },
+          error: (err) =>
+            this.notification.showMessage(
+              err?.error?.message || 'Error al actualizar',
+              'error'
+            ),
+        });
+    } else {
+      if (!this.email?.trim()) {
+        this.notification.showMessage('El correo es requerido.', 'error');
+        return;
+      }
+      if (!this.temporaryPassword) {
+        this.notification.showMessage(
+          'Genere una contraseña temporal antes de guardar.',
+          'error'
+        );
+        return;
+      }
+      this.usersService
+        .create({
+          username: this.username.trim(),
+          email: this.email.trim(),
+          password: this.temporaryPassword,
+          name: this.fullName.trim(),
+          phone: this.phone || undefined,
+          role: this.role,
+          status: this.status,
+        })
+        .subscribe({
+          next: () => {
+            this.notification.showMessage('Usuario creado.', 'success');
+            this.router.navigate(['/admin/usuarios']);
+          },
+          error: (err) =>
+            this.notification.showMessage(
+              err?.error?.message || 'Error al crear usuario',
+              'error'
+            ),
+        });
     }
-    // TODO: enviar al backend; el backend debe hashear la contraseña (ej. bcrypt) antes de guardar.
-    const message = this.isEditingUser ? 'Usuario actualizado.' : 'Usuario creado.';
-    this.notification.showMessage(message, 'success');
-    this.router.navigate(['/admin/usuarios']);
   }
 
   cancel(): void {

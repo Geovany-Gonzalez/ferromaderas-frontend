@@ -161,11 +161,52 @@ export class CatalogService {
     return this.products.filter(p => p.active !== false && !p.featured);
   }
 
+  /** Productos creados por carga masiva que faltan foto, precio y categoría. */
+  getPendingProducts(): Product[] {
+    return this.products.filter(p => p.pendingConfig === true);
+  }
+
+  /** Crea productos desde carga masiva (Excel). Solo código y descripción; el usuario completa foto, precio y categoría. */
+  addProductsFromBulkImport(items: { code: string; name: string }[]): { created: number; skipped: number; errors: string[] } {
+    const errors: string[] = [];
+    let created = 0;
+    let skipped = 0;
+    const existingCodes = new Set(this.products.map(p => p.code.trim().toLowerCase()));
+    for (const item of items) {
+      const code = String(item.code ?? '').trim();
+      const name = String(item.name ?? '').trim();
+      if (!code) {
+        errors.push(`Fila con descripción "${name?.slice(0, 30) || 'vacía'}...": código vacío`);
+        continue;
+      }
+      const codeKey = code.toLowerCase();
+      if (existingCodes.has(codeKey)) {
+        skipped++;
+        continue;
+      }
+      existingCodes.add(codeKey);
+      this.addProduct({
+        code,
+        name: name || code,
+        categoryId: '',
+        price: 0,
+        imageUrl: '',
+        description: '',
+        featured: false,
+        active: false,
+        pendingConfig: true,
+      });
+      created++;
+    }
+    return { created, skipped, errors };
+  }
+
   addProduct(product: Omit<Product, 'id'>): Product {
     const newProduct: Product = {
       ...product,
       id: this.generateId('p'),
-      active: product.active !== false
+      active: product.active !== false,
+      pendingConfig: product.pendingConfig ?? false,
     };
     this.products.push(newProduct);
     this.saveProducts();

@@ -2,6 +2,28 @@
   <div class="list-section">
     <h2 class="list-title">Listado de productos</h2>
 
+    <div class="view-tabs">
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="viewMode === 'todos'"
+        (click)="viewMode = 'todos'"
+      >
+        Todos
+      </button>
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="viewMode === 'pendientes'"
+        (click)="viewMode = 'pendientes'"
+      >
+        Pendientes de configurar
+        @if (pendingCount > 0) {
+          <span class="tab-badge">{{ pendingCount }}</span>
+        }
+      </button>
+    </div>
+
     <div class="toolbar">
       <a [routerLink]="['/admin/dashboard']" class="btn-home" title="Inicio" aria-label="Inicio">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -16,11 +38,21 @@
         </svg>
         <input type="text" class="search-input" placeholder="Ingresar producto" [(ngModel)]="searchTerm" />
       </div>
-      <select class="filter-estado" [(ngModel)]="filterEstado" title="Filtrar por estado">
-        <option value="todos">Todos</option>
-        <option value="activo">Activos</option>
-        <option value="inactivo">Inactivos</option>
-      </select>
+      @if (viewMode === 'todos') {
+        <select class="filter-estado" [(ngModel)]="filterEstado" title="Filtrar por estado">
+          <option value="todos">Todos</option>
+          <option value="activo">Activos</option>
+          <option value="inactivo">Inactivos</option>
+        </select>
+      }
+      <button type="button" class="btn-bulk" (click)="openBulkImport()" title="Carga masiva Excel">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        Carga masiva
+      </button>
       <button type="button" class="btn-add" (click)="addProduct()" title="Agregar producto" aria-label="Agregar producto">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <line x1="12" y1="5" x2="12" y2="19"/>
@@ -44,9 +76,9 @@
         <tbody>
           <tr *ngFor="let product of filteredProducts; trackBy: trackById">
             <td class="col-code" data-label="Código">{{ product.code }}</td>
-            <td class="col-category" data-label="Categoría">{{ getCategoryName(product.categoryId) }}</td>
+            <td class="col-category" data-label="Categoría">{{ (product.categoryId && getCategoryName(product.categoryId)) || (product.pendingConfig ? 'Pendiente' : '—') }}</td>
             <td class="col-name" data-label="Nombre">{{ product.name }}</td>
-            <td class="col-price" data-label="Precio">Q{{ product.price }}</td>
+            <td class="col-price" data-label="Precio">{{ product.pendingConfig ? 'Pendiente' : ('Q' + product.price) }}</td>
             <td class="col-estado" data-label="Estado">
               <span class="badge" [class.badge-activo]="product.active !== false" [class.badge-inactivo]="product.active === false">
                 {{ product.active !== false ? 'Activo' : 'Inactivo' }}
@@ -75,7 +107,55 @@
           </tr>
         </tbody>
       </table>
-      <p *ngIf="filteredProducts.length === 0" class="empty-message">No hay productos o no coinciden con la búsqueda.</p>
+      <p *ngIf="filteredProducts.length === 0" class="empty-message">
+        {{ viewMode === 'pendientes' ? 'No hay productos pendientes de configurar.' : 'No hay productos o no coinciden con la búsqueda.' }}
+      </p>
     </div>
   </div>
+
+  <!-- Modal Carga masiva -->
+  @if (showBulkImport) {
+    <div class="modal-overlay" (click)="closeBulkImport()">
+      <div class="modal-dialog bulk-modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3 class="modal-title">Carga masiva de productos</h3>
+          <button type="button" class="modal-close" (click)="closeBulkImport()" aria-label="Cerrar">×</button>
+        </div>
+        <div class="modal-body">
+          <p class="bulk-help">
+            Sube un Excel (.xlsx, .xls) o CSV con columnas <strong>Código</strong> y <strong>Descripción</strong>.
+            Se crearán productos pendientes para que agregues foto, precio y categoría.
+          </p>
+          <label class="file-label">
+            <input type="file" accept=".xlsx,.xls,.csv" (change)="onBulkFileSelect($event)" />
+            {{ bulkFile ? bulkFile.name : 'Seleccionar archivo' }}
+          </label>
+          @if (bulkPreview.length > 0) {
+            <div class="bulk-preview">
+              <p class="bulk-preview-title">Vista previa ({{ bulkPreview.length }} filas):</p>
+              <div class="bulk-preview-list">
+                @for (item of bulkPreview.slice(0, 10); track item.code) {
+                  <div class="bulk-preview-row">{{ item.code }} — {{ item.name }}</div>
+                }
+                @if (bulkPreview.length > 10) {
+                  <div class="bulk-preview-more">... y {{ bulkPreview.length - 10 }} más</div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-cancel" (click)="closeBulkImport()">Cancelar</button>
+          <button
+            type="button"
+            class="btn btn-primary"
+            [disabled]="bulkPreview.length === 0 || bulkLoading"
+            (click)="confirmBulkImport()"
+          >
+            {{ bulkLoading ? 'Importando...' : 'Importar ' + bulkPreview.length + ' producto(s)' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
 </div>

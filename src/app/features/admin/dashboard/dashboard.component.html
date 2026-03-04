@@ -1,6 +1,11 @@
 <div class="dashboard-container">
   <h1 class="dashboard-title">Estadísticas del sitio web</h1>
 
+  @if (loading) {
+    <p class="loading-message">Cargando estadísticas...</p>
+  } @else if (error) {
+    <p class="error-message">{{ error }}</p>
+  } @else {
   <div class="stats-grid">
     <div class="stat-card">
       <h3 class="stat-title">Visitas totales</h3>
@@ -67,4 +72,5 @@
       </div>
     </div>
   </div>
+  }
 </div>

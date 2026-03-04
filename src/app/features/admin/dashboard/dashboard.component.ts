@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartData, ChartType } from 'chart.js';
 
+import { StatisticsService } from '../../../core/services/statistics.service';
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -12,27 +14,24 @@ import { ChartConfiguration, ChartData, ChartType } from 'chart.js';
 })
 export class DashboardComponent implements OnInit {
   /** Estadísticas del sitio web */
-  visitasTotales = 12480;
-  vistasPagina = 38420;
-  paginasSesion = 3.1;
-  rebotePorcentaje = 42;
+  visitasTotales = 0;
+  vistasPagina = 0;
+  paginasSesion = 0;
+  rebotePorcentaje = 0;
 
   /** Páginas más visitadas */
-  paginasMasVisitadas: { pagina: string; vistas: number }[] = [
-    { pagina: 'Inicio', vistas: 8520 },
-    { pagina: 'Categorías', vistas: 6120 },
-    { pagina: 'Carrito', vistas: 3240 },
-    { pagina: 'Ubicación', vistas: 2180 },
-    { pagina: 'Políticas', vistas: 960 },
-  ];
+  paginasMasVisitadas: { pagina: string; vistas: number }[] = [];
+
+  loading = true;
+  error: string | null = null;
 
   /** Gráfico: Visitas por día (última semana) */
   public barChartType: ChartType = 'bar';
   public barChartData: ChartData<'bar'> = {
-    labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+    labels: [],
     datasets: [
       {
-        data: [1420, 1680, 1520, 1890, 2100, 1840, 2030],
+        data: [],
         label: 'Visitas',
         backgroundColor: '#1e3a8a',
         borderColor: '#1e40af',
@@ -60,10 +59,10 @@ export class DashboardComponent implements OnInit {
   /** Gráfico: Dispositivos */
   public doughnutChartType: ChartType = 'doughnut';
   public doughnutChartData: ChartData<'doughnut'> = {
-    labels: ['Móvil', 'Escritorio', 'Tablet'],
+    labels: [],
     datasets: [
       {
-        data: [58, 35, 7],
+        data: [],
         backgroundColor: ['#1e3a8a', '#3b82f6', '#93c5fd'],
         borderWidth: 2,
         borderColor: '#ffffff',
@@ -91,10 +90,10 @@ export class DashboardComponent implements OnInit {
   /** Gráfico: Tráfico por mes */
   public lineChartType: ChartType = 'line';
   public lineChartData: ChartData<'line'> = {
-    labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+    labels: [],
     datasets: [
       {
-        data: [2800, 3200, 4100, 3800, 4500, 5200, 4800, 5100, 5900, 6200, 5800, 6700],
+        data: [],
         label: 'Visitas',
         borderColor: '#1e3a8a',
         backgroundColor: 'rgba(30, 58, 138, 0.1)',
@@ -120,7 +119,81 @@ export class DashboardComponent implements OnInit {
     },
   };
 
+  constructor(private readonly statistics: StatisticsService) {}
+
   ngOnInit(): void {
-    // Conectar con analytics real cuando exista backend
+    this.statistics.getDashboard().subscribe({
+      next: (data) => this.applyDashboardData(data),
+      error: (err) => {
+        this.error = 'No se pudieron cargar las estadísticas.';
+        this.loading = false;
+        console.error('Dashboard stats error:', err);
+      },
+    });
+  }
+
+  private applyDashboardData(data: {
+    visitasTotales: number;
+    vistasPagina: number;
+    paginasSesion: number;
+    rebotePorcentaje: number;
+    paginasMasVisitadas: { pagina: string; vistas: number }[];
+    visitasPorDia: { date: string; visits: number }[];
+    dispositivos: { device: string; percentage: number }[];
+    traficoMensual: { month: string; visits: number }[];
+  }): void {
+    this.visitasTotales = data.visitasTotales;
+    this.vistasPagina = data.vistasPagina;
+    this.paginasSesion = data.paginasSesion;
+    this.rebotePorcentaje = data.rebotePorcentaje;
+    this.paginasMasVisitadas = data.paginasMasVisitadas;
+
+    this.barChartData = {
+      ...this.barChartData,
+      labels: data.visitasPorDia.map((d) =>
+        /^\d{8}$/.test(d.date)
+          ? this.formatDateLabel(d.date)
+          : d.date,
+      ),
+      datasets: [
+        {
+          ...this.barChartData.datasets[0],
+          data: data.visitasPorDia.map((d) => d.visits),
+        },
+      ],
+    };
+
+    this.doughnutChartData = {
+      ...this.doughnutChartData,
+      labels: data.dispositivos.map((d) => d.device),
+      datasets: [
+        {
+          ...this.doughnutChartData.datasets[0],
+          data: data.dispositivos.map((d) => d.percentage),
+        },
+      ],
+    };
+
+    this.lineChartData = {
+      ...this.lineChartData,
+      labels: data.traficoMensual.map((d) => d.month),
+      datasets: [
+        {
+          ...this.lineChartData.datasets[0],
+          data: data.traficoMensual.map((d) => d.visits),
+        },
+      ],
+    };
+
+    this.loading = false;
+  }
+
+  private formatDateLabel(yyyymmdd: string): string {
+    const y = parseInt(yyyymmdd.slice(0, 4), 10);
+    const m = parseInt(yyyymmdd.slice(4, 6), 10) - 1;
+    const d = parseInt(yyyymmdd.slice(6, 8), 10);
+    const date = new Date(y, m, d);
+    const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    return `${days[date.getDay()]} ${d}`;
   }
 }

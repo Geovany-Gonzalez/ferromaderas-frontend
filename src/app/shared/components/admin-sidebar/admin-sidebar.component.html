@@ -15,7 +15,7 @@
   </div>
   
   <div class="avatar-section">
-    <p class="user-name">{{ userName }}</p>
+    <p class="user-name">{{ userName() }}</p>
     <div class="user-avatar">
       <img src="/assets/images/persona.png" alt="Usuario" />
       <span class="online-indicator"></span>
@@ -26,7 +26,7 @@
     <h3 class="menu-title">Accesos rápidos</h3>
     <nav class="menu-nav">
       <a
-        *ngFor="let item of menuItems"
+        *ngFor="let item of menuItems()"
         [routerLink]="item.route"
         routerLinkActive="active"
         class="menu-item"

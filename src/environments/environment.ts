@@ -6,4 +6,6 @@ export const environment = {
   production: false,
   /** ID del contenedor GTM. Vacío en desarrollo para no enviar datos a analytics. */
   gtmId: '',
+  /** URL base de la API NestJS (feromaderas-api) */
+  apiUrl: 'http://localhost:3001/api',
 };

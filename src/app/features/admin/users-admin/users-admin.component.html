@@ -7,7 +7,7 @@
         <button type="button" class="btn btn-cancel" (click)="cancel()">Cancelar</button>
       </div>
     </div>
-    <p class="page-subtitle text-black">Solo Gerencia puede crear usuarios.</p>
+    <p class="page-subtitle text-black">Solo Admin/Gerencia puede crear usuarios.</p>
   </div>
 
   <div class="form-card card">
@@ -28,15 +28,29 @@
         </div>
 
         <div class="form-group">
-          <label for="username">Username:</label>
+          <label for="username">Usuario:</label>
           <input
             type="text"
             id="username"
             [(ngModel)]="username"
             placeholder="Ej: jperez"
             class="form-input"
+            [readonly]="isEditingUser"
           />
           <span class="field-hint">Debe ser único. Sin espacios.</span>
+        </div>
+
+        <div class="form-group">
+          <label for="email">Correo electrónico:</label>
+          <input
+            type="email"
+            id="email"
+            [(ngModel)]="email"
+            placeholder="Ej: jperez@ferromaderas.com"
+            class="form-input"
+            [readonly]="isEditingUser"
+          />
+          <span class="field-hint" *ngIf="!isEditingUser">Requerido. Se usa para recuperar contraseña y enviar credenciales.</span>
         </div>
 
         <div class="form-group">
@@ -90,7 +104,7 @@
       </div>
     </div>
 
-    <!-- Sección 2: Seguridad (solo al crear; al editar se usa "Cambiar contraseña" del listado) -->
+    <!-- Sección 2: Seguridad (solo al crear) -->
     <div class="form-section" *ngIf="!isEditingUser">
       <h2 class="section-title title-centered">Seguridad</h2>
 
@@ -113,6 +127,7 @@
             </button>
           </div>
         </div>
+        <span class="field-hint">Se enviará un correo con credenciales y enlace para cambiar contraseña (obligatorio).</span>
       </div>
     </div>
 

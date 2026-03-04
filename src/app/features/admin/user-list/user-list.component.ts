@@ -1,20 +1,14 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { NotificationService } from '../../../core/services/notification.service';
-
-export type UserRole = 'vendedor' | 'administrador';
-export type UserStatus = 'activo' | 'inactivo';
-
-export interface ListUser {
-  id: string;
-  username: string;
-  nombre: string;
-  rol: UserRole;
-  ultimoAcceso: string;
-  estado: UserStatus;
-}
+import {
+  UsersService,
+  type ListUser,
+  type UserRole,
+  type UserStatus,
+} from '../../../core/services/users.service';
 
 @Component({
   selector: 'app-user-list',
@@ -23,21 +17,19 @@ export interface ListUser {
   templateUrl: './user-list.component.html',
   styleUrl: './user-list.component.scss',
 })
-export class UserListComponent {
+export class UserListComponent implements OnInit {
   searchTerm = '';
   filterRol: UserRole | '' = '';
   filterEstado: UserStatus | '' = '';
+  users: ListUser[] = [];
+  loading = true;
 
-  /** Modal Ver usuario */
   viewModalUser: ListUser | null = null;
-  /** Popup cambiar contraseña */
-  passwordModalUser: ListUser | null = null;
-  generatedPassword = '';
-  showPasswordInModal = false;
 
   constructor(
     private router: Router,
-    private notification: NotificationService
+    private notification: NotificationService,
+    private usersService: UsersService
   ) {}
 
   roles: { value: UserRole | ''; label: string }[] = [
@@ -52,15 +44,38 @@ export class UserListComponent {
     { value: 'inactivo', label: 'Inactivo' },
   ];
 
-  /** Datos de ejemplo; reemplazar por llamada al servicio */
-  users: ListUser[] = [
-    { id: '1', username: 'juan1', nombre: 'Juan Perez', rol: 'administrador', ultimoAcceso: '25/01/2026', estado: 'activo' },
-    { id: '2', username: 'pedro1', nombre: 'Pedro Catalan', rol: 'vendedor', ultimoAcceso: '22/02/2026', estado: 'activo' },
-  ];
+  ngOnInit(): void {
+    this.loadUsers();
+  }
+
+  loadUsers(): void {
+    this.loading = true;
+    this.usersService
+      .list({
+        search: this.searchTerm || undefined,
+        rol: this.filterRol || undefined,
+        estado: this.filterEstado || undefined,
+      })
+      .subscribe({
+        next: (data) => {
+          this.users = data;
+          this.loading = false;
+        },
+        error: (err) => {
+          this.loading = false;
+          this.notification.showMessage(
+            err?.error?.message || 'Error al cargar usuarios',
+            'error'
+          );
+        },
+      });
+  }
 
   get filteredUsers(): ListUser[] {
     return this.users.filter((u) => {
-      const matchSearch = !this.searchTerm || u.username.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+      const matchSearch =
+        !this.searchTerm ||
+        u.username.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
         u.nombre.toLowerCase().includes(this.searchTerm.toLowerCase());
       const matchRol = !this.filterRol || u.rol === this.filterRol;
       const matchEstado = !this.filterEstado || u.estado === this.filterEstado;
@@ -77,56 +92,42 @@ export class UserListComponent {
   }
 
   editUser(user: ListUser): void {
-    this.router.navigate(['/admin/usuarios/crear'], { state: { editingUser: user } });
+    this.router.navigate(['/admin/usuarios/crear'], {
+      state: {
+        editingUser: {
+          id: user.id,
+          nombre: user.nombre,
+          username: user.username,
+          email: user.email,
+          rol: user.rol,
+          estado: user.estado,
+        },
+      },
+    });
   }
 
   toggleEstado(user: ListUser): void {
     const accion = user.estado === 'activo' ? 'desactivar' : 'activar';
-    this.notification.confirm('Confirmar', `¿${accion.charAt(0).toUpperCase() + accion.slice(1)} a ${user.nombre}?`).then((ok) => {
-      if (ok) {
-        user.estado = user.estado === 'activo' ? 'inactivo' : 'activo';
-        this.notification.showMessage(`Estado de ${user.nombre} actualizado a ${user.estado === 'activo' ? 'Activo' : 'Inactivo'}.`, 'success');
-      }
-    });
-  }
-
-  changePassword(user: ListUser): void {
-    this.passwordModalUser = user;
-    this.generatedPassword = '';
-    this.showPasswordInModal = false;
-  }
-
-  closePasswordModal(): void {
-    this.passwordModalUser = null;
-    this.generatedPassword = '';
-  }
-
-  generatePasswordForModal(): void {
-    const length = 12;
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%';
-    let pass = '';
-    for (let i = 0; i < length; i++) {
-      pass += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    this.generatedPassword = pass;
-  }
-
-  copyPasswordModal(): void {
-    if (!this.generatedPassword) return;
-    navigator.clipboard.writeText(this.generatedPassword);
-    this.notification.showMessage('Contraseña copiada al portapapeles.', 'success');
-  }
-
-  confirmPasswordChange(): void {
-    if (!this.passwordModalUser || !this.generatedPassword) return;
-    const msg = `¿Confirmar que desea guardar esta nueva contraseña para ${this.passwordModalUser.nombre}? El usuario deberá usarla en el próximo inicio de sesión.`;
-    this.notification.confirm('Guardar contraseña', msg).then((ok) => {
-      if (ok) {
-        // TODO: enviar al backend para persistir (hashear y guardar).
-        this.notification.showMessage('Contraseña actualizada. Conectar con el backend para persistir.', 'success');
-        this.closePasswordModal();
-      }
-    });
+    this.notification
+      .confirm('Confirmar', `¿${accion.charAt(0).toUpperCase() + accion.slice(1)} a ${user.nombre}?`)
+      .then((ok) => {
+        if (!ok) return;
+        const newStatus = user.estado === 'activo' ? 'inactivo' : 'activo';
+        this.usersService.update(user.id, { status: newStatus }).subscribe({
+          next: () => {
+            user.estado = newStatus;
+            this.notification.showMessage(
+              `Estado de ${user.nombre} actualizado.`,
+              'success'
+            );
+          },
+          error: (err) =>
+            this.notification.showMessage(
+              err?.error?.message || 'Error al actualizar',
+              'error'
+            ),
+        });
+      });
   }
 
   rolLabel(rol: UserRole): string {

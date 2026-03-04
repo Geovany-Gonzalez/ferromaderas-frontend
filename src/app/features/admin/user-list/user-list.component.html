@@ -70,12 +70,6 @@
                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
               </svg>
             </button>
-            <button type="button" class="btn-action btn-password" (click)="changePassword(user)" title="Cambiar contraseña">
-              <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-              </svg>
-            </button>
             <button type="button" class="btn-action btn-toggle" (click)="toggleEstado(user)" [title]="user.estado === 'activo' ? 'Desactivar' : 'Activar'">
               <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="10"/>
@@ -133,34 +127,3 @@
   </div>
 </div>
 
-<!-- Modal Cambiar contraseña -->
-<div class="modal-overlay" *ngIf="passwordModalUser" (click)="closePasswordModal()">
-  <div class="modal-dialog" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h3 class="modal-title">Cambiar contraseña — {{ passwordModalUser.nombre }}</h3>
-      <button type="button" class="modal-close" (click)="closePasswordModal()" aria-label="Cerrar">×</button>
-    </div>
-    <div class="modal-body">
-      <p class="modal-user-info">{{ passwordModalUser.username }}</p>
-      <div class="password-display">
-        <label class="password-label">Nueva contraseña:</label>
-        <div class="password-row">
-          <span class="password-value">{{ generatedPassword ? (showPasswordInModal ? generatedPassword : '••••••••••••') : '—' }}</span>
-          <div class="password-buttons">
-            <button type="button" class="btn-small" (click)="showPasswordInModal = !showPasswordInModal" [disabled]="!generatedPassword">
-              {{ showPasswordInModal ? 'Ocultar' : 'Mostrar' }}
-            </button>
-            <button type="button" class="btn-small" (click)="copyPasswordModal()" [disabled]="!generatedPassword">Copiar</button>
-            <button type="button" class="btn-small btn-generate-one" (click)="generatePasswordForModal()">Generar</button>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer" [class.single-button]="!generatedPassword">
-      <button type="button" class="btn btn-close" (click)="closePasswordModal()">Cerrar</button>
-      <button type="button" class="btn btn-save-password" (click)="confirmPasswordChange()" [disabled]="!generatedPassword" *ngIf="generatedPassword">
-        Guardar nueva contraseña
-      </button>
-    </div>
-  </div>
-</div>

@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-admin-header',
@@ -10,15 +11,16 @@ import { Router } from '@angular/router';
   styleUrl: './admin-header.component.scss',
 })
 export class AdminHeaderComponent {
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private readonly auth: AuthService
+  ) {}
 
   goToPublicSite(): void {
-    // Redirige al sitio público
     this.router.navigate(['/']);
   }
 
   logout(): void {
-    // Aquí se implementará la lógica de logout
-    this.router.navigate(['/admin-login']);
+    this.auth.logout();
   }
 }

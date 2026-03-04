@@ -130,7 +130,7 @@ export class ProductFormComponent implements OnInit {
       }
     }
     if (this.isEditing && this.productForm.id) {
-      this.catalogService.updateProduct(this.productForm.id, {
+      const updates: Partial<Product> = {
         code: this.productForm.code,
         name: this.productForm.name,
         categoryId: this.productForm.categoryId,
@@ -139,7 +139,11 @@ export class ProductFormComponent implements OnInit {
         description: this.productForm.description,
         featured: this.productForm.featured,
         active: this.productForm.active,
-      });
+      };
+      if (this.productForm.pendingConfig) {
+        updates.pendingConfig = false;
+      }
+      this.catalogService.updateProduct(this.productForm.id, updates);
     } else {
       this.catalogService.addProduct({
         code: this.productForm.code!,

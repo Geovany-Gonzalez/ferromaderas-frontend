@@ -6,4 +6,6 @@ export const environment = {
   production: true,
   /** ID del contenedor GTM para producción. Reemplazar GTM-XXXXXX por tu ID real. */
   gtmId: 'GTM-XXXXXX',
+  /** URL base de la API en producción */
+  apiUrl: '/api',
 };

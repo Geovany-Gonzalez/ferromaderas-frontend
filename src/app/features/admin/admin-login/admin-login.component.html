@@ -18,12 +18,17 @@
       <div class="form-section">
         <h2 class="form-title">Ingresa Los siguientes datos:</h2>
         
+        @if (error) {
+          <p class="login-error">{{ error }}</p>
+        }
         <div class="form-group">
           <label class="form-label">Usuario</label>
           <input 
             type="text" 
             class="form-input" 
-            placeholder="ingresa tu usuario"
+            placeholder="Usuario"
+            [(ngModel)]="username"
+            [disabled]="loading"
           />
         </div>
 
@@ -33,12 +38,18 @@
             type="password" 
             class="form-input" 
             placeholder="ingresa contraseña"
+            [(ngModel)]="password"
+            [disabled]="loading"
           />
         </div>
 
-        <p class="forgot-password">Si olvidaste tu contraseña contacta al administrador</p>
+        <button type="button" class="forgot-password-link" (click)="openForgotModal()">
+          ¿Olvidaste tu contraseña?
+        </button>
 
-        <button class="login-button" type="button">Ingresar</button>
+        <button class="login-button" type="button" (click)="onSubmit()" [disabled]="loading">
+          {{ loading ? 'Ingresando...' : 'Ingresar' }}
+        </button>
       </div>
     </div>
 
@@ -47,6 +58,52 @@
       © 2026 Ferromaderas Todos los derechos reservados.
     </div>
   </div>
+
+  <!-- Modal Olvidé contraseña -->
+  @if (showForgotPassword) {
+    <div class="modal-overlay" (click)="closeForgotModal()">
+      <div class="modal-dialog" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3 class="modal-title">Recuperar contraseña</h3>
+          <button type="button" class="modal-close" (click)="closeForgotModal()" aria-label="Cerrar">×</button>
+        </div>
+        <div class="modal-body">
+          @if (forgotSuccess) {
+            <div class="forgot-success-box">
+              <p class="forgot-success-icon">✓</p>
+              <p class="forgot-success-title">Correo enviado</p>
+              <p class="forgot-success-text">{{ forgotSuccess }}</p>
+            </div>
+          } @else {
+            <p class="modal-text">Ingresa el correo que usaste al registrarte. Te enviaremos una contraseña temporal.</p>
+            @if (forgotError) {
+              <p class="forgot-error">{{ forgotError }}</p>
+            }
+            <div class="form-group">
+              <label class="form-label">Correo electrónico</label>
+              <input
+                type="email"
+                class="form-input"
+                placeholder="tu@correo.com"
+                [(ngModel)]="forgotEmail"
+                [disabled]="forgotLoading"
+              />
+            </div>
+          }
+        </div>
+        <div class="modal-footer">
+          @if (forgotSuccess) {
+            <button type="button" class="btn btn-primary" (click)="closeForgotModal()">Cerrar</button>
+          } @else {
+            <button type="button" class="btn btn-cancel" (click)="closeForgotModal()">Cancelar</button>
+            <button type="button" class="btn btn-primary" (click)="onForgotPassword()" [disabled]="forgotLoading || !isForgotEmailValid">
+              {{ forgotLoading ? 'Enviando...' : 'Enviar' }}
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+  }
 
   <!-- Panel derecho con imagen estática -->
   <div class="image-panel">

@@ -8,4 +8,6 @@ export interface Product {
   featured?: boolean;
   description?: string;
   active?: boolean;
+  /** true = creado por carga masiva, falta foto, precio y categoría */
+  pendingConfig?: boolean;
 }
