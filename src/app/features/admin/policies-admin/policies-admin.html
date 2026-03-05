@@ -69,3 +69,39 @@
     </ng-container>
   </div>
 </div>
+
+<!-- Modal Vista previa (datos del formulario, no del sitio real) -->
+<div class="preview-modal-overlay" *ngIf="showPreviewModal" (click)="closePreview()">
+  <div class="preview-modal" (click)="$event.stopPropagation()">
+    <div class="preview-modal-header">
+      <h3>Vista previa</h3>
+      <span class="preview-badge">Entorno controlado — muestra lo que verás al guardar</span>
+      <button type="button" class="preview-close" (click)="closePreview()" aria-label="Cerrar">×</button>
+    </div>
+    <div class="preview-modal-body">
+      <div class="preview-policies">
+        <section class="preview-title">
+          <h1>{{ policyPage.title }}</h1>
+        </section>
+        <section class="preview-subtitle">
+          <p>{{ policyPage.subtitle }}</p>
+        </section>
+        <section class="preview-grid">
+          <div class="preview-card" *ngFor="let policy of policies">
+            <div class="preview-card-header">
+              <h2>{{ policy.title }}</h2>
+            </div>
+            <div class="preview-card-content">
+              <div class="preview-icon">
+                <img [src]="policy.icon" [alt]="policy.title" />
+              </div>
+              <ul class="preview-list">
+                <li *ngFor="let item of policy.content">{{ item }}</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+</div>

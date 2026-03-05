@@ -10,4 +10,6 @@ export interface Product {
   active?: boolean;
   /** true = creado por carga masiva, falta foto, precio y categoría */
   pendingConfig?: boolean;
+  /** Existencia / inventario teórico (Dichara) */
+  stock?: number;
 }

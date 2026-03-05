@@ -12,7 +12,7 @@ export interface AuthUser {
   username: string;
   name: string;
   email: string;
-  role: 'vendedor' | 'administrador';
+  role: 'vendedor' | 'administrador' | 'gerente' | 'editor';
   permissions: string[];
 }
 
@@ -77,7 +77,7 @@ export class AuthService {
     return perms.includes(slug);
   }
 
-  hasRole(role: 'vendedor' | 'administrador'): boolean {
+  hasRole(role: string): boolean {
     return this.userData()?.role === role;
   }
 

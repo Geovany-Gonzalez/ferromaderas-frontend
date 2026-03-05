@@ -7,7 +7,6 @@ interface MenuItem {
   label: string;
   route: string;
   permission?: string;
-  adminOnly?: boolean;
 }
 
 const ALL_MENU_ITEMS: MenuItem[] = [
@@ -17,7 +16,7 @@ const ALL_MENU_ITEMS: MenuItem[] = [
   { label: 'Destacados', route: '/admin/destacados', permission: 'manage_featured' },
   { label: 'Cotizaciones', route: '/admin/cotizaciones', permission: 'view_quotes' },
   { label: 'Reportes', route: '/admin/reportes', permission: 'view_quotes' },
-  { label: 'Políticas', route: '/admin/politicas', adminOnly: true },
+  { label: 'Políticas', route: '/admin/politicas', permission: 'manage_policies' },
   { label: 'Usuarios', route: '/admin/usuarios', permission: 'manage_users' },
 ];
 
@@ -38,7 +37,6 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
     if (!user) return [];
     return ALL_MENU_ITEMS.filter((item) => {
       if (item.permission) return this.auth.hasPermission(item.permission);
-      if (item.adminOnly) return this.auth.hasRole('administrador');
       return true;
     });
   });

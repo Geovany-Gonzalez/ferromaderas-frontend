@@ -166,25 +166,29 @@ export class CatalogService {
     return this.products.filter(p => p.pendingConfig === true);
   }
 
-  /** Crea productos desde carga masiva (Excel). Solo código y descripción; el usuario completa foto, precio y categoría. */
-  addProductsFromBulkImport(items: { code: string; name: string }[]): { created: number; skipped: number; errors: string[] } {
+  /** Crea o actualiza productos desde carga masiva (Excel). Código, descripción y existencia; el usuario completa foto, precio y categoría. */
+  addProductsFromBulkImport(items: { code: string; name: string; stock?: number }[]): { created: number; updated: number; skipped: number; errors: string[] } {
     const errors: string[] = [];
     let created = 0;
+    let updated = 0;
     let skipped = 0;
-    const existingCodes = new Set(this.products.map(p => p.code.trim().toLowerCase()));
+    const existingByCode = new Map(this.products.map(p => [p.code.trim().toLowerCase(), p]));
     for (const item of items) {
       const code = String(item.code ?? '').trim();
       const name = String(item.name ?? '').trim();
+      const stock = typeof item.stock === 'number' ? item.stock : 0;
       if (!code) {
         errors.push(`Fila con descripción "${name?.slice(0, 30) || 'vacía'}...": código vacío`);
         continue;
       }
       const codeKey = code.toLowerCase();
-      if (existingCodes.has(codeKey)) {
-        skipped++;
+      const existing = existingByCode.get(codeKey);
+      if (existing) {
+        this.updateProduct(existing.id, { stock, name: name || existing.name });
+        updated++;
         continue;
       }
-      existingCodes.add(codeKey);
+      existingByCode.set(codeKey, { id: '', code, name } as Product);
       this.addProduct({
         code,
         name: name || code,
@@ -195,10 +199,11 @@ export class CatalogService {
         featured: false,
         active: false,
         pendingConfig: true,
+        stock,
       });
       created++;
     }
-    return { created, skipped, errors };
+    return { created, updated, skipped, errors };
   }
 
   addProduct(product: Omit<Product, 'id'>): Product {

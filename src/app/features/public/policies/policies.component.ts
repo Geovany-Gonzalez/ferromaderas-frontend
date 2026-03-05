@@ -18,7 +18,7 @@ export class PoliciesComponent implements OnInit, OnDestroy {
   public policyPage: PolicyPage | null = null;
 
   ngOnInit(): void {
-    this.policyService.getPolicyPage()
+    this.policyService.loadPolicyPage()
       .pipe(takeUntil(this.destroy$))
       .subscribe(page => {
         this.policyPage = page;

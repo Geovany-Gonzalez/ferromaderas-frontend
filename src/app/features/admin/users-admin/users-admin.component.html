@@ -7,7 +7,7 @@
         <button type="button" class="btn btn-cancel" (click)="cancel()">Cancelar</button>
       </div>
     </div>
-    <p class="page-subtitle text-black">Solo Admin/Gerencia puede crear usuarios.</p>
+    <p class="page-subtitle text-black">Solo el Administrador puede crear y gestionar usuarios.</p>
   </div>
 
   <div class="form-card card">
@@ -33,11 +33,13 @@
             type="text"
             id="username"
             [(ngModel)]="username"
+            (ngModelChange)="username = sanitizeUsername($event)"
             placeholder="Ej: jperez"
             class="form-input"
             [readonly]="isEditingUser"
+            autocomplete="username"
           />
-          <span class="field-hint">Debe ser único. Sin espacios.</span>
+          <span class="field-hint">Solo minúsculas, números, guión bajo, punto o guión. Sin espacios.</span>
         </div>
 
         <div class="form-group">
@@ -55,13 +57,18 @@
 
         <div class="form-group">
           <label for="phone">Teléfono:</label>
-          <input
-            type="text"
-            id="phone"
-            [(ngModel)]="phone"
-            placeholder="Ej: +502 1234-5678"
-            class="form-input"
-          />
+          <div class="phone-input-wrap">
+            <span class="phone-prefix">+502</span>
+            <input
+              type="tel"
+              id="phone"
+              [(ngModel)]="phone"
+              placeholder="1234-5678"
+              class="form-input phone-input"
+              maxlength="12"
+            />
+          </div>
+          <span class="field-hint">Solo ingresa tu número. El código +502 ya está incluido.</span>
         </div>
 
         <div class="form-group">
@@ -140,6 +147,28 @@
           <h3 class="permission-role-title">Vendedor</h3>
           <ul class="permission-list">
             <li *ngFor="let p of vendedorPermissions" class="permission-item">
+              <span class="permission-icon" [class.allowed]="p.allowed" [class.denied]="!p.allowed">
+                {{ p.allowed ? '✓' : '✕' }}
+              </span>
+              <span class="permission-label">{{ p.label }}</span>
+            </li>
+          </ul>
+        </div>
+        <div class="permission-column">
+          <h3 class="permission-role-title">Gerente</h3>
+          <ul class="permission-list">
+            <li *ngFor="let p of gerentePermissions" class="permission-item">
+              <span class="permission-icon" [class.allowed]="p.allowed" [class.denied]="!p.allowed">
+                {{ p.allowed ? '✓' : '✕' }}
+              </span>
+              <span class="permission-label">{{ p.label }}</span>
+            </li>
+          </ul>
+        </div>
+        <div class="permission-column">
+          <h3 class="permission-role-title">Editor</h3>
+          <ul class="permission-list">
+            <li *ngFor="let p of editorPermissions" class="permission-item">
               <span class="permission-icon" [class.allowed]="p.allowed" [class.denied]="!p.allowed">
                 {{ p.allowed ? '✓' : '✕' }}
               </span>

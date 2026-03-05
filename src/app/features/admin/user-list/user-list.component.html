@@ -18,12 +18,13 @@
         class="search-input"
         placeholder="username"
         [(ngModel)]="searchTerm"
+        (ngModelChange)="onFilterChange()"
       />
     </div>
-    <select class="filter-select" [(ngModel)]="filterRol">
+    <select class="filter-select" [(ngModel)]="filterRol" (change)="loadUsers()">
       <option *ngFor="let r of roles" [value]="r.value">{{ r.label }}</option>
     </select>
-    <select class="filter-select" [(ngModel)]="filterEstado">
+    <select class="filter-select" [(ngModel)]="filterEstado" (change)="loadUsers()">
       <option *ngFor="let s of statusOptions" [value]="s.value">{{ s.label }}</option>
     </select>
     <a [routerLink]="['/admin/usuarios/crear']" class="btn-create" title="Crear usuario" aria-label="Crear usuario">
@@ -35,6 +36,11 @@
   </div>
 
   <div class="table-wrap">
+    @if (loading && users.length === 0) {
+      <p class="empty-message">Cargando usuarios...</p>
+    } @else if (!loading && users.length === 0) {
+      <p class="empty-message">No hay usuarios que coincidan con los filtros.</p>
+    } @else {
     <table class="users-table">
       <thead>
         <tr>
@@ -47,11 +53,11 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let user of filteredUsers; trackBy: userTrackBy">
+        <tr *ngFor="let user of users; trackBy: userTrackBy">
           <td class="text-username" data-label="Usuario">{{ user.username }}</td>
           <td class="text-nombre" data-label="Nombre">{{ user.nombre }}</td>
           <td data-label="Rol">{{ rolLabel(user.rol) }}</td>
-          <td data-label="Último acceso">{{ user.ultimoAcceso }}</td>
+          <td data-label="Último acceso">{{ formatUltimoAcceso(user.ultimoAcceso) }}</td>
           <td data-label="Estado">
             <span class="pill" [class.pill-activo]="user.estado === 'activo'" [class.pill-inactivo]="user.estado === 'inactivo'">
               {{ user.estado === 'activo' ? 'Activo' : 'Inactivo' }}
@@ -81,7 +87,7 @@
         </tr>
       </tbody>
     </table>
-    <p *ngIf="filteredUsers.length === 0" class="empty-message">No hay usuarios que coincidan con los filtros.</p>
+    }
   </div>
 </div>
 
@@ -108,7 +114,7 @@
         </div>
         <div class="view-user-row">
           <span class="view-label">Último acceso</span>
-          <span class="view-value">{{ viewModalUser.ultimoAcceso }}</span>
+          <span class="view-value">{{ formatUltimoAcceso(viewModalUser.ultimoAcceso) }}</span>
         </div>
         <div class="view-user-row">
           <span class="view-label">Estado</span>

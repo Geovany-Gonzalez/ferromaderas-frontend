@@ -53,12 +53,6 @@
         </svg>
         Carga masiva
       </button>
-      <button type="button" class="btn-add" (click)="addProduct()" title="Agregar producto" aria-label="Agregar producto">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <line x1="12" y1="5" x2="12" y2="19"/>
-          <line x1="5" y1="12" x2="19" y2="12"/>
-        </svg>
-      </button>
     </div>
 
     <div class="table-wrap">
@@ -123,23 +117,58 @@
         </div>
         <div class="modal-body">
           <p class="bulk-help">
-            Sube un Excel (.xlsx, .xls) o CSV con columnas <strong>Código</strong> y <strong>Descripción</strong>.
-            Se crearán productos pendientes para que agregues foto, precio y categoría.
+            Sube un Excel (.xlsx, .xls) generado en Dichara en el módulo <strong>Reporte para levantar inventario</strong>.
+            <br>
+            Se crearán productos pendientes para que <strong>agregues foto, precio y categoría</strong>.
           </p>
+          <div class="bulk-file-wrap">
           <label class="file-label">
-            <input type="file" accept=".xlsx,.xls,.csv" (change)="onBulkFileSelect($event)" />
+            <input type="file" accept=".xlsx,.xls" (change)="onBulkFileSelect($event)" />
             {{ bulkFile ? bulkFile.name : 'Seleccionar archivo' }}
           </label>
+          </div>
+          @if (bulkParseError) {
+            <p class="bulk-error">{{ bulkParseError }}</p>
+          }
           @if (bulkPreview.length > 0) {
+            <div class="bulk-stats">
+              <span class="stat-badge stat-nuevos" title="Se crearán en el sistema">{{ bulkStats.nuevos }} nuevos</span>
+              <span class="stat-badge stat-actualizados" title="Se actualizará existencia">{{ bulkStats.actualizados }} actualizados</span>
+              <span class="stat-badge stat-eliminados" title="Están en el sistema pero no en el archivo (solo informativo)">{{ bulkStats.eliminados }} eliminados</span>
+            </div>
+            <div class="bulk-filters">
+              <button type="button" class="filter-chip" [class.active]="bulkPreviewFilter === 'todos'" (click)="bulkPreviewFilter = 'todos'">Todos</button>
+              <button type="button" class="filter-chip" [class.active]="bulkPreviewFilter === 'nuevos'" (click)="bulkPreviewFilter = 'nuevos'">Nuevos</button>
+              <button type="button" class="filter-chip" [class.active]="bulkPreviewFilter === 'actualizados'" (click)="bulkPreviewFilter = 'actualizados'">Actualizados</button>
+              <button type="button" class="filter-chip" [class.active]="bulkPreviewFilter === 'eliminados'" (click)="bulkPreviewFilter = 'eliminados'">Eliminados</button>
+            </div>
             <div class="bulk-preview">
-              <p class="bulk-preview-title">Vista previa ({{ bulkPreview.length }} filas):</p>
-              <div class="bulk-preview-list">
-                @for (item of bulkPreview.slice(0, 10); track item.code) {
-                  <div class="bulk-preview-row">{{ item.code }} — {{ item.name }}</div>
-                }
-                @if (bulkPreview.length > 10) {
-                  <div class="bulk-preview-more">... y {{ bulkPreview.length - 10 }} más</div>
-                }
+              <p class="bulk-preview-title">Vista previa ({{ bulkTableRows.length }} filas)</p>
+              <div class="bulk-table-wrap">
+                <table class="bulk-preview-table">
+                  <thead>
+                    <tr>
+                      <th>CÓDIGO</th>
+                      <th>DESCRIPCIÓN</th>
+                      <th>EXISTENCIA</th>
+                      <th>ESTADO</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (row of bulkTableRows; track row.code) {
+                      <tr>
+                        <td class="col-code">{{ row.code }}</td>
+                        <td class="col-desc">{{ row.name }}</td>
+                        <td class="col-stock">{{ row.stock | number }}</td>
+                        <td class="col-status">
+                          @if (row.status === 'nuevo') { <span class="badge badge-nuevo">Nuevo</span> }
+                          @if (row.status === 'actualizado') { <span class="badge badge-actualizado">Actualizado</span> }
+                          @if (row.status === 'eliminado') { <span class="badge badge-eliminado">Eliminado</span> }
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
               </div>
             </div>
           }

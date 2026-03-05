@@ -1,14 +1,30 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { NotificationService } from '../../../core/services/notification.service';
+import { finalize } from 'rxjs';
 import {
   UsersService,
   type ListUser,
   type UserRole,
   type UserStatus,
 } from '../../../core/services/users.service';
+
+/** Convierte ISO string (UTC) a hora de Guatemala (America/Guatemala, UTC-6) */
+function formatGuatemalaTime(isoString: string | null): string {
+  if (!isoString) return '—';
+  try {
+    const date = new Date(isoString);
+    return new Intl.DateTimeFormat('es-GT', {
+      dateStyle: 'short',
+      timeStyle: 'short',
+      timeZone: 'America/Guatemala',
+    }).format(date);
+  } catch {
+    return isoString;
+  }
+}
 
 @Component({
   selector: 'app-user-list',
@@ -29,12 +45,15 @@ export class UserListComponent implements OnInit {
   constructor(
     private router: Router,
     private notification: NotificationService,
-    private usersService: UsersService
+    private usersService: UsersService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   roles: { value: UserRole | ''; label: string }[] = [
     { value: '', label: 'Rol' },
     { value: 'vendedor', label: 'Vendedor' },
+    { value: 'gerente', label: 'Gerente' },
+    { value: 'editor', label: 'Editor' },
     { value: 'administrador', label: 'Administrador' },
   ];
 
@@ -44,25 +63,36 @@ export class UserListComponent implements OnInit {
     { value: 'inactivo', label: 'Inactivo' },
   ];
 
+  private filterDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+
   ngOnInit(): void {
-    this.loadUsers();
+    // Diferir carga para asegurar que auth y vista estén listos (evita que se quede en "Cargando...")
+    setTimeout(() => this.loadUsers(), 0);
+  }
+
+  onFilterChange(): void {
+    if (this.filterDebounceTimer) clearTimeout(this.filterDebounceTimer);
+    this.filterDebounceTimer = setTimeout(() => this.loadUsers(), 300);
   }
 
   loadUsers(): void {
     this.loading = true;
     this.usersService
       .list({
-        search: this.searchTerm || undefined,
+        search: this.searchTerm?.trim() || undefined,
         rol: this.filterRol || undefined,
         estado: this.filterEstado || undefined,
       })
+      .pipe(finalize(() => {
+        this.loading = false;
+        this.cdr.detectChanges();
+      }))
       .subscribe({
         next: (data) => {
           this.users = data;
-          this.loading = false;
+          this.cdr.detectChanges();
         },
         error: (err) => {
-          this.loading = false;
           this.notification.showMessage(
             err?.error?.message || 'Error al cargar usuarios',
             'error'
@@ -71,16 +101,9 @@ export class UserListComponent implements OnInit {
       });
   }
 
-  get filteredUsers(): ListUser[] {
-    return this.users.filter((u) => {
-      const matchSearch =
-        !this.searchTerm ||
-        u.username.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        u.nombre.toLowerCase().includes(this.searchTerm.toLowerCase());
-      const matchRol = !this.filterRol || u.rol === this.filterRol;
-      const matchEstado = !this.filterEstado || u.estado === this.filterEstado;
-      return matchSearch && matchRol && matchEstado;
-    });
+  /** Formatea último acceso en hora Guatemala */
+  formatUltimoAcceso(iso: string | null): string {
+    return formatGuatemalaTime(iso);
   }
 
   viewUser(user: ListUser): void {
@@ -99,6 +122,7 @@ export class UserListComponent implements OnInit {
           nombre: user.nombre,
           username: user.username,
           email: user.email,
+          phone: user.phone,
           rol: user.rol,
           estado: user.estado,
         },
@@ -131,7 +155,13 @@ export class UserListComponent implements OnInit {
   }
 
   rolLabel(rol: UserRole): string {
-    return rol === 'administrador' ? 'Administrador' : 'Vendedor';
+    const labels: Record<UserRole, string> = {
+      vendedor: 'Vendedor',
+      administrador: 'Administrador',
+      gerente: 'Gerente',
+      editor: 'Editor',
+    };
+    return labels[rol] ?? rol;
   }
 
   userTrackBy(_index: number, user: ListUser): string {

@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { Observable, map, timeout, catchError, of } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
-export type UserRole = 'vendedor' | 'administrador';
+export type UserRole = 'vendedor' | 'administrador' | 'gerente' | 'editor';
 export type UserStatus = 'activo' | 'inactivo';
 
 export interface ListUser {
@@ -12,6 +12,7 @@ export interface ListUser {
   name: string;
   nombre: string;
   email: string;
+  phone?: string;
   rol: UserRole;
   ultimoAcceso: string | null;
   estado: UserStatus;
@@ -49,9 +50,16 @@ export class UsersService {
     if (filters?.rol) params['rol'] = filters.rol;
     if (filters?.estado) params['estado'] = filters.estado;
     return this.http.get<Omit<ListUser, 'nombre'>[]>(this.api, { params }).pipe(
+      timeout(12000),
       map((users) =>
         users.map((u) => ({ ...u, nombre: u.name } as ListUser))
-      )
+      ),
+      catchError((err) => {
+        if (err?.name === 'TimeoutError') {
+          throw { error: { message: 'La solicitud tardó demasiado. Verifica que el servidor esté activo.' } };
+        }
+        throw err;
+      })
     );
   }
 

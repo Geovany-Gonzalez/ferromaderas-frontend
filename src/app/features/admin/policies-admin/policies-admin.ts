@@ -40,8 +40,7 @@ export class PoliciesAdminComponent implements OnInit {
   }
 
   cancelEdit(): void {
-    this.policyPage = this.policyService.getPolicyPageSnapshot();
-    this.savedSnapshot = JSON.stringify(this.policyPage);
+    this.policyPage = JSON.parse(this.savedSnapshot);
     this.hasUnsavedChanges = false;
     this.isEditMode = false;
     this.cdr.detectChanges();
@@ -50,31 +49,38 @@ export class PoliciesAdminComponent implements OnInit {
   /** Carga las 6 políticas por defecto (por si no se cargaron al inicio). */
   loadDefaultPolicies(): void {
     this.policyPage = this.policyService.getDefaultPolicyPage();
-    this.policyService.updatePolicyPage(this.policyPage);
-    this.savedSnapshot = JSON.stringify(this.policyPage);
-    this.hasUnsavedChanges = false;
-    this.cdr.detectChanges();
-  }
-
-  ngOnInit(): void {
-    // Carga inmediata: mismo contenido que el sitio público, siempre con políticas para editar
-    this.policyPage = this.policyService.getPolicyPageSnapshot();
-    if (!this.policyPage.policies?.length) {
-      this.policyPage = this.policyService.getDefaultPolicyPage();
-      this.policyService.updatePolicyPage(this.policyPage);
-    }
-    this.savedSnapshot = JSON.stringify(this.policyPage);
-    this.hasUnsavedChanges = false;
-    this.cdr.detectChanges();
-
-    // Mantener sincronizado solo si llegan datos válidos (nunca sobrescribir con vacío)
-    this.policyService.getPolicyPage().subscribe(policyPage => {
-      if (policyPage?.policies?.length) {
-        this.policyPage = JSON.parse(JSON.stringify(policyPage));
+    this.policyService.updatePolicyPage(this.policyPage).subscribe({
+      next: () => {
         this.savedSnapshot = JSON.stringify(this.policyPage);
         this.hasUnsavedChanges = false;
         this.cdr.detectChanges();
-      }
+        this.notification.showMessage('Políticas por defecto cargadas.', 'success');
+      },
+      error: (err) => {
+        this.notification.showMessage(
+          err?.error?.message || 'Error al cargar políticas por defecto',
+          'error'
+        );
+      },
+    });
+  }
+
+  ngOnInit(): void {
+    this.policyService.loadPolicyPage().subscribe({
+      next: (policyPage) => {
+        this.policyPage = policyPage?.policies?.length
+          ? JSON.parse(JSON.stringify(policyPage))
+          : this.policyService.getDefaultPolicyPage();
+        this.savedSnapshot = JSON.stringify(this.policyPage);
+        this.hasUnsavedChanges = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.policyPage = this.policyService.getDefaultPolicyPage();
+        this.savedSnapshot = JSON.stringify(this.policyPage);
+        this.hasUnsavedChanges = false;
+        this.cdr.detectChanges();
+      },
     });
   }
 
@@ -85,15 +91,34 @@ export class PoliciesAdminComponent implements OnInit {
 
   onSave(): void {
     const copy = JSON.parse(JSON.stringify(this.policyPage));
-    this.policyService.updatePolicyPage(copy);
-    this.savedSnapshot = JSON.stringify(copy);
-    this.hasUnsavedChanges = false;
-    this.cdr.markForCheck();
-    this.notification.showMessage('Políticas guardadas. El sitio público se ha actualizado.', 'success');
+    this.policyService.updatePolicyPage(copy).subscribe({
+      next: () => {
+        this.savedSnapshot = JSON.stringify(copy);
+        this.hasUnsavedChanges = false;
+        this.cdr.markForCheck();
+        this.notification.showMessage('Políticas guardadas. El sitio público se ha actualizado.', 'success');
+      },
+      error: (err) => {
+        this.notification.showMessage(
+          err?.error?.message || 'Error al guardar políticas',
+          'error'
+        );
+      },
+    });
   }
 
+  showPreviewModal = false;
+
   goPreview(): void {
-    window.open('/politicas', '_blank');
+    // Muestra vista previa con los datos actuales del formulario (guardados o no)
+    // Entorno controlado: no abre el sitio real, evita confusión con producción
+    this.showPreviewModal = true;
+    this.cdr.detectChanges();
+  }
+
+  closePreview(): void {
+    this.showPreviewModal = false;
+    this.cdr.detectChanges();
   }
 
   addContent(policy: Policy): void {

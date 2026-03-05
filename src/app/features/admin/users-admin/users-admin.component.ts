@@ -1,11 +1,11 @@
-import { Component } from '@angular/core';
+import { Component, NgZone, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { NotificationService } from '../../../core/services/notification.service';
 import { UsersService } from '../../../core/services/users.service';
 
-export type UserRole = 'vendedor' | 'administrador';
+export type UserRole = 'vendedor' | 'administrador' | 'gerente' | 'editor';
 
 export interface RolePermission {
   label: string;
@@ -34,6 +34,8 @@ export class UsersAdminComponent {
 
   roles: { value: UserRole; label: string }[] = [
     { value: 'vendedor', label: 'Vendedor' },
+    { value: 'gerente', label: 'Gerente' },
+    { value: 'editor', label: 'Editor' },
     { value: 'administrador', label: 'Administrador' },
   ];
 
@@ -48,6 +50,25 @@ export class UsersAdminComponent {
     { label: 'Gestionar categorías', allowed: false },
     { label: 'Gestionar destacados', allowed: false },
     { label: 'Ver cotizaciones y cambiar estado', allowed: true },
+    { label: 'Gestionar políticas de compra', allowed: false },
+    { label: 'Crear usuarios / Resetear contraseñas', allowed: false },
+  ];
+
+  gerentePermissions: RolePermission[] = [
+    { label: 'Gestionar productos', allowed: true },
+    { label: 'Gestionar categorías', allowed: true },
+    { label: 'Gestionar destacados', allowed: true },
+    { label: 'Ver cotizaciones y cambiar estado', allowed: true },
+    { label: 'Gestionar políticas de compra', allowed: true },
+    { label: 'Crear usuarios / Resetear contraseñas', allowed: false },
+  ];
+
+  editorPermissions: RolePermission[] = [
+    { label: 'Gestionar productos', allowed: false },
+    { label: 'Gestionar categorías', allowed: false },
+    { label: 'Gestionar destacados', allowed: true },
+    { label: 'Ver cotizaciones y cambiar estado', allowed: true },
+    { label: 'Gestionar políticas de compra', allowed: true },
     { label: 'Crear usuarios / Resetear contraseñas', allowed: false },
   ];
 
@@ -56,13 +77,16 @@ export class UsersAdminComponent {
     { label: 'Gestionar categorías', allowed: true },
     { label: 'Gestionar destacados', allowed: true },
     { label: 'Ver cotizaciones y cambiar estado', allowed: true },
+    { label: 'Gestionar políticas de compra', allowed: true },
     { label: 'Crear usuarios / Resetear contraseñas', allowed: true },
   ];
 
   constructor(
     private router: Router,
     private notification: NotificationService,
-    private usersService: UsersService
+    private usersService: UsersService,
+    private ngZone: NgZone,
+    private cdr: ChangeDetectorRef,
   ) {
     const state = this.router.getCurrentNavigation()?.extras?.state as {
       editingUser?: {
@@ -70,6 +94,7 @@ export class UsersAdminComponent {
         nombre: string;
         username: string;
         email?: string;
+        phone?: string;
         rol: UserRole;
         estado: 'activo' | 'inactivo';
       };
@@ -81,27 +106,56 @@ export class UsersAdminComponent {
       this.fullName = u.nombre;
       this.username = u.username;
       this.email = u.email ?? '';
+      this.phone = this.parsePhoneForInput(u.phone);
       this.role = u.rol;
       this.status = u.estado;
     }
   }
 
+  /** Extrae solo el número del teléfono (sin +502) para mostrar en el input */
+  private parsePhoneForInput(phone?: string): string {
+    if (!phone?.trim()) return '';
+    return phone.replace(/^\+502\s*/, '').trim();
+  }
+
+  /** Solo permite: minúsculas, números, guión bajo, punto, guión. Estándar para usernames. */
+  sanitizeUsername(value: string): string {
+    return (value ?? '').toLowerCase().replace(/[^a-z0-9_.-]/g, '');
+  }
+
+  /** Solo dígitos para guardar en BD. El +502 se muestra en el input, no se guarda. */
+  get phoneForApi(): string {
+    return (this.phone ?? '').replace(/\D/g, '');
+  }
+
   onImageSelect(event: Event): void {
     const input = event.target as HTMLInputElement;
-    if (input.files?.length && input.files[0]) {
-      const file = input.files[0];
-      const allowed = ['image/jpeg', 'image/jpg', 'image/png'];
-      if (!allowed.includes(file.type)) {
-        this.notification.showMessage('Solo se permiten imágenes .jpg, .jpeg o .png', 'error');
-        input.value = '';
-        return;
-      }
-      const reader = new FileReader();
-      reader.onload = (e: ProgressEvent<FileReader>) => {
-        if (e.target?.result) this.profileImage = e.target.result as string;
-      };
-      reader.readAsDataURL(file);
+    if (!input.files?.length || !input.files[0]) return;
+    const file = input.files[0];
+    const allowed = ['image/jpeg', 'image/jpg', 'image/png'];
+    if (!allowed.includes(file.type)) {
+      this.notification.showMessage('Solo se permiten imágenes .jpg, .jpeg o .png', 'error');
+      input.value = '';
+      return;
     }
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      this.notification.showMessage('La imagen es demasiado grande. Máximo 5MB.', 'error');
+      input.value = '';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e: ProgressEvent<FileReader>) => {
+      const result = e.target?.result as string | undefined;
+      this.ngZone.run(() => {
+        this.profileImage = result ?? null;
+        this.cdr.detectChanges();
+        if (result) {
+          this.notification.showMessage('Imagen seleccionada correctamente', 'success');
+        }
+      });
+    };
+    reader.readAsDataURL(file);
   }
 
   generatePassword(): void {
@@ -139,7 +193,7 @@ export class UsersAdminComponent {
         .update(this.editingUserId!, {
           name: this.fullName,
           email: this.email?.trim() || undefined,
-          phone: this.phone || undefined,
+          phone: this.phoneForApi || undefined,
           role: this.role,
           status: this.status,
         })
@@ -172,7 +226,7 @@ export class UsersAdminComponent {
           email: this.email.trim(),
           password: this.temporaryPassword,
           name: this.fullName.trim(),
-          phone: this.phone || undefined,
+          phone: this.phoneForApi || undefined,
           role: this.role,
           status: this.status,
         })

@@ -139,6 +139,38 @@
     color: #64748b;
     margin-top: 0.35rem;
   }
+
+  .phone-input-wrap {
+    display: flex;
+    align-items: center;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+    background: white;
+
+    &:focus-within {
+      border-color: #1e3a8a;
+      box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.12);
+    }
+
+    .phone-prefix {
+      padding: 0.75rem 1rem;
+      background: #f1f5f9;
+      color: #1e3a8a;
+      font-weight: 600;
+      font-size: 1rem;
+      white-space: nowrap;
+      border-right: 1px solid #e2e8f0;
+    }
+
+    .phone-input {
+      flex: 1;
+      border: none;
+      border-radius: 0;
+      box-shadow: none;
+      min-width: 0;
+    }
+  }
 }
 
 .image-upload-row {
@@ -293,8 +325,15 @@
 
 .permissions-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(4, 1fr);
   gap: 1.5rem;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr 1fr;
+  }
+  @media (max-width: 500px) {
+    grid-template-columns: 1fr;
+  }
 }
 
 .permission-column {

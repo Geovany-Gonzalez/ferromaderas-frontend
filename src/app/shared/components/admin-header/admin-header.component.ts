@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { NotificationService } from '../../../core/services/notification.service';
 
 @Component({
   selector: 'app-admin-header',
@@ -13,7 +14,8 @@ import { AuthService } from '../../../core/services/auth.service';
 export class AdminHeaderComponent {
   constructor(
     private router: Router,
-    private readonly auth: AuthService
+    private readonly auth: AuthService,
+    private notification: NotificationService
   ) {}
 
   goToPublicSite(): void {
@@ -21,6 +23,8 @@ export class AdminHeaderComponent {
   }
 
   logout(): void {
-    this.auth.logout();
+    this.notification.confirm('Cerrar sesión', '¿Estás seguro de que deseas salir?').then((ok) => {
+      if (ok) this.auth.logout();
+    });
   }
 }

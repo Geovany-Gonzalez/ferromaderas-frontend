@@ -72,8 +72,8 @@ export const routes: Routes = [
       },
       {
         path: 'productos/crear',
-        loadComponent: () =>
-          import('./features/admin/product-form/product-form.component').then(m => m.ProductFormComponent),
+        redirectTo: '/admin/productos',
+        pathMatch: 'full',
       },
       {
         path: 'productos/editar/:id',
