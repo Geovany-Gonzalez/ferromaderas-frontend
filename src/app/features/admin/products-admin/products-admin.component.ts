@@ -23,8 +23,9 @@ export class ProductsAdminComponent implements OnInit {
   showBulkImport = false;
   bulkFile: File | null = null;
   bulkPreview: { code: string; name: string; stock: number; status: 'nuevo' | 'actualizado' }[] = [];
-  bulkDeleted: { code: string; name: string; stock: number }[] = [];
+  bulkDeleted: { id: string; code: string; name: string; stock: number }[] = [];
   bulkPreviewFilter: 'todos' | 'nuevos' | 'actualizados' | 'eliminados' = 'todos';
+  bulkSyncMode = false;
   bulkLoading = false;
 
   constructor(
@@ -121,6 +122,7 @@ export class ProductsAdminComponent implements OnInit {
     this.bulkPreview = [];
     this.bulkDeleted = [];
     this.bulkPreviewFilter = 'todos';
+    this.bulkSyncMode = false;
     this.bulkParseError = '';
   }
 
@@ -225,15 +227,30 @@ export class ProductsAdminComponent implements OnInit {
 
     this.bulkDeleted = this.products
       .filter((p) => !excelCodes.has(p.code.trim().toLowerCase()))
-      .map((p) => ({ code: p.code, name: p.name, stock: p.stock ?? 0 }));
+      .map((p) => ({ id: p.id, code: p.code, name: p.name, stock: p.stock ?? 0 }));
+    // Por defecto sincronizar: eliminar los que no están en el archivo
+    this.bulkSyncMode = this.bulkDeleted.length > 0;
   }
 
-  confirmBulkImport(): void {
+  async confirmBulkImport(): Promise<void> {
     if (this.bulkPreview.length === 0) {
       this.notification.showMessage('No hay datos para importar.', 'error');
       return;
     }
+    if (this.bulkSyncMode && this.bulkDeleted.length > 0) {
+      const ok = await this.notification.confirm(
+        'Sincronizar',
+        `Se eliminarán ${this.bulkDeleted.length} producto(s) que no están en el archivo. ¿Continuar?`
+      );
+      if (!ok) return;
+    }
     this.bulkLoading = true;
+    let deleted = 0;
+    if (this.bulkSyncMode && this.bulkDeleted.length > 0) {
+      deleted = this.catalogService.removeProductsNotInExcel(
+        this.bulkPreview.map((i) => i.code.trim().toLowerCase())
+      );
+    }
     const result = this.catalogService.addProductsFromBulkImport(
       this.bulkPreview.map((i) => ({ code: i.code, name: i.name, stock: i.stock }))
     );
@@ -242,9 +259,10 @@ export class ProductsAdminComponent implements OnInit {
     this.closeBulkImport();
     let msg = `Se crearon ${result.created} producto(s) pendientes de configurar.`;
     if (result.updated) msg += ` Se actualizó existencia de ${result.updated} producto(s).`;
+    if (deleted) msg += ` Se eliminaron ${deleted} producto(s) que no estaban en el archivo.`;
     if (result.skipped) msg += ` ${result.skipped} omitido(s) (código ya existe).`;
     if (result.errors.length) msg += ` Advertencias: ${result.errors.slice(0, 3).join('; ')}`;
-    this.notification.showMessage(msg, result.created > 0 ? 'success' : 'info');
+    this.notification.showMessage(msg, result.created > 0 || deleted > 0 ? 'success' : 'info');
     if (result.created > 0) this.viewMode = 'pendientes';
   }
 }

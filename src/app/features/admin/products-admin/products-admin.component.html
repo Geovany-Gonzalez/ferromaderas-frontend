@@ -134,8 +134,14 @@
             <div class="bulk-stats">
               <span class="stat-badge stat-nuevos" title="Se crearán en el sistema">{{ bulkStats.nuevos }} nuevos</span>
               <span class="stat-badge stat-actualizados" title="Se actualizará existencia">{{ bulkStats.actualizados }} actualizados</span>
-              <span class="stat-badge stat-eliminados" title="Están en el sistema pero no en el archivo (solo informativo)">{{ bulkStats.eliminados }} eliminados</span>
+              <span class="stat-badge stat-eliminados" title="Se eliminarán al importar">{{ bulkStats.eliminados }} eliminados</span>
             </div>
+            @if (bulkStats.eliminados > 0) {
+              <label class="bulk-sync-option">
+                <input type="checkbox" [(ngModel)]="bulkSyncMode" />
+                <span>Sincronizar: eliminar {{ bulkStats.eliminados }} producto(s) que no están en el archivo</span>
+              </label>
+            }
             <div class="bulk-filters">
               <button type="button" class="filter-chip" [class.active]="bulkPreviewFilter === 'todos'" (click)="bulkPreviewFilter = 'todos'">Todos</button>
               <button type="button" class="filter-chip" [class.active]="bulkPreviewFilter === 'nuevos'" (click)="bulkPreviewFilter = 'nuevos'">Nuevos</button>
@@ -181,7 +187,7 @@
             [disabled]="bulkPreview.length === 0 || bulkLoading"
             (click)="confirmBulkImport()"
           >
-            {{ bulkLoading ? 'Importando...' : 'Importar ' + bulkPreview.length + ' producto(s)' }}
+            {{ bulkLoading ? 'Importando...' : (bulkSyncMode && bulkStats.eliminados > 0 ? 'Importar y sincronizar' : 'Importar ' + bulkPreview.length + ' producto(s)') }}
           </button>
         </div>
       </div>

@@ -235,6 +235,16 @@ export class CatalogService {
     return true;
   }
 
+  /** Elimina permanentemente productos cuyo código no está en el Excel (modo sincronizar). */
+  removeProductsNotInExcel(excelCodes: string[]): number {
+    const codesSet = new Set(excelCodes.map(c => c.trim().toLowerCase()));
+    const before = this.products.length;
+    this.products = this.products.filter(p => codesSet.has(p.code.trim().toLowerCase()));
+    const removed = before - this.products.length;
+    if (removed > 0) this.saveProducts();
+    return removed;
+  }
+
   /** Genera el siguiente código interno de producto (secuencial: 001, 002, ...). */
   getNextProductCode(): string {
     const codes = this.products
