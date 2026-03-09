@@ -31,15 +31,17 @@ export class CategoryFormComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    const id = this.route.snapshot.paramMap.get('id');
-    if (id) {
-      const category = this.catalogService.getCategoryById(id);
-      if (category) {
-        this.isEditing = true;
-        this.categoryForm = { ...category };
-        this.previewImage = category.imageUrl || '';
+    this.catalogService.loadCategories().subscribe(() => {
+      const id = this.route.snapshot.paramMap.get('id');
+      if (id) {
+        const category = this.catalogService.getCategoryById(id);
+        if (category) {
+          this.isEditing = true;
+          this.categoryForm = { ...category };
+          this.previewImage = category.imageUrl || '';
+        }
       }
-    }
+    });
   }
 
   backToList(): void {
@@ -78,28 +80,29 @@ export class CategoryFormComponent implements OnInit {
       this.notification.showMessage('El nombre de la categoría es requerido', 'error');
       return;
     }
-    if (!this.categoryForm.imageUrl?.trim()) {
-      this.notification.showMessage('La imagen de la categoría es requerida', 'error');
-      return;
-    }
+    const slug = this.catalogService.generateSlug(this.categoryForm.name!);
     if (this.isEditing && this.categoryForm.id) {
-      this.catalogService.updateCategory(this.categoryForm.id, {
-        name: this.categoryForm.name,
-        description: this.categoryForm.description,
-        imageUrl: this.categoryForm.imageUrl,
-        slug: this.catalogService.generateSlug(this.categoryForm.name),
-        active: this.categoryForm.active,
+      this.catalogService.updateCategory(this.categoryForm.id, { name: this.categoryForm.name, slug }).subscribe({
+        next: () => {
+          this.notification.showMessage('Categoría actualizada.', 'success');
+          this.router.navigate(['/admin/categorias']);
+        },
+        error: () => this.notification.showMessage('Error al actualizar.', 'error'),
       });
     } else {
       this.catalogService.addCategory({
         name: this.categoryForm.name!,
+        slug,
+        imageUrl: this.categoryForm.imageUrl || '',
         description: this.categoryForm.description,
-        imageUrl: this.categoryForm.imageUrl!,
-        slug: this.catalogService.generateSlug(this.categoryForm.name!),
         active: this.categoryForm.active ?? true,
+      } as Omit<Category, 'id'>).subscribe({
+        next: () => {
+          this.notification.showMessage('Categoría creada.', 'success');
+          this.router.navigate(['/admin/categorias']);
+        },
+        error: () => this.notification.showMessage('Error al crear.', 'error'),
       });
     }
-    this.notification.showMessage(this.isEditing ? 'Categoría actualizada.' : 'Categoría creada.', 'success');
-    this.router.navigate(['/admin/categorias']);
   }
 }

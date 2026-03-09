@@ -23,7 +23,9 @@ export class FeaturedAdminComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadFeatured();
+    this.catalogService.loadProducts().subscribe(() => {
+      this.catalogService.loadCategories().subscribe(() => this.loadFeatured());
+    });
   }
 
   loadFeatured(): void {
@@ -45,8 +47,7 @@ export class FeaturedAdminComponent implements OnInit {
       list = list.filter(
         (p) =>
           p.name.toLowerCase().includes(term) ||
-          p.code.toLowerCase().includes(term) ||
-          (p.description && p.description.toLowerCase().includes(term))
+          p.code.toLowerCase().includes(term)
       );
     }
     return list;
@@ -64,15 +65,23 @@ export class FeaturedAdminComponent implements OnInit {
       );
       return;
     }
-    this.catalogService.updateProduct(product.id, { featured: true });
-    this.loadFeatured();
-    this.notification.showMessage(`"${product.name}" agregado a destacados.`, 'success');
+    this.catalogService.updateProduct(product.id, { featured: true }).subscribe({
+      next: () => {
+        this.loadFeatured();
+        this.notification.showMessage(`"${product.name}" agregado a destacados.`, 'success');
+      },
+      error: () => this.notification.showMessage('Error al actualizar.', 'error'),
+    });
   }
 
   removeFromFeatured(product: Product): void {
-    this.catalogService.updateProduct(product.id, { featured: false });
-    this.loadFeatured();
-    this.notification.showMessage(`"${product.name}" quitado de destacados.`, 'success');
+    this.catalogService.updateProduct(product.id, { featured: false }).subscribe({
+      next: () => {
+        this.loadFeatured();
+        this.notification.showMessage(`"${product.name}" quitado de destacados.`, 'success');
+      },
+      error: () => this.notification.showMessage('Error al actualizar.', 'error'),
+    });
   }
 
   trackById(_index: number, p: Product): string {

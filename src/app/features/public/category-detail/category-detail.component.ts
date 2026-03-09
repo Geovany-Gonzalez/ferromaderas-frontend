@@ -30,17 +30,19 @@ export class CategoryDetailComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.route.params.subscribe(params => {
-      const slug = params['slug'];
-      this.loadCategoryData(slug);
+    this.catalogService.loadCatalog().subscribe(() => {
+      this.catalogService.loadCategories().subscribe(() => {
+        this.route.params.subscribe((params) => {
+          this.loadCategoryData(params['slug']);
+        });
+      });
     });
   }
 
   private loadCategoryData(slug: string): void {
     const foundCategory = this.catalogService.getCategoryBySlug(slug);
-    
+
     if (!foundCategory) {
-      // Redirigir a categorías si no se encuentra
       this.router.navigate(['/categorias']);
       return;
     }

@@ -416,9 +416,67 @@
     background: #eff6ff;
   }
 
+  &.loading {
+    cursor: wait;
+    pointer-events: none;
+    opacity: 0.6;
+  }
+
   input {
     display: none;
   }
+}
+
+.bulk-progress {
+  margin: 1rem 0;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.bulk-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.bulk-progress-bar {
+  flex: 1;
+  height: 12px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: var(--progress, 0%);
+    background: #1e3a8a;
+    border-radius: 999px;
+    transition: width 0.2s ease-out;
+  }
+}
+
+.bulk-progress-percent {
+  flex-shrink: 0;
+  min-width: 2.5rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #1e3a8a;
+  text-align: right;
+}
+
+.bulk-progress-text {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #64748b;
+  text-align: center;
 }
 
 .bulk-stats {
@@ -442,6 +500,11 @@
   &.stat-actualizados {
     background: #dbeafe;
     color: #1e40af;
+  }
+
+  &.stat-sin-cambios {
+    background: #f1f5f9;
+    color: #64748b;
   }
 
   &.stat-eliminados {
@@ -551,6 +614,13 @@
     background: #f8fafc;
   }
 
+  .col-num {
+    width: 3rem;
+    text-align: right;
+    color: #64748b;
+    font-size: 0.75rem;
+  }
+
   .col-code {
     font-weight: 600;
     width: 6rem;
@@ -587,6 +657,11 @@
     &.badge-actualizado {
       background: #dbeafe;
       color: #1e40af;
+    }
+
+    &.badge-sin-cambios {
+      background: #f1f5f9;
+      color: #64748b;
     }
 
     &.badge-eliminado {

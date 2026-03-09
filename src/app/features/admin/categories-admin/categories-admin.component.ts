@@ -27,11 +27,14 @@ export class CategoriesAdminComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.catalogService.loadProducts().subscribe();
     this.loadCategories();
   }
 
   loadCategories(): void {
-    this.categories = this.catalogService.getAllCategories();
+    this.catalogService.loadCategories().subscribe(() => {
+      this.categories = this.catalogService.getAllCategories();
+    });
   }
 
   get filteredCategories(): Category[] {
@@ -72,20 +75,23 @@ export class CategoriesAdminComponent implements OnInit {
     }
     this.notification.confirm('Confirmar', message).then((ok) => {
       if (ok) {
-        this.catalogService.updateCategory(category.id, { active });
-        if (!active) {
-          this.deactivateProductsInCategory(category.id);
-        }
-        this.loadCategories();
-        this.notification.showMessage(`Categoría "${category.name}" ${active ? 'activada' : 'desactivada'}.`, 'success');
+        this.catalogService.updateCategory(category.id, { active } as Partial<Category>).subscribe({
+          next: () => {
+            if (!active) this.deactivateProductsInCategory(category.id);
+            this.loadCategories();
+            this.notification.showMessage(`Categoría "${category.name}" ${active ? 'activada' : 'desactivada'}.`, 'success');
+          },
+          error: () => this.notification.showMessage('Error al actualizar categoría.', 'error'),
+        });
       }
     });
   }
 
-  /** Deshabilita todos los productos de la categoría. */
   private deactivateProductsInCategory(categoryId: string): void {
     const products = this.catalogService.getProductsByCategory(categoryId, false);
-    products.forEach((p) => this.catalogService.updateProduct(p.id, { active: false }));
+    products.forEach((p) =>
+      this.catalogService.setProductActive(p.id, false).subscribe()
+    );
   }
 
   trackById(_index: number, category: Category): string {

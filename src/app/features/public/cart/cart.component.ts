@@ -42,6 +42,8 @@ export class CartComponent implements OnInit {
   };
 
   ngOnInit(): void {
+    this.catalog.loadCatalog().subscribe();
+    this.catalog.loadCategories().subscribe();
     this.route.queryParams.subscribe((params) => {
       const c = params['c'];
       if (c) {

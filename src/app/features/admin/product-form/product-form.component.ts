@@ -24,7 +24,6 @@ export class ProductFormComponent implements OnInit {
     categoryId: '',
     price: 0,
     imageUrl: '',
-    description: '',
     featured: false,
     active: true,
   };
@@ -40,18 +39,24 @@ export class ProductFormComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.categories = this.catalogService.getAllCategories().filter((c) => c.active !== false);
+    this.catalogService.loadCategories().subscribe(() => {
+      this.categories = this.catalogService.getAllCategories().filter((c) => c.active !== false);
+    });
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
-      const product = this.catalogService.getProducts().find((p) => p.id === id);
-      if (product) {
-        this.isEditing = true;
-        this.originalFeatured = product.featured === true;
-        this.productForm = { ...product };
-        this.previewImage = product.imageUrl || '';
-      }
+      this.catalogService.loadProductById(id).subscribe((product) => {
+        if (product) {
+          this.isEditing = true;
+          this.originalFeatured = product.featured === true;
+          this.productForm = { ...product };
+          this.previewImage = product.imageUrl || '';
+        }
+      });
+      this.catalogService.loadProducts().subscribe();
     } else {
-      this.productForm.code = this.catalogService.getNextProductCode();
+      this.catalogService.loadProducts().subscribe(() => {
+        this.productForm.code = this.catalogService.getNextProductCode();
+      });
     }
   }
 
@@ -136,14 +141,19 @@ export class ProductFormComponent implements OnInit {
         categoryId: this.productForm.categoryId,
         price: Number(this.productForm.price),
         imageUrl: this.productForm.imageUrl,
-        description: this.productForm.description,
         featured: this.productForm.featured,
         active: this.productForm.active,
       };
       if (this.productForm.pendingConfig) {
         updates.pendingConfig = false;
       }
-      this.catalogService.updateProduct(this.productForm.id, updates);
+      this.catalogService.updateProduct(this.productForm.id, updates).subscribe({
+        next: () => {
+          this.notification.showMessage('Producto actualizado.', 'success');
+          this.router.navigate(['/admin/productos']);
+        },
+        error: () => this.notification.showMessage('Error al actualizar.', 'error'),
+      });
     } else {
       this.catalogService.addProduct({
         code: this.productForm.code!,
@@ -151,12 +161,15 @@ export class ProductFormComponent implements OnInit {
         categoryId: this.productForm.categoryId!,
         price: Number(this.productForm.price),
         imageUrl: this.productForm.imageUrl!,
-        description: this.productForm.description,
         featured: this.productForm.featured ?? false,
         active: this.productForm.active !== false,
+      }).subscribe({
+        next: () => {
+          this.notification.showMessage('Producto creado.', 'success');
+          this.router.navigate(['/admin/productos']);
+        },
+        error: () => this.notification.showMessage('Error al crear.', 'error'),
       });
     }
-    this.notification.showMessage(this.isEditing ? 'Producto actualizado.' : 'Producto creado.', 'success');
-    this.router.navigate(['/admin/productos']);
   }
 }

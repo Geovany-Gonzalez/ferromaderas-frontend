@@ -22,11 +22,15 @@ export class ProductsAdminComponent implements OnInit {
 
   showBulkImport = false;
   bulkFile: File | null = null;
-  bulkPreview: { code: string; name: string; stock: number; status: 'nuevo' | 'actualizado' }[] = [];
+  bulkPreview: { code: string; name: string; stock: number; status: 'nuevo' | 'actualizado' | 'sin_cambios' }[] = [];
   bulkDeleted: { id: string; code: string; name: string; stock: number }[] = [];
-  bulkPreviewFilter: 'todos' | 'nuevos' | 'actualizados' | 'eliminados' = 'todos';
+  bulkPreviewFilter: 'todos' | 'nuevos' | 'actualizados' | 'sin_cambios' | 'eliminados' = 'todos';
   bulkSyncMode = false;
   bulkLoading = false;
+  bulkParsing = false;
+  /** Porcentaje 0-100 para la barra de progreso (simulado durante importación). */
+  bulkProgressPercent = 0;
+  private bulkProgressInterval: ReturnType<typeof setInterval> | null = null;
 
   constructor(
     private catalogService: CatalogService,
@@ -36,10 +40,18 @@ export class ProductsAdminComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadProducts();
+    this.catalogService.loadCategories().subscribe();
   }
 
   loadProducts(): void {
-    this.products = this.catalogService.getProducts();
+    this.catalogService.loadProducts().subscribe({
+      next: (list) => {
+        this.products = list;
+      },
+      error: () => {
+        this.notification.showMessage('Error al cargar productos. Verifica que la API esté activa.', 'error');
+      },
+    });
   }
 
   get pendingCount(): number {
@@ -64,8 +76,7 @@ export class ProductsAdminComponent implements OnInit {
     return list.filter(
       (p) =>
         p.name.toLowerCase().includes(term) ||
-        p.code.toLowerCase().includes(term) ||
-        (p.description && p.description.toLowerCase().includes(term))
+        p.code.toLowerCase().includes(term)
     );
   }
 
@@ -82,9 +93,13 @@ export class ProductsAdminComponent implements OnInit {
     const action = active ? 'activar' : 'desactivar';
     this.notification.confirm('Confirmar', `¿Deseas ${action} el producto "${product.name}"?`).then((ok) => {
       if (ok) {
-        this.catalogService.updateProduct(product.id, { active });
-        this.loadProducts();
-        this.notification.showMessage(`Producto "${product.name}" ${active ? 'activado' : 'desactivado'}.`, 'success');
+        this.catalogService.setProductActive(product.id, active).subscribe({
+          next: () => {
+            this.loadProducts();
+            this.notification.showMessage(`Producto "${product.name}" ${active ? 'activado' : 'desactivado'}.`, 'success');
+          },
+          error: () => this.notification.showMessage('Error al actualizar el producto.', 'error'),
+        });
       }
     });
   }
@@ -93,23 +108,30 @@ export class ProductsAdminComponent implements OnInit {
     return product.id;
   }
 
-  get bulkStats(): { nuevos: number; actualizados: number; eliminados: number } {
+  get bulkStats(): { nuevos: number; actualizados: number; sinCambios: number; eliminados: number } {
     return {
       nuevos: this.bulkPreview.filter((i) => i.status === 'nuevo').length,
       actualizados: this.bulkPreview.filter((i) => i.status === 'actualizado').length,
+      sinCambios: this.bulkPreview.filter((i) => i.status === 'sin_cambios').length,
       eliminados: this.bulkDeleted.length,
     };
   }
 
-  get filteredBulkItems(): { code: string; name: string; stock: number; status: 'nuevo' | 'actualizado' }[] {
+  /** Cantidad de items que se enviarán a la API (nuevos + actualizados; sin_cambios se excluyen). */
+  get bulkToImportCount(): number {
+    return this.bulkPreview.filter((i) => i.status === 'nuevo' || i.status === 'actualizado').length;
+  }
+
+  get filteredBulkItems(): { code: string; name: string; stock: number; status: 'nuevo' | 'actualizado' | 'sin_cambios' }[] {
     if (this.bulkPreviewFilter === 'nuevos') return this.bulkPreview.filter((i) => i.status === 'nuevo');
     if (this.bulkPreviewFilter === 'actualizados') return this.bulkPreview.filter((i) => i.status === 'actualizado');
+    if (this.bulkPreviewFilter === 'sin_cambios') return this.bulkPreview.filter((i) => i.status === 'sin_cambios');
     if (this.bulkPreviewFilter === 'eliminados') return [];
     return this.bulkPreview;
   }
 
-  /** Items a mostrar en la tabla: del Excel (nuevos/actualizados) o eliminados (no están en Excel). */
-  get bulkTableRows(): { code: string; name: string; stock: number; status?: 'nuevo' | 'actualizado' | 'eliminado' }[] {
+  /** Items a mostrar en la tabla: del Excel (nuevos/actualizados/sin_cambios) o eliminados (no están en Excel). */
+  get bulkTableRows(): { code: string; name: string; stock: number; status?: 'nuevo' | 'actualizado' | 'sin_cambios' | 'eliminado' }[] {
     if (this.bulkPreviewFilter === 'eliminados') {
       return this.bulkDeleted.map((d) => ({ ...d, status: 'eliminado' as const }));
     }
@@ -123,6 +145,10 @@ export class ProductsAdminComponent implements OnInit {
     this.bulkDeleted = [];
     this.bulkPreviewFilter = 'todos';
     this.bulkSyncMode = false;
+    this.bulkLoading = false;
+    this.bulkParsing = false;
+    this.bulkProgressPercent = 0;
+    this.stopBulkProgressSimulation();
     this.bulkParseError = '';
   }
 
@@ -131,7 +157,28 @@ export class ProductsAdminComponent implements OnInit {
     this.bulkFile = null;
     this.bulkPreview = [];
     this.bulkDeleted = [];
+    this.bulkParsing = false;
+    this.stopBulkProgressSimulation();
     this.bulkParseError = '';
+  }
+
+  private stopBulkProgressSimulation(): void {
+    if (this.bulkProgressInterval) {
+      clearInterval(this.bulkProgressInterval);
+      this.bulkProgressInterval = null;
+    }
+  }
+
+  private startBulkProgressSimulation(isParsing: boolean): void {
+    this.bulkProgressPercent = 0;
+    this.stopBulkProgressSimulation();
+    const target = isParsing ? 100 : 90;
+    const step = isParsing ? 15 : 3;
+    const intervalMs = isParsing ? 80 : 200;
+    this.bulkProgressInterval = setInterval(() => {
+      this.bulkProgressPercent = Math.min(this.bulkProgressPercent + step, target);
+      if (this.bulkProgressPercent >= target) this.stopBulkProgressSimulation();
+    }, intervalMs);
   }
 
   bulkParseError = '';
@@ -149,8 +196,13 @@ export class ProductsAdminComponent implements OnInit {
     this.bulkFile = file;
     this.bulkPreview = [];
     this.bulkParseError = '';
+    this.bulkParsing = true;
+    this.startBulkProgressSimulation(true);
     const reader = new FileReader();
     reader.onload = (e: ProgressEvent<FileReader>) => {
+      this.bulkParsing = false;
+      this.bulkProgressPercent = 100;
+      this.stopBulkProgressSimulation();
       try {
         const data = e.target?.result;
         if (!data) {
@@ -214,15 +266,19 @@ export class ProductsAdminComponent implements OnInit {
     return items;
   }
 
-  /** Clasifica items del Excel: nuevos (crear), actualizados (ya existen), y productos eliminados (en sistema pero no en Excel). */
+  /** Clasifica items del Excel: nuevos (crear), actualizados (cambió nombre o existencia), sin_cambios (existe y no cambió nada). */
   private classifyBulkItems(items: { code: string; name: string; stock: number }[]): void {
     const existingByCode = new Map(this.products.map((p) => [p.code.trim().toLowerCase(), p]));
     const excelCodes = new Set(items.map((i) => i.code.trim().toLowerCase()));
 
     this.bulkPreview = items.map((item) => {
       const key = item.code.trim().toLowerCase();
-      const exists = existingByCode.has(key);
-      return { ...item, status: (exists ? 'actualizado' : 'nuevo') as 'nuevo' | 'actualizado' };
+      const existing = existingByCode.get(key);
+      if (!existing) return { ...item, status: 'nuevo' as const };
+      const nameChanged = existing.name.trim() !== item.name.trim();
+      const stockChanged = (existing.stock ?? 0) !== item.stock;
+      const status = nameChanged || stockChanged ? 'actualizado' : 'sin_cambios';
+      return { ...item, status };
     });
 
     this.bulkDeleted = this.products
@@ -233,36 +289,50 @@ export class ProductsAdminComponent implements OnInit {
   }
 
   async confirmBulkImport(): Promise<void> {
-    if (this.bulkPreview.length === 0) {
-      this.notification.showMessage('No hay datos para importar.', 'error');
+    const toImport = this.bulkPreview.filter((i) => i.status === 'nuevo' || i.status === 'actualizado');
+    if (toImport.length === 0) {
+      this.notification.showMessage(
+        this.bulkStats.sinCambios > 0
+          ? 'No hay productos nuevos ni con cambios. Todos están sin modificar.'
+          : 'No hay datos para importar.',
+        'error'
+      );
       return;
     }
     if (this.bulkSyncMode && this.bulkDeleted.length > 0) {
       const ok = await this.notification.confirm(
         'Sincronizar',
-        `Se eliminarán ${this.bulkDeleted.length} producto(s) que no están en el archivo. ¿Continuar?`
+        `Se desactivarán ${this.bulkDeleted.length} producto(s) que no están en el archivo. ¿Continuar?`
       );
       if (!ok) return;
     }
     this.bulkLoading = true;
-    let deleted = 0;
-    if (this.bulkSyncMode && this.bulkDeleted.length > 0) {
-      deleted = this.catalogService.removeProductsNotInExcel(
-        this.bulkPreview.map((i) => i.code.trim().toLowerCase())
-      );
-    }
-    const result = this.catalogService.addProductsFromBulkImport(
-      this.bulkPreview.map((i) => ({ code: i.code, name: i.name, stock: i.stock }))
-    );
-    this.bulkLoading = false;
-    this.loadProducts();
-    this.closeBulkImport();
-    let msg = `Se crearon ${result.created} producto(s) pendientes de configurar.`;
-    if (result.updated) msg += ` Se actualizó existencia de ${result.updated} producto(s).`;
-    if (deleted) msg += ` Se eliminaron ${deleted} producto(s) que no estaban en el archivo.`;
-    if (result.skipped) msg += ` ${result.skipped} omitido(s) (código ya existe).`;
-    if (result.errors.length) msg += ` Advertencias: ${result.errors.slice(0, 3).join('; ')}`;
-    this.notification.showMessage(msg, result.created > 0 || deleted > 0 ? 'success' : 'info');
-    if (result.created > 0) this.viewMode = 'pendientes';
+    this.bulkProgressPercent = 0;
+    this.startBulkProgressSimulation(false);
+    this.catalogService
+      .addProductsFromBulkImport(
+        toImport.map((i) => ({ code: i.code, name: i.name, stock: i.stock })),
+        this.bulkSyncMode
+      )
+      .subscribe({
+        next: (result) => {
+          this.bulkLoading = false;
+          this.bulkProgressPercent = 100;
+          this.stopBulkProgressSimulation();
+          this.loadProducts();
+          this.closeBulkImport();
+          let msg = `Se crearon ${result.created} producto(s) pendientes de configurar.`;
+          if (result.updated) msg += ` Se actualizó existencia de ${result.updated} producto(s).`;
+          if (result.deleted) msg += ` Se desactivaron ${result.deleted} producto(s) que no estaban en el archivo.`;
+          if (result.errors.length) msg += ` Advertencias: ${result.errors.slice(0, 3).join('; ')}`;
+          this.notification.showMessage(msg, result.created > 0 || result.deleted > 0 ? 'success' : 'info');
+          if (result.created > 0) this.viewMode = 'pendientes';
+        },
+        error: () => {
+          this.bulkLoading = false;
+          this.stopBulkProgressSimulation();
+          this.notification.showMessage('Error al importar. Verifica la conexión con la API.', 'error');
+        },
+      });
   }
 }

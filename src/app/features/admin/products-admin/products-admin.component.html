@@ -122,18 +122,28 @@
             Se crearán productos pendientes para que <strong>agregues foto, precio y categoría</strong>.
           </p>
           <div class="bulk-file-wrap">
-          <label class="file-label">
-            <input type="file" accept=".xlsx,.xls" (change)="onBulkFileSelect($event)" />
-            {{ bulkFile ? bulkFile.name : 'Seleccionar archivo' }}
+          <label class="file-label" [class.loading]="bulkParsing">
+            <input type="file" accept=".xlsx,.xls" (change)="onBulkFileSelect($event)" [disabled]="bulkParsing">
+            {{ bulkParsing ? 'Leyendo archivo...' : (bulkFile ? bulkFile.name : 'Seleccionar archivo') }}
           </label>
           </div>
+          @if (bulkParsing || bulkLoading) {
+            <div class="bulk-progress">
+              <div class="bulk-progress-row">
+                <div class="bulk-progress-bar" [style.--progress]="bulkProgressPercent + '%'"></div>
+                <span class="bulk-progress-percent">{{ bulkProgressPercent }}%</span>
+              </div>
+              <p class="bulk-progress-text">{{ bulkParsing ? 'Leyendo y procesando archivo...' : 'Importando productos...' }}</p>
+            </div>
+          }
           @if (bulkParseError) {
             <p class="bulk-error">{{ bulkParseError }}</p>
           }
           @if (bulkPreview.length > 0) {
             <div class="bulk-stats">
               <span class="stat-badge stat-nuevos" title="Se crearán en el sistema">{{ bulkStats.nuevos }} nuevos</span>
-              <span class="stat-badge stat-actualizados" title="Se actualizará existencia">{{ bulkStats.actualizados }} actualizados</span>
+              <span class="stat-badge stat-actualizados" title="Cambió nombre o existencia">{{ bulkStats.actualizados }} actualizados</span>
+              <span class="stat-badge stat-sin-cambios" title="No se modifican (se excluyen de la carga)">{{ bulkStats.sinCambios }} sin cambios</span>
               <span class="stat-badge stat-eliminados" title="Se eliminarán al importar">{{ bulkStats.eliminados }} eliminados</span>
             </div>
             @if (bulkStats.eliminados > 0) {
@@ -146,6 +156,7 @@
               <button type="button" class="filter-chip" [class.active]="bulkPreviewFilter === 'todos'" (click)="bulkPreviewFilter = 'todos'">Todos</button>
               <button type="button" class="filter-chip" [class.active]="bulkPreviewFilter === 'nuevos'" (click)="bulkPreviewFilter = 'nuevos'">Nuevos</button>
               <button type="button" class="filter-chip" [class.active]="bulkPreviewFilter === 'actualizados'" (click)="bulkPreviewFilter = 'actualizados'">Actualizados</button>
+              <button type="button" class="filter-chip" [class.active]="bulkPreviewFilter === 'sin_cambios'" (click)="bulkPreviewFilter = 'sin_cambios'">Sin cambios</button>
               <button type="button" class="filter-chip" [class.active]="bulkPreviewFilter === 'eliminados'" (click)="bulkPreviewFilter = 'eliminados'">Eliminados</button>
             </div>
             <div class="bulk-preview">
@@ -154,6 +165,7 @@
                 <table class="bulk-preview-table">
                   <thead>
                     <tr>
+                      <th class="col-num">#</th>
                       <th>CÓDIGO</th>
                       <th>DESCRIPCIÓN</th>
                       <th>EXISTENCIA</th>
@@ -161,14 +173,16 @@
                     </tr>
                   </thead>
                   <tbody>
-                    @for (row of bulkTableRows; track row.code) {
+                    @for (row of bulkTableRows; track row.code; let i = $index) {
                       <tr>
+                        <td class="col-num">{{ i + 1 }}</td>
                         <td class="col-code">{{ row.code }}</td>
                         <td class="col-desc">{{ row.name }}</td>
                         <td class="col-stock">{{ row.stock | number }}</td>
                         <td class="col-status">
                           @if (row.status === 'nuevo') { <span class="badge badge-nuevo">Nuevo</span> }
                           @if (row.status === 'actualizado') { <span class="badge badge-actualizado">Actualizado</span> }
+                          @if (row.status === 'sin_cambios') { <span class="badge badge-sin-cambios">Sin cambios</span> }
                           @if (row.status === 'eliminado') { <span class="badge badge-eliminado">Eliminado</span> }
                         </td>
                       </tr>
@@ -184,10 +198,10 @@
           <button
             type="button"
             class="btn btn-primary"
-            [disabled]="bulkPreview.length === 0 || bulkLoading"
+            [disabled]="bulkToImportCount === 0 || bulkLoading"
             (click)="confirmBulkImport()"
           >
-            {{ bulkLoading ? 'Importando...' : (bulkSyncMode && bulkStats.eliminados > 0 ? 'Importar y sincronizar' : 'Importar ' + bulkPreview.length + ' producto(s)') }}
+            {{ bulkLoading ? 'Importando...' : (bulkSyncMode && bulkStats.eliminados > 0 ? 'Importar y sincronizar' : 'Importar ' + bulkToImportCount + ' producto(s)') }}
           </button>
         </div>
       </div>

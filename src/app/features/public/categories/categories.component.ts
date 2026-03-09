@@ -22,7 +22,9 @@ export class CategoriesComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.categories = this.catalogService.getCategories();
+    this.catalogService.loadCategories().subscribe(() => {
+      this.categories = this.catalogService.getCategories();
+    });
   }
 
   trackById(index: number, category: Category): string {

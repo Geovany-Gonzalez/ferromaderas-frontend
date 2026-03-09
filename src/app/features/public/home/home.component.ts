@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { CatalogService } from '../../../core/services/catalog.service';
@@ -14,11 +14,18 @@ import { Product } from '../../../core/models/product.model';
   styleUrl: './home.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class HomeComponent {
+export class HomeComponent implements OnInit {
   private catalog = inject(CatalogService);
   private cart = inject(CartService);
 
-  featured = this.catalog.getFeaturedProducts();
+  featured: Product[] = [];
+
+  ngOnInit(): void {
+    this.catalog.loadCatalog().subscribe(() => {
+      this.featured = this.catalog.getFeaturedProducts();
+    });
+    this.catalog.loadCategories().subscribe();
+  }
 
   onAdd(p: Product){ this.cart.addOne(p); }
   trackById(_: number, p: Product){ return p.id; }
