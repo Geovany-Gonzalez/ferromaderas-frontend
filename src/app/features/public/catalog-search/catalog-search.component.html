@@ -1,0 +1,52 @@
+<section class="container hero card">
+  <div class="hero-bar">Buscar productos</div>
+  <div class="hero-body">
+    <p class="lead">
+      Escribí código o nombre. Se busca en el catálogo público (solo productos activos).
+    </p>
+    <div class="search">
+      <input
+        type="search"
+        [(ngModel)]="searchQuery"
+        (keydown.enter)="submitSearch()"
+        placeholder="Ej: PVC 1/2, cemento, pintura..."
+        aria-label="Buscar producto por nombre o código"
+      />
+      <button type="button" (click)="submitSearch()" aria-label="Buscar">
+        <img src="/assets/icons/Lupa.png" alt="" />
+      </button>
+    </div>
+  </div>
+</section>
+
+<p *ngIf="loading" class="container status">Cargando catálogo…</p>
+<p *ngIf="loadError" class="container status status--error">
+  No se pudo cargar el catálogo. Comprobá que la API esté en ejecución.
+</p>
+
+<section class="container section-title" *ngIf="!loading && !loadError">
+  <div class="title">
+    <ng-container *ngIf="searchQuery.trim(); else allTitle">
+      Resultados para «{{ searchQuery.trim() }}»
+    </ng-container>
+    <ng-template #allTitle>Todos los productos del catálogo</ng-template>
+  </div>
+</section>
+
+<section class="container grid" *ngIf="!loading && !loadError && results.length > 0">
+  <app-product-card
+    *ngFor="let p of results; trackBy: trackById"
+    [product]="p"
+    (add)="onAdd($event)"
+  />
+</section>
+
+<section class="container empty" *ngIf="!loading && !loadError && results.length === 0">
+  <div class="empty-card card">
+    <h2>Sin resultados</h2>
+    <p *ngIf="searchQuery.trim()">
+      No hay productos que coincidan con «{{ searchQuery.trim() }}».
+    </p>
+    <p *ngIf="!searchQuery.trim()">No hay productos activos en el catálogo.</p>
+  </div>
+</section>

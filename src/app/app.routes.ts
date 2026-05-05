@@ -23,6 +23,11 @@ export const routes: Routes = [
           import('./features/public/category-detail/category-detail.component').then(m => m.CategoryDetailComponent),
       },
       {
+        path: 'buscar',
+        loadComponent: () =>
+          import('./features/public/catalog-search/catalog-search.component').then(m => m.CatalogSearchComponent),
+      },
+      {
         path: 'ubicacion',
         loadComponent: () =>
           import('./features/public/location/location.component').then(m => m.LocationComponent),
@@ -69,6 +74,11 @@ export const routes: Routes = [
         path: 'reportes',
         loadComponent: () =>
           import('./features/admin/reports-dashboard/reports-dashboard.component').then(m => m.ReportsDashboardComponent),
+      },
+      {
+        path: 'bitacora',
+        loadComponent: () =>
+          import('./features/admin/bitacora-admin/bitacora-admin.component').then(m => m.BitacoraAdminComponent),
       },
       {
         path: 'productos/crear',

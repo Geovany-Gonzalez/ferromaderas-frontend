@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, NgZone, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
@@ -27,7 +27,8 @@ export class CategoryFormComponent implements OnInit {
     private catalogService: CatalogService,
     private router: Router,
     private route: ActivatedRoute,
-    private notification: NotificationService
+    private notification: NotificationService,
+    private ngZone: NgZone
   ) {}
 
   ngOnInit(): void {
@@ -66,10 +67,15 @@ export class CategoryFormComponent implements OnInit {
       }
       const reader = new FileReader();
       reader.onload = (e: ProgressEvent<FileReader>) => {
-        if (e.target?.result) {
-          this.categoryForm.imageUrl = e.target.result as string;
-          this.previewImage = e.target.result as string;
+        const dataUrl = e.target?.result;
+        if (!dataUrl || typeof dataUrl !== 'string') {
+          return;
         }
+        // FileReader dispara fuera de la zona de Angular; sin esto no se pinta la vista previa.
+        this.ngZone.run(() => {
+          this.categoryForm.imageUrl = dataUrl;
+          this.previewImage = dataUrl;
+        });
       };
       reader.readAsDataURL(file);
     }

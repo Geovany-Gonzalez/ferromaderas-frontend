@@ -16,9 +16,25 @@
   </div>
 </section>
 
-<section class="container categories-grid">
+<section class="container categories-toolbar" *ngIf="!loadError">
+  <input
+    type="search"
+    class="search-input"
+    [(ngModel)]="searchTerm"
+    placeholder="Buscar categoría por nombre..."
+    autocomplete="off"
+    aria-label="Buscar categoría por nombre"
+  />
+</section>
+
+<p *ngIf="loading" class="container status-msg">Cargando categorías…</p>
+<p *ngIf="loadError" class="container status-msg status-msg--error">
+  No se pudieron cargar las categorías. Comprobá que la API esté en ejecución y vuelve a intentar.
+</p>
+
+<section class="container categories-grid" *ngIf="!loading && !loadError">
   <div 
-    *ngFor="let category of categories; trackBy: trackById" 
+    *ngFor="let category of displayedCategories; trackBy: trackById" 
     class="category-card card"
     (click)="onCategoryClick(category)"
     role="button"
@@ -26,7 +42,7 @@
     [attr.aria-label]="'Ver productos de ' + category.name">
     
     <div class="category-image">
-      <img [src]="category.imageUrl" [alt]="category.name" />
+      <img [src]="categoryImageUrl(category)" [alt]="category.name" loading="lazy" />
     </div>
     
     <div class="category-info">
@@ -35,6 +51,18 @@
     </div>
   </div>
 </section>
+
+<p
+  *ngIf="!loading && !loadError && displayedCategories.length === 0"
+  class="container status-msg"
+>
+  <ng-container *ngIf="searchTerm.trim(); else noCategories">
+    No hay categorías que coincidan con «{{ searchTerm.trim() }}».
+  </ng-container>
+  <ng-template #noCategories>
+    Aún no hay categorías publicadas o activas.
+  </ng-template>
+</p>
 
 <section class="container cta-section">
   <div class="cta-card">

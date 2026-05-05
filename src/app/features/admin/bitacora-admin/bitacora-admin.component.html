@@ -1,0 +1,73 @@
+<div class="bitacora-admin-container">
+  <div class="list-section">
+    <h2 class="list-title">Bitácora de auditoría</h2>
+    <p class="list-intro">
+      Registro de acciones sobre productos (crear, editar, activar) y cargas masivas / sincronización de inventario.
+    </p>
+
+    <div class="toolbar">
+      <a [routerLink]="['/admin/dashboard']" class="btn-home" title="Inicio" aria-label="Inicio">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+          <polyline points="9 22 9 12 15 12 15 22" />
+        </svg>
+      </a>
+      <div class="filters">
+        <label class="filter-field">
+          <span>Módulo</span>
+          <input type="text" [(ngModel)]="filterModulo" placeholder="ej. productos" class="filter-input" />
+        </label>
+        <label class="filter-field">
+          <span>Desde</span>
+          <input type="date" [(ngModel)]="filterDesde" class="filter-input" />
+        </label>
+        <label class="filter-field">
+          <span>Hasta</span>
+          <input type="date" [(ngModel)]="filterHasta" class="filter-input" />
+        </label>
+        <button type="button" class="btn-filter" (click)="aplicarFiltros()">Filtrar</button>
+      </div>
+    </div>
+
+    <div class="table-wrap" *ngIf="!loading">
+      <table class="bitacora-table">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Módulo</th>
+            <th>Acción</th>
+            <th>Usuario (id)</th>
+            <th>IP</th>
+            <th>Detalles</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of rows">
+            <td class="col-fecha">{{ formatFecha(row.fecha) }}</td>
+            <td>{{ row.modulo }}</td>
+            <td><span class="badge-accion">{{ row.accion }}</span></td>
+            <td class="col-id">{{ row.usuarioId || '—' }}</td>
+            <td>{{ row.ip || '—' }}</td>
+            <td class="col-detalles">
+              <button type="button" class="btn-toggle" (click)="toggleDetalle(row.id)">
+                {{ detalleExpandido[row.id] ? 'Ocultar' : 'Ver' }}
+              </button>
+              <pre *ngIf="detalleExpandido[row.id]" class="detalle-pre">{{ detallesJson(row.detalles) }}</pre>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p *ngIf="rows.length === 0" class="empty-message">No hay registros con los filtros actuales.</p>
+    </div>
+
+    <div *ngIf="loading" class="loading-row">Cargando…</div>
+
+    <div class="pagination" *ngIf="!loading && total > 0">
+      <button type="button" class="btn-page" [disabled]="page <= 1" (click)="prevPage()">Anterior</button>
+      <span class="page-info"
+        >Página {{ page }} de {{ totalPages }} ({{ total }} registros)</span
+      >
+      <button type="button" class="btn-page" [disabled]="page >= totalPages" (click)="nextPage()">Siguiente</button>
+    </div>
+  </div>
+</div>

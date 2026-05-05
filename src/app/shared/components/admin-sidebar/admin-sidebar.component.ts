@@ -16,6 +16,7 @@ const ALL_MENU_ITEMS: MenuItem[] = [
   { label: 'Destacados', route: '/admin/destacados', permission: 'manage_featured' },
   { label: 'Cotizaciones', route: '/admin/cotizaciones', permission: 'view_quotes' },
   { label: 'Reportes', route: '/admin/reportes', permission: 'view_quotes' },
+  { label: 'Bitácora', route: '/admin/bitacora', permission: 'view_bitacora' },
   { label: 'Políticas', route: '/admin/politicas', permission: 'manage_policies' },
   { label: 'Usuarios', route: '/admin/usuarios', permission: 'manage_users' },
 ];

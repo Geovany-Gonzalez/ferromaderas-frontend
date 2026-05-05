@@ -73,6 +73,43 @@
   height: 48px;
 }
 
+.categories-toolbar {
+  max-width: 1400px;
+  margin: 0 auto 16px;
+  padding: 0 16px;
+}
+
+.search-input {
+  width: 100%;
+  max-width: 480px;
+  display: block;
+  margin: 0 auto;
+  padding: 12px 16px;
+  font-size: 16px;
+  border: 1px solid var(--border, #cfd8dc);
+  border-radius: var(--radius);
+  background: var(--card, #fff);
+  color: var(--text);
+  box-sizing: border-box;
+}
+
+.search-input:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.status-msg {
+  text-align: center;
+  color: var(--muted);
+  margin: 24px auto 32px;
+  max-width: 640px;
+  padding: 0 16px;
+}
+
+.status-msg--error {
+  color: #c62828;
+}
+
 // Categories Grid
 .categories-grid {
   margin-top: 24px;

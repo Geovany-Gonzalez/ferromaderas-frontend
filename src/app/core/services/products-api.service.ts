@@ -68,18 +68,33 @@ export class ProductsApiService {
     });
   }
 
-  private mapToProduct(p: Record<string, unknown>): Product {
+  private mapToProduct(p: unknown): Product {
+    if (p == null || typeof p !== 'object' || Array.isArray(p)) {
+      return {
+        id: '',
+        code: '',
+        name: '',
+        price: 0,
+        imageUrl: '',
+        categoryId: '',
+        featured: false,
+        active: false,
+        pendingConfig: false,
+        stock: 0,
+      };
+    }
+    const o = p as Record<string, unknown>;
     return {
-      id: String(p['id'] ?? ''),
-      code: String(p['code'] ?? ''),
-      name: String(p['name'] ?? ''),
-      price: Number(p['price'] ?? 0),
-      imageUrl: String(p['imageUrl'] ?? ''),
-      categoryId: (p['categoryId'] as string) || '',
-      featured: Boolean(p['featured']),
-      active: p['active'] !== false,
-      pendingConfig: Boolean(p['pendingConfig']),
-      stock: Number(p['stock'] ?? 0),
+      id: String(o['id'] ?? ''),
+      code: String(o['code'] ?? ''),
+      name: String(o['name'] ?? ''),
+      price: Number(o['price'] ?? 0),
+      imageUrl: String(o['imageUrl'] ?? ''),
+      categoryId: (o['categoryId'] as string) || '',
+      featured: Boolean(o['featured']),
+      active: o['active'] !== false,
+      pendingConfig: Boolean(o['pendingConfig']),
+      stock: Number(o['stock'] ?? 0),
     };
   }
 

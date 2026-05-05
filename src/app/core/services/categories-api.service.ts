@@ -11,9 +11,14 @@ export class CategoriesApiService {
   constructor(private readonly http: HttpClient) {}
 
   getAll(): Observable<Category[]> {
-    return this.http
-      .get<Record<string, unknown>[]>(this.api)
-      .pipe(map((list) => list.map((c) => this.mapToCategory(c))));
+    return this.http.get<unknown>(this.api).pipe(
+      map((raw) => {
+        const list = Array.isArray(raw) ? raw : [];
+        return list.map((c) =>
+          this.mapToCategory(c as Record<string, unknown>)
+        );
+      })
+    );
   }
 
   getById(id: string): Observable<Category | null> {
@@ -34,7 +39,13 @@ export class CategoriesApiService {
       );
   }
 
-  create(data: { name: string; slug: string }): Observable<Category> {
+  create(data: {
+    name: string;
+    slug: string;
+    imageUrl?: string;
+    description?: string;
+    active?: boolean;
+  }): Observable<Category> {
     return this.http
       .post<Record<string, unknown>>(this.api, data)
       .pipe(map((c) => this.mapToCategory(c)));
@@ -42,7 +53,13 @@ export class CategoriesApiService {
 
   update(
     id: string,
-    data: { name?: string; slug?: string }
+    data: {
+      name?: string;
+      slug?: string;
+      imageUrl?: string | null;
+      description?: string | null;
+      active?: boolean;
+    }
   ): Observable<Category | null> {
     return this.http
       .put<Record<string, unknown>>(`${this.api}/${id}`, data)

@@ -90,6 +90,13 @@ export class ProductsAdminComponent implements OnInit {
   }
 
   setProductActive(product: Product, active: boolean): void {
+    if (active && product.pendingConfig) {
+      this.notification.showMessage(
+        'Primero configura precio, categoría e imagen desde Editar. No puedes activar un producto pendiente sin esos datos.',
+        'error'
+      );
+      return;
+    }
     const action = active ? 'activar' : 'desactivar';
     this.notification.confirm('Confirmar', `¿Deseas ${action} el producto "${product.name}"?`).then((ok) => {
       if (ok) {

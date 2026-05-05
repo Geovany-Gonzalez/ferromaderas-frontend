@@ -1,7 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, NgZone, OnDestroy, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
+import { TimeoutError, timeout, catchError, finalize, of } from 'rxjs';
 import { CatalogService, FEATURED_LIMIT } from '../../../core/services/catalog.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { Product } from '../../../core/models/product.model';
@@ -14,9 +16,13 @@ import { Category } from '../../../core/models/category.model';
   templateUrl: './product-form.component.html',
   styleUrl: './product-form.component.scss',
 })
-export class ProductFormComponent implements OnInit {
+export class ProductFormComponent implements OnInit, OnDestroy {
   readonly FEATURED_LIMIT = FEATURED_LIMIT;
+  private readonly destroyRef = inject(DestroyRef);
+
   isEditing = false;
+  /** Mientras carga el producto desde la API (solo edición). */
+  loadingProduct = false;
   previewImage = '';
   productForm: Partial<Product> = {
     code: '',
@@ -31,33 +37,143 @@ export class ProductFormComponent implements OnInit {
   /** Si estamos editando, si el producto ya estaba en destacados al cargar. */
   private originalFeatured = false;
 
+  /** Respaldo si RxJS/HTTP no terminan (no depende de Zone ni del operador timeout). */
+  private loadSafetyTimer: ReturnType<typeof setTimeout> | null = null;
+
+  /** Id de edición resuelto una vez (evita regex en cada ciclo de detección de cambios). */
+  private editRouteProductId: string | null = null;
+
   constructor(
     private catalogService: CatalogService,
     private router: Router,
     private route: ActivatedRoute,
-    private notification: NotificationService
-  ) {}
+    private notification: NotificationService,
+    private cdr: ChangeDetectorRef,
+    private ngZone: NgZone
+  ) {
+    this.editRouteProductId = this.getEditProductId();
+  }
+
+  ngOnDestroy(): void {
+    this.clearLoadSafetyTimer();
+  }
+
+  /**
+   * Id del producto a editar: primero la URL (fiable con router-outlet anidado),
+   * luego recorriendo ActivatedRoute.
+   */
+  private getEditProductId(): string | null {
+    const fromUrl = /\/admin\/productos\/editar\/([^/?#]+)/.exec(this.router.url);
+    if (fromUrl?.[1]) {
+      return fromUrl[1];
+    }
+    let r: ActivatedRoute | null = this.route;
+    while (r) {
+      const id = r.snapshot.paramMap.get('id');
+      if (id) {
+        return id;
+      }
+      r = r.firstChild;
+    }
+    return null;
+  }
+
+  private clearLoadSafetyTimer(): void {
+    if (this.loadSafetyTimer != null) {
+      clearTimeout(this.loadSafetyTimer);
+      this.loadSafetyTimer = null;
+    }
+  }
+
+  /** Temporizador del navegador: fuerza salida del estado "cargando" aunque falle RxJS/HTTP. */
+  private startLoadSafetyTimer(): void {
+    this.clearLoadSafetyTimer();
+    this.loadSafetyTimer = setTimeout(() => {
+      this.loadSafetyTimer = null;
+      if (!this.loadingProduct) {
+        return;
+      }
+      this.loadingProduct = false;
+      this.notification.showMessage(
+        'No se pudo cargar el producto (tiempo agotado). Comprueba que la API esté en ejecución (por ejemplo http://localhost:3001) y que environment.apiUrl sea correcto.',
+        'error'
+      );
+      this.router.navigate(['/admin/productos']);
+      this.cdr.markForCheck();
+    }, 20000);
+  }
 
   ngOnInit(): void {
     this.catalogService.loadCategories().subscribe(() => {
       this.categories = this.catalogService.getAllCategories().filter((c) => c.active !== false);
+      this.cdr.markForCheck();
     });
-    const id = this.route.snapshot.paramMap.get('id');
-    if (id) {
-      this.catalogService.loadProductById(id).subscribe((product) => {
-        if (product) {
-          this.isEditing = true;
-          this.originalFeatured = product.featured === true;
-          this.productForm = { ...product };
-          this.previewImage = product.imageUrl || '';
-        }
-      });
-      this.catalogService.loadProducts().subscribe();
-    } else {
+
+    const id = this.editRouteProductId;
+    if (!id) {
       this.catalogService.loadProducts().subscribe(() => {
         this.productForm.code = this.catalogService.getNextProductCode();
+        this.cdr.markForCheck();
       });
+      return;
     }
+
+    this.loadingProduct = true;
+    this.startLoadSafetyTimer();
+    this.cdr.markForCheck();
+
+    this.catalogService.loadProducts().subscribe();
+
+    this.catalogService
+      .loadProductById(id)
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        timeout({ first: 20000 }),
+        catchError((err: unknown) => {
+          if (err instanceof TimeoutError) {
+            this.notification.showMessage(
+              'La API no respondió a tiempo. Verifica feromaderas-api (puerto 3001) y environment.apiUrl.',
+              'error'
+            );
+          } else {
+            this.notification.showMessage('Error al cargar el producto.', 'error');
+          }
+          return of(null);
+        }),
+        finalize(() => {
+          this.clearLoadSafetyTimer();
+          this.loadingProduct = false;
+          this.cdr.markForCheck();
+        })
+      )
+      .subscribe({
+        next: (product) => {
+          if (product?.id) {
+            this.isEditing = true;
+            this.originalFeatured = product.featured === true;
+            this.productForm = { ...product };
+            this.previewImage = product.imageUrl || '';
+            if (product.pendingConfig) {
+              this.productForm.active = false;
+            }
+          } else {
+            this.notification.showMessage('No se encontró el producto.', 'error');
+            this.router.navigate(['/admin/productos']);
+          }
+        },
+      });
+  }
+
+  /** Ruta /admin/productos/editar/:id (para título mientras carga). */
+  get isEditRoute(): boolean {
+    return !!this.editRouteProductId;
+  }
+
+  /** Precio, categoría e imagen listos (pendientes de carga masiva). */
+  get isConfigurationComplete(): boolean {
+    const price = Number(this.productForm.price ?? 0);
+    const hasImage = !!(this.productForm.imageUrl?.trim() || this.previewImage?.trim());
+    return !!(this.productForm.categoryId && price > 0 && hasImage);
   }
 
   /** Permitir marcar como destacado solo si hay cupo o ya estaba destacado al editar. */
@@ -90,10 +206,15 @@ export class ProductFormComponent implements OnInit {
       }
       const reader = new FileReader();
       reader.onload = (e: ProgressEvent<FileReader>) => {
-        if (e.target?.result) {
-          this.productForm.imageUrl = e.target.result as string;
-          this.previewImage = e.target.result as string;
+        const dataUrl = e.target?.result;
+        if (!dataUrl || typeof dataUrl !== 'string') {
+          return;
         }
+        this.ngZone.run(() => {
+          this.productForm.imageUrl = dataUrl;
+          this.previewImage = dataUrl;
+          this.cdr.markForCheck();
+        });
       };
       reader.readAsDataURL(file);
     }

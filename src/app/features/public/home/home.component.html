@@ -5,9 +5,15 @@
     <div class="search-section">
       <div class="q">¿Qué estás buscando?</div>
       <div class="search">
-        <input placeholder='Ej: PVC 1/2, cemento, pintura...' />
-        <button type="button" aria-label="Buscar">
-          <img src="/assets/icons/Lupa.png" alt="Buscar" />
+        <input
+          type="search"
+          [(ngModel)]="searchQuery"
+          (keydown.enter)="submitSearch()"
+          placeholder="Ej: PVC 1/2, cemento, pintura..."
+          aria-label="Buscar producto por nombre o código"
+        />
+        <button type="button" aria-label="Buscar" (click)="submitSearch()">
+          <img src="/assets/icons/Lupa.png" alt="" />
         </button>
       </div>
     </div>

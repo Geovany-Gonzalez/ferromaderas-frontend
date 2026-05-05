@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable, tap, map, of } from 'rxjs';
+import { Observable, tap, map, of, timeout, catchError } from 'rxjs';
 import { ProductsApiService } from './products-api.service';
 import { CategoriesApiService } from './categories-api.service';
 import { Category } from '../models/category.model';
@@ -12,6 +12,8 @@ export const FEATURED_LIMIT = 9;
 export class CatalogService {
   private products: Product[] = [];
   private categories: Category[] = [];
+  /** Indica si el último intento de loadCategories() falló (red, timeout, respuesta inválida). */
+  private lastCategoriesLoadFailed = false;
 
   constructor(
     private readonly productsApi: ProductsApiService,
@@ -52,10 +54,23 @@ export class CatalogService {
   /** Carga categorías desde la API. */
   loadCategories(): Observable<Category[]> {
     return this.categoriesApi.getAll().pipe(
+      timeout(20000),
       tap((list) => {
         this.categories = list;
+        this.lastCategoriesLoadFailed = false;
+      }),
+      catchError((err) => {
+        console.error('No se pudieron cargar las categorías', err);
+        this.categories = [];
+        this.lastCategoriesLoadFailed = true;
+        return of([]);
       })
     );
+  }
+
+  /** True si la última llamada a loadCategories() terminó en error (p. ej. API caída o timeout). */
+  didLastCategoriesLoadFail(): boolean {
+    return this.lastCategoriesLoadFailed;
   }
 
   // Métodos de Categorías (sincrónicos sobre cache)
@@ -72,7 +87,8 @@ export class CatalogService {
   }
 
   getCategoryBySlug(slug: string): Category | undefined {
-    return this.categories.find((c) => c.slug === slug);
+    const s = slug.trim().toLowerCase();
+    return this.categories.find((c) => (c.slug || '').toLowerCase() === s);
   }
 
   addCategory(category: Omit<Category, 'id'>): Observable<Category> {
@@ -80,7 +96,13 @@ export class CatalogService {
       (category as { slug?: string }).slug ||
       this.generateSlug(category.name);
     return this.categoriesApi
-      .create({ name: category.name, slug })
+      .create({
+        name: category.name,
+        slug,
+        imageUrl: category.imageUrl,
+        description: category.description,
+        active: category.active,
+      })
       .pipe(tap((c) => this.categories.push(c)));
   }
 

@@ -24,6 +24,14 @@
     font-weight: 600;
     margin: 0;
     text-align: center;
+    line-height: 1.35;
+    .page-title-product {
+      display: block;
+      font-size: 1rem;
+      font-weight: 500;
+      margin-top: 0.35rem;
+      opacity: 0.95;
+    }
   }
   .page-subtitle {
     color: #1e293b;
@@ -37,6 +45,36 @@
     border-top: none;
     border-radius: 0;
   }
+}
+
+.loading-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #64748b;
+  font-size: 1.1rem;
+}
+
+.pending-banner {
+  margin: 0;
+  padding: 1rem 1.5rem;
+  background: #fff7ed;
+  border-bottom: 1px solid #fed7aa;
+  color: #9a3412;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  strong {
+    display: block;
+    margin-bottom: 0.25rem;
+  }
+}
+
+.field-hint.block-hint {
+  display: block;
+  margin: 0 0 1rem 0;
+}
+
+.field-hint.warn {
+  color: #c2410c;
 }
 
 .form-card.card {

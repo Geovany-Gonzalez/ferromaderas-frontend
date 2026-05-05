@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
 import { CatalogService } from '../../../core/services/catalog.service';
 import { CartService } from '../../../core/services/cart.service';
 import { ProductCardComponent } from '../../../shared/components/product-card/product-card.component';
@@ -9,7 +10,7 @@ import { Product } from '../../../core/models/product.model';
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, RouterLink, ProductCardComponent],
+  imports: [CommonModule, FormsModule, RouterLink, ProductCardComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -17,14 +18,25 @@ import { Product } from '../../../core/models/product.model';
 export class HomeComponent implements OnInit {
   private catalog = inject(CatalogService);
   private cart = inject(CartService);
+  private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
 
   featured: Product[] = [];
+  searchQuery = '';
 
   ngOnInit(): void {
     this.catalog.loadCatalog().subscribe(() => {
       this.featured = this.catalog.getFeaturedProducts();
+      this.cdr.markForCheck();
     });
     this.catalog.loadCategories().subscribe();
+  }
+
+  submitSearch(): void {
+    const q = this.searchQuery?.trim() ?? '';
+    void this.router.navigate(['/buscar'], {
+      queryParams: q ? { q } : {},
+    });
   }
 
   onAdd(p: Product){ this.cart.addOne(p); }
