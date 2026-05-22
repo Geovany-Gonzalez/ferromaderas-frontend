@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { forkJoin, of, catchError } from 'rxjs';
 import { CatalogService } from '../../../core/services/catalog.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { Category } from '../../../core/models/category.model';
@@ -27,13 +28,21 @@ export class CategoriesAdminComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.catalogService.loadProducts().subscribe();
-    this.loadCategories();
+    forkJoin({
+      products: this.catalogService.loadProducts().pipe(catchError(() => of([]))),
+      categories: this.catalogService.loadCategories(),
+    }).subscribe({
+      next: ({ categories }) => {
+        this.categories = categories;
+      },
+    });
   }
 
   loadCategories(): void {
-    this.catalogService.loadCategories().subscribe(() => {
-      this.categories = this.catalogService.getAllCategories();
+    this.catalogService.loadCategories().subscribe({
+      next: (list) => {
+        this.categories = list;
+      },
     });
   }
 

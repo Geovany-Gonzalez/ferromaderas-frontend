@@ -1,11 +1,13 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, tap, catchError, of, map, timeout } from 'rxjs';
+import { Observable, tap, catchError, of, map, timeout, finalize } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
-const TOKEN_KEY = 'ferromaderas_token';
 const USER_KEY = 'ferromaderas_user';
+
+/** Limpia JWT legado en localStorage (antes era Bearer en cliente). */
+const LEGACY_TOKEN_KEY = 'ferromaderas_token';
 
 export interface AuthUser {
   id: string;
@@ -17,7 +19,6 @@ export interface AuthUser {
 }
 
 interface LoginResponse {
-  access_token: string;
   user: AuthUser;
 }
 
@@ -25,51 +26,70 @@ interface LoginResponse {
 export class AuthService {
   private readonly api = `${environment.apiUrl}/auth`;
 
-  private token = signal<string | null>(this.loadToken());
-  private userData = signal<AuthUser | null>(this.loadUser());
+  private userData = signal<AuthUser | null>(this.loadCachedUser());
+  /** Evita GET /me en cada clic dentro del admin; se resetea en 401 o logout. */
+  private sessionConfirmed = false;
 
   currentUser = computed(() => this.userData());
-  isAuthenticated = computed(() => !!this.token());
+  /** Sesión válida si hay usuario en memoria (validado vía /me en el guard). */
+  isAuthenticated = computed(() => !!this.userData());
 
   constructor(
     private readonly http: HttpClient,
     private readonly router: Router
-  ) {}
-
-  private loadToken(): string | null {
-    return localStorage.getItem(TOKEN_KEY);
+  ) {
+    localStorage.removeItem(LEGACY_TOKEN_KEY);
   }
 
-  private loadUser(): AuthUser | null {
-    const raw = localStorage.getItem(USER_KEY);
-    return raw ? (JSON.parse(raw) as AuthUser) : null;
+  private loadCachedUser(): AuthUser | null {
+    try {
+      const raw = sessionStorage.getItem(USER_KEY);
+      return raw ? (JSON.parse(raw) as AuthUser) : null;
+    } catch {
+      sessionStorage.removeItem(USER_KEY);
+      return null;
+    }
+  }
+
+  private persistUser(user: AuthUser): void {
+    sessionStorage.setItem(USER_KEY, JSON.stringify(user));
+    localStorage.setItem('ferromaderas_admin_user', user.name);
+    this.userData.set(user);
+    this.sessionConfirmed = true;
+  }
+
+  private clearLocalProfile(): void {
+    sessionStorage.removeItem(USER_KEY);
+    localStorage.removeItem('ferromaderas_admin_user');
+    this.userData.set(null);
+    this.sessionConfirmed = false;
   }
 
   login(username: string, password: string): Observable<LoginResponse> {
-    return this.http
-      .post<LoginResponse>(`${this.api}/login`, { username, password })
-      .pipe(
-        timeout(8000),
-        tap((res) => {
-          localStorage.setItem(TOKEN_KEY, res.access_token);
-          localStorage.setItem(USER_KEY, JSON.stringify(res.user));
-          localStorage.setItem('ferromaderas_admin_user', res.user.name);
-          this.token.set(res.access_token);
-          this.userData.set(res.user);
-        })
-      );
+    return this.http.post<LoginResponse>(`${this.api}/login`, { username, password }).pipe(
+      timeout(8000),
+      tap((res) => {
+        this.persistUser(res.user);
+      })
+    );
   }
 
   logout(): void {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(USER_KEY);
-    this.token.set(null);
-    this.userData.set(null);
-    this.router.navigate(['/admin-login']);
+    this.http
+      .post<{ ok: boolean }>(`${this.api}/logout`, {})
+      .pipe(
+        finalize(() => {
+          this.clearLocalProfile();
+          void this.router.navigate(['/admin-login']);
+        })
+      )
+      .subscribe({ error: () => {} });
   }
 
-  getToken(): string | null {
-    return this.token();
+  /** Tras 401: borra perfil local e intenta invalidar cookie en el servidor. */
+  clearSessionAfterUnauthorized(): void {
+    this.clearLocalProfile();
+    this.http.post<{ ok: boolean }>(`${this.api}/logout`, {}).subscribe({ error: () => {} });
   }
 
   hasPermission(slug: string): boolean {
@@ -81,21 +101,35 @@ export class AuthService {
     return this.userData()?.role === role;
   }
 
-  refreshMe(): Observable<AuthUser | null> {
-    const t = this.getToken();
-    if (!t) return of(null);
+  /** Valida sesión con el servidor (cookie HttpOnly). */
+  ensureSession(): Observable<boolean> {
+    if (this.sessionConfirmed && this.userData()) {
+      return of(true);
+    }
     return this.http.get<{ user: AuthUser | null }>(`${this.api}/me`).pipe(
       tap((res) => {
-        if (res.user) {
-          localStorage.setItem(USER_KEY, JSON.stringify(res.user));
-          this.userData.set(res.user);
-        } else {
-          this.logout();
+        if (res.user) this.persistUser(res.user);
+        else this.clearLocalProfile();
+      }),
+      map((res) => !!res.user),
+      catchError(() => {
+        this.clearLocalProfile();
+        return of(false);
+      })
+    );
+  }
+
+  refreshMe(): Observable<AuthUser | null> {
+    return this.http.get<{ user: AuthUser | null }>(`${this.api}/me`).pipe(
+      tap((res) => {
+        if (res.user) this.persistUser(res.user);
+        else {
+          this.clearLocalProfile();
         }
       }),
       map((res) => res.user),
       catchError(() => {
-        this.logout();
+        this.clearLocalProfile();
         return of(null);
       })
     );
@@ -109,10 +143,8 @@ export class AuthService {
       .pipe(timeout(15000));
   }
 
+  /** Compatibilidad: antes existía initFromStorage(); el estado sale de sessionStorage en el constructor. */
   initFromStorage(): void {
-    const t = localStorage.getItem(TOKEN_KEY);
-    const u = localStorage.getItem(USER_KEY);
-    this.token.set(t);
-    this.userData.set(u ? JSON.parse(u) : null);
+    this.userData.set(this.loadCachedUser());
   }
 }

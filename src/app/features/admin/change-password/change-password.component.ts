@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
+import { clientFacingHttpMessage } from '../../../core/http/client-facing-error';
 
 /** Requisitos mínimos de contraseña */
 const MIN_LENGTH = 8;
@@ -117,7 +118,10 @@ export class ChangePasswordComponent {
         error: (err) => {
           this.ngZone.run(() => {
             this.loading = false;
-            this.error = err?.error?.message || 'Error al cambiar contraseña. Verifica los datos.';
+            this.error = clientFacingHttpMessage(
+              err,
+              'No se pudo cambiar la contraseña. Verifica los datos e intenta de nuevo.'
+            );
             this.cdr.detectChanges();
           });
         },

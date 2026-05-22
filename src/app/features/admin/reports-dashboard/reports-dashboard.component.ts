@@ -405,8 +405,7 @@ export class ReportsDashboardComponent implements OnInit, AfterViewChecked {
       }
 
       return doc.output('blob');
-    } catch (err) {
-      console.error('Error al generar PDF:', err);
+    } catch {
       return null;
     } finally {
       excludeEls.forEach((e) => ((e as HTMLElement).style.visibility = ''));

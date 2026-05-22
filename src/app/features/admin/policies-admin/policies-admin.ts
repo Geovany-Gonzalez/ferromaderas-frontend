@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Policy, PolicyPage, PolicyService } from '../../../core/services/policy';
 import { NotificationService } from '../../../core/services/notification.service';
+import { clientFacingHttpMessage } from '../../../core/http/client-facing-error';
 
 @Component({
   selector: 'app-policies-admin',
@@ -58,7 +59,7 @@ export class PoliciesAdminComponent implements OnInit {
       },
       error: (err) => {
         this.notification.showMessage(
-          err?.error?.message || 'Error al cargar políticas por defecto',
+          clientFacingHttpMessage(err, 'No se pudieron cargar las políticas por defecto.'),
           'error'
         );
       },
@@ -100,7 +101,7 @@ export class PoliciesAdminComponent implements OnInit {
       },
       error: (err) => {
         this.notification.showMessage(
-          err?.error?.message || 'Error al guardar políticas',
+          clientFacingHttpMessage(err, 'No se pudieron guardar las políticas.'),
           'error'
         );
       },

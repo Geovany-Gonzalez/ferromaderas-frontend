@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import * as XLSX from 'xlsx';
+import { forkJoin, of, catchError } from 'rxjs';
 import { CatalogService } from '../../../core/services/catalog.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { Product } from '../../../core/models/product.model';
@@ -39,8 +40,22 @@ export class ProductsAdminComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadProducts();
-    this.catalogService.loadCategories().subscribe();
+    forkJoin({
+      products: this.catalogService.loadProducts().pipe(
+        catchError(() => {
+          this.notification.showMessage(
+            'No se pudieron cargar los productos. Intenta más tarde.',
+            'error'
+          );
+          return of([]);
+        })
+      ),
+      categories: this.catalogService.loadCategories(),
+    }).subscribe({
+      next: ({ products }) => {
+        this.products = products;
+      },
+    });
   }
 
   loadProducts(): void {
@@ -49,7 +64,7 @@ export class ProductsAdminComponent implements OnInit {
         this.products = list;
       },
       error: () => {
-        this.notification.showMessage('Error al cargar productos. Verifica que la API esté activa.', 'error');
+        this.notification.showMessage('No se pudieron cargar los productos. Intenta más tarde.', 'error');
       },
     });
   }
@@ -338,7 +353,7 @@ export class ProductsAdminComponent implements OnInit {
         error: () => {
           this.bulkLoading = false;
           this.stopBulkProgressSimulation();
-          this.notification.showMessage('Error al importar. Verifica la conexión con la API.', 'error');
+          this.notification.showMessage('No se pudo completar la importación. Intenta más tarde.', 'error');
         },
       });
   }

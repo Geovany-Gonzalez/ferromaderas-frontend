@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { NotificationService } from '../../../core/services/notification.service';
+import { clientFacingHttpMessage } from '../../../core/http/client-facing-error';
 import { finalize } from 'rxjs';
 import {
   UsersService,
@@ -94,7 +95,7 @@ export class UserListComponent implements OnInit {
         },
         error: (err) => {
           this.notification.showMessage(
-            err?.error?.message || 'Error al cargar usuarios',
+            clientFacingHttpMessage(err, 'No se pudieron cargar los usuarios.'),
             'error'
           );
         },
@@ -147,7 +148,7 @@ export class UserListComponent implements OnInit {
           },
           error: (err) =>
             this.notification.showMessage(
-              err?.error?.message || 'Error al actualizar',
+              clientFacingHttpMessage(err, 'No se pudo actualizar el usuario.'),
               'error'
             ),
         });

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { NotificationService } from '../../../core/services/notification.service';
+import { clientFacingHttpMessage } from '../../../core/http/client-facing-error';
 import { UsersService } from '../../../core/services/users.service';
 
 export type UserRole = 'vendedor' | 'administrador' | 'gerente' | 'editor';
@@ -204,7 +205,7 @@ export class UsersAdminComponent {
           },
           error: (err) =>
             this.notification.showMessage(
-              err?.error?.message || 'Error al actualizar',
+              clientFacingHttpMessage(err, 'No se pudo actualizar el usuario.'),
               'error'
             ),
         });
@@ -237,7 +238,7 @@ export class UsersAdminComponent {
           },
           error: (err) =>
             this.notification.showMessage(
-              err?.error?.message || 'Error al crear usuario',
+              clientFacingHttpMessage(err, 'No se pudo crear el usuario.'),
               'error'
             ),
         });

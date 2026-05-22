@@ -6,6 +6,9 @@ export const environment = {
   production: false,
   /** ID del contenedor GTM. Vacío en desarrollo para no enviar datos a analytics. */
   gtmId: '',
-  /** URL base de la API NestJS (feromaderas-api) */
-  apiUrl: 'http://localhost:3001/api',
+  /**
+   * Misma ruta que en producción (Vercel rewrite → Railway).
+   * En local, `ng serve` usa proxy.conf.json → http://127.0.0.1:3001
+   */
+  apiUrl: '/api',
 };

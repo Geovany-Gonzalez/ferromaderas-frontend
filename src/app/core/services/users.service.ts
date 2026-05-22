@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map, timeout, catchError, of } from 'rxjs';
+import { Observable, map, timeout } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export type UserRole = 'vendedor' | 'administrador' | 'gerente' | 'editor';
@@ -53,13 +53,7 @@ export class UsersService {
       timeout(12000),
       map((users) =>
         users.map((u) => ({ ...u, nombre: u.name } as ListUser))
-      ),
-      catchError((err) => {
-        if (err?.name === 'TimeoutError') {
-          throw { error: { message: 'La solicitud tardó demasiado. Verifica que el servidor esté activo.' } };
-        }
-        throw err;
-      })
+      )
     );
   }
 

@@ -124,10 +124,9 @@ export class DashboardComponent implements OnInit {
   ngOnInit(): void {
     this.statistics.getDashboard().subscribe({
       next: (data) => this.applyDashboardData(data),
-      error: (err) => {
+      error: () => {
         this.error = 'No se pudieron cargar las estadísticas.';
         this.loading = false;
-        console.error('Dashboard stats error:', err);
       },
     });
   }

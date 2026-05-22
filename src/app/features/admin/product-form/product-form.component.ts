@@ -95,7 +95,7 @@ export class ProductFormComponent implements OnInit, OnDestroy {
       }
       this.loadingProduct = false;
       this.notification.showMessage(
-        'No se pudo cargar el producto (tiempo agotado). Comprueba que la API esté en ejecución (por ejemplo http://localhost:3001) y que environment.apiUrl sea correcto.',
+        'No se pudo cargar el producto: la solicitud tardó demasiado. Intenta de nuevo más tarde.',
         'error'
       );
       this.router.navigate(['/admin/productos']);
@@ -132,7 +132,7 @@ export class ProductFormComponent implements OnInit, OnDestroy {
         catchError((err: unknown) => {
           if (err instanceof TimeoutError) {
             this.notification.showMessage(
-              'La API no respondió a tiempo. Verifica feromaderas-api (puerto 3001) y environment.apiUrl.',
+              'El servidor no respondió a tiempo. Intenta de nuevo más tarde.',
               'error'
             );
           } else {

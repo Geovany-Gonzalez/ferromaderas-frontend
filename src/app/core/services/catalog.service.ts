@@ -59,8 +59,7 @@ export class CatalogService {
         this.categories = list;
         this.lastCategoriesLoadFailed = false;
       }),
-      catchError((err) => {
-        console.error('No se pudieron cargar las categorías', err);
+      catchError(() => {
         this.categories = [];
         this.lastCategoriesLoadFailed = true;
         return of([]);

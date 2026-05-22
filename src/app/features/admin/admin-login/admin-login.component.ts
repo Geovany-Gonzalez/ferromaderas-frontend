@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { clientFacingHttpMessage } from '../../../core/http/client-facing-error';
 
 @Component({
   selector: 'app-admin-login',
@@ -57,26 +58,24 @@ export class AdminLoginComponent {
         const setError = () => {
           this.loading = false;
           if (!err) {
-            this.error = 'Error desconocido. Revisa la consola (F12).';
+            this.error = 'No se pudo iniciar sesión. Intenta de nuevo.';
             this.cdr.detectChanges();
             return;
           }
-          const msg = err?.error?.message ?? err?.message ?? '';
-          const status = err?.status ?? err?.statusCode;
-          const isTimeout = err?.name === 'TimeoutError' || /timeout/i.test(msg);
-          if (isTimeout) {
-            this.error = 'El servidor tardó demasiado en responder. Revisa tu conexión o intenta más tarde.';
-          } else if (status === 0 || status === undefined) {
-            this.error =
-              'No se puede conectar con el servidor. ¿La API está corriendo en http://localhost:3001?';
-          } else if (status === 503) {
-            this.error =
-              msg ||
-              'La base de datos no está conectada. Revisa el .env del API (DATABASE_URL).';
-          } else if (status === 401) {
-            this.error = msg || 'Usuario o contraseña incorrectos.';
+          if ((err as { name?: string })?.name === 'TimeoutError') {
+            this.error = 'El servidor tardó demasiado en responder. Intenta más tarde.';
+            this.cdr.detectChanges();
+            return;
+          }
+          const status = (err as { status?: number; statusCode?: number })?.status ??
+            (err as { statusCode?: number }).statusCode;
+          if (status === 401) {
+            this.error = 'Usuario o contraseña incorrectos.';
           } else {
-            this.error = msg || 'Error al iniciar sesión. Intenta de nuevo.';
+            this.error = clientFacingHttpMessage(
+              err,
+              'Error al iniciar sesión. Intenta de nuevo.'
+            );
           }
           this.cdr.detectChanges();
         };
@@ -109,7 +108,10 @@ export class AdminLoginComponent {
       error: (err) => {
         this.ngZone.run(() => {
           this.forgotLoading = false;
-          this.forgotError = err?.error?.message || 'No se pudo enviar. Verifica el correo o contacta al administrador.';
+          this.forgotError = clientFacingHttpMessage(
+            err,
+            'No se pudo completar la solicitud. Intenta más tarde.'
+          );
           this.cdr.detectChanges();
         });
       },
