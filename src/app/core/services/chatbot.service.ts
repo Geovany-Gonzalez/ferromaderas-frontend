@@ -1,5 +1,9 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, catchError, of } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
+/** Opción de pregunta rápida (compatibilidad con el flujo anterior por botones). */
 export interface ChatOption {
   id: string;
   text: string;
@@ -7,73 +11,95 @@ export interface ChatOption {
   nextOptions?: ChatOption[];
 }
 
+/** Pregunta frecuente (FAQ) que viene del backend. */
+export interface ChatFaq {
+  id: string;
+  question: string;
+  answer: string;
+}
+
+/** Respuesta del backend al enviar un mensaje. */
+export interface ChatResponse {
+  conversationId: string;
+  answer: string;
+  source: 'faq' | 'ia' | 'fallback';
+  suggestions: ChatFaq[];
+}
+
 const STORAGE_FAQ_KEY = 'ferromaderas_chatbot_faq_clicks';
+const STORAGE_SESSION_KEY = 'ferromaderas_chatbot_session';
+const STORAGE_NAME_KEY = 'ferromaderas_chatbot_name';
 
 @Injectable({ providedIn: 'root' })
 export class ChatbotService {
-  /** Preguntas predefinidas con flujos conversacionales */
-  readonly welcomeMessage = '¡Hola! Soy el asistente de Ferromaderas. ¿En qué puedo ayudarte?';
+  private readonly http = inject(HttpClient);
+  private readonly api = `${environment.apiUrl}/chatbot`;
 
+  /** Mensaje de bienvenida del asistente. */
+  readonly welcomeMessage =
+    '¡Hola! Soy el asistente de Ferromaderas. Elegí una pregunta o escribime tu consulta.';
+
+  /**
+   * Opciones locales de respaldo: se usan solo si el backend no devuelve FAQs
+   * (por ejemplo, sin conexión). Lo normal es cargar las FAQs desde la API.
+   */
   readonly initialOptions: ChatOption[] = [
-    {
-      id: 'horarios',
-      text: '¿Cuáles son los horarios de atención?',
-      response: 'Nuestro horario de atención es de Lunes a Viernes de 8:00 a 18:00 y Sábados de 8:00 a 12:00. ¿Necesitas más información?',
-      nextOptions: [
-        { id: 'horarios-detalle', text: '¿Atienden domingos?', response: 'No, los domingos estamos cerrados. Puedes contactarnos por WhatsApp para dejar tu pedido.' },
-        { id: 'horarios-fin', text: 'Gracias, eso es todo', response: '¡De nada! Estamos para ayudarte cuando lo necesites.' },
-      ],
-    },
-    {
-      id: 'envios',
-      text: '¿Hacen envíos a domicilio?',
-      response: 'Sí, realizamos envíos a domicilio dentro de la zona de cobertura. ¿Qué más te gustaría saber?',
-      nextOptions: [
-        { id: 'envios-costo', text: '¿Cuál es el costo de envío?', response: 'El costo de envío depende de la zona y el pedido. Te daremos el monto al confirmar tu cotización.' },
-        { id: 'envios-tiempo', text: '¿En cuánto tiempo llega?', response: 'Generalmente en 24-48 horas hábiles después de confirmar tu pedido.' },
-        { id: 'envios-fin', text: 'Perfecto, gracias', response: '¡De nada! Cualquier duda estamos aquí.' },
-      ],
-    },
-    {
-      id: 'productos',
-      text: '¿Qué productos ofrecen?',
-      response: 'Ofrecemos cemento, tubos PVC, pintura, y más materiales de construcción. Puedes explorar nuestro catálogo en la página principal. ¿Quieres ver algo específico?',
-      nextOptions: [
-        { id: 'prod-cemento', text: 'Precios de cemento', response: 'Te invitamos a revisar nuestro catálogo de cementos o generar una cotización desde el carrito. Los precios varían según marca y cantidad.' },
-        { id: 'prod-pvc', text: 'Tubos y accesorios PVC', response: 'Tenemos tubos PVC de diferentes medidas y accesorios. Revisa la categoría PVC en el menú o solicita una cotización.' },
-        { id: 'prod-fin', text: 'Entendido', response: '¡Perfecto! Si necesitas cotizar, agrega productos al carrito y genera tu cotización.' },
-      ],
-    },
-    {
-      id: 'pago',
-      text: '¿Qué métodos de pago aceptan?',
-      response: 'Aceptamos efectivo, transferencia bancaria y tarjetas de crédito/débito. ¿Algo más?',
-      nextOptions: [
-        { id: 'pago-cuotas', text: '¿Puedo pagar a cuotas?', response: 'Sí, ofrecemos planes de pago según el monto. Consulta con nuestro equipo al confirmar tu pedido.' },
-        { id: 'pago-fin', text: 'Gracias', response: '¡De nada! Estamos para servirte.' },
-      ],
-    },
-    {
-      id: 'ubicacion',
-      text: '¿Dónde están ubicados?',
-      response: 'Estamos en [dirección]. Puedes ver nuestra ubicación exacta en la sección "Ubicación" del menú. ¿Necesitas indicaciones?',
-      nextOptions: [
-        { id: 'ubica-mapa', text: '¿Tienen mapa o Waze?', response: 'Sí, en la página de Ubicación encontrarás un enlace a Google Maps para llegar fácilmente.' },
-        { id: 'ubica-fin', text: 'Listo, gracias', response: '¡Nos vemos pronto!' },
-      ],
-    },
-    {
-      id: 'cotizacion',
-      text: '¿Cómo obtengo una cotización?',
-      response: 'Agrega los productos que necesitas al carrito, luego ve a "Ver carrito" y genera tu cotización. Te dará un link para enviar por WhatsApp o compartir. ¿Alguna duda del proceso?',
-      nextOptions: [
-        { id: 'coti-whatsapp', text: '¿Puedo cotizar por WhatsApp?', response: 'Sí, genera la cotización desde el carrito y se creará un enlace para enviar por WhatsApp. Nuestro equipo te atenderá.' },
-        { id: 'coti-fin', text: 'Perfecto', response: '¡Genial! Cualquier duda estamos aquí.' },
-      ],
-    },
+    { id: 'ubicacion', text: '¿Cuál es la ubicación?' },
+    { id: 'horarios', text: '¿Cuáles son los horarios?' },
+    { id: 'envios', text: '¿Hacen envíos a domicilio?' },
+    { id: 'pago', text: '¿Qué métodos de pago aceptan?' },
+    { id: 'cotizacion', text: '¿Cómo obtengo una cotización?' },
   ];
 
-  /** Registrar que se hizo clic en una opción (para reporte FAQ) */
+  // ---------------------------------------------------------------------------
+  // Backend
+  // ---------------------------------------------------------------------------
+
+  /** Carga las preguntas prelistadas (FAQs activas) desde la API. */
+  getFaqs(): Observable<ChatFaq[]> {
+    return this.http
+      .get<ChatFaq[]>(`${this.api}/faqs`)
+      .pipe(catchError(() => of([])));
+  }
+
+  /** Envía el mensaje del usuario y devuelve la respuesta del asistente. */
+  sendMessage(message: string): Observable<ChatResponse> {
+    return this.http.post<ChatResponse>(`${this.api}/message`, {
+      message,
+      sessionId: this.getSessionId(),
+      name: this.getName() || undefined,
+    });
+  }
+
+  /** Nombre del visitante guardado (vacío si aún no lo dio). */
+  getName(): string {
+    return localStorage.getItem(STORAGE_NAME_KEY) ?? '';
+  }
+
+  /** Guarda el nombre del visitante para personalizar el trato. */
+  setName(name: string): void {
+    const clean = name.trim().slice(0, 40);
+    if (clean) localStorage.setItem(STORAGE_NAME_KEY, clean);
+  }
+
+  /** ID de sesión persistente para agrupar el historial de la conversación. */
+  private getSessionId(): string {
+    let id = localStorage.getItem(STORAGE_SESSION_KEY);
+    if (!id) {
+      id =
+        typeof crypto !== 'undefined' && 'randomUUID' in crypto
+          ? crypto.randomUUID()
+          : `sess-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      localStorage.setItem(STORAGE_SESSION_KEY, id);
+    }
+    return id;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Compatibilidad: reporte local de preguntas más usadas (panel de reportes)
+  // ---------------------------------------------------------------------------
+
+  /** Registra un clic en una pregunta (para el reporte local de FAQ). */
   recordClick(optionId: string, text: string): void {
     const raw = localStorage.getItem(STORAGE_FAQ_KEY);
     let clicks: { id: string; text: string; count: number }[] = [];
@@ -93,12 +119,13 @@ export class ChatbotService {
     localStorage.setItem(STORAGE_FAQ_KEY, JSON.stringify(clicks));
   }
 
-  /** Obtener preguntas más frecuentes para reportes */
+  /** Devuelve las preguntas más frecuentes registradas localmente. */
   getPreguntasFrecuentes(): { pregunta: string; veces: number }[] {
     const raw = localStorage.getItem(STORAGE_FAQ_KEY);
     if (!raw) return [];
     try {
-      const clicks: { id: string; text: string; count: number }[] = JSON.parse(raw);
+      const clicks: { id: string; text: string; count: number }[] =
+        JSON.parse(raw);
       return clicks
         .map((c) => ({ pregunta: c.text, veces: c.count }))
         .sort((a, b) => b.veces - a.veces)

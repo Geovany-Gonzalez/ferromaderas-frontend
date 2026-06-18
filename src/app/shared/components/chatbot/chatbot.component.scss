@@ -144,10 +144,86 @@
   cursor: pointer;
   transition: background 0.2s, border-color 0.2s;
 
-  &:hover {
+  &:hover:not(:disabled) {
     background: #eff6ff;
     border-color: #1e3a8a;
     color: #1e3a8a;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+// Paso para pedir el nombre del visitante
+.msg-bubble.name-step {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  .name-input {
+    padding: 8px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    outline: none;
+
+    &:focus {
+      border-color: #1e3a8a;
+    }
+  }
+
+  .name-actions {
+    display: flex;
+    gap: 6px;
+  }
+
+  .opt-btn.primary {
+    background: #1e3a8a;
+    color: white;
+    border-color: #1e3a8a;
+
+    &:hover:not(:disabled) {
+      background: #1e40af;
+      color: white;
+    }
+  }
+}
+
+// Indicador de "escribiendo..." (tres puntos animados)
+.msg-bubble.typing {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+
+  .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #9ca3af;
+    animation: chatbot-typing 1.2s infinite ease-in-out;
+
+    &:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    &:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+  }
+}
+
+@keyframes chatbot-typing {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  30% {
+    transform: translateY(-4px);
+    opacity: 1;
   }
 }
 
@@ -184,8 +260,13 @@
   border-radius: 8px;
   cursor: pointer;
 
-  &:hover {
+  &:hover:not(:disabled) {
     background: #1e40af;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 }
 

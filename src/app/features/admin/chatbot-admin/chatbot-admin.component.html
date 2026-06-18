@@ -1,0 +1,247 @@
+<div class="chatbot-admin">
+  <header class="page-head">
+    <h1>Chatbot</h1>
+    <p class="subtitle">
+      Gestioná las preguntas del asistente, revisá métricas de uso y el consumo de IA.
+    </p>
+  </header>
+
+  <nav class="tabs">
+    <button [class.active]="tab === 'faqs'" (click)="setTab('faqs')">Preguntas (FAQs)</button>
+    <button [class.active]="tab === 'metrics'" (click)="setTab('metrics')">Métricas y consumo</button>
+    <button [class.active]="tab === 'conversations'" (click)="setTab('conversations')">Conversaciones</button>
+  </nav>
+
+  <p *ngIf="feedback" class="feedback">{{ feedback }}</p>
+
+  <!-- ===================== FAQs ===================== -->
+  <section *ngIf="tab === 'faqs'" class="panel">
+    <div class="faq-form card">
+      <h2>{{ editingId ? 'Editar pregunta' : 'Nueva pregunta' }}</h2>
+
+      <label>Pregunta</label>
+      <input type="text" [(ngModel)]="form.question" placeholder="¿Cuál es la ubicación?" />
+
+      <label>Respuesta</label>
+      <textarea [(ngModel)]="form.answer" rows="3" placeholder="Estamos ubicados en..."></textarea>
+
+      <label>Palabras clave (separadas por coma)</label>
+      <input type="text" [(ngModel)]="form.keywords" placeholder="ubicacion, direccion, donde, mapa" />
+      <small>Se usan para reconocer la pregunta cuando el usuario escribe libremente (sin gastar IA).</small>
+
+      <div class="form-row">
+        <div>
+          <label>Orden</label>
+          <input type="number" [(ngModel)]="form.order" min="0" />
+        </div>
+        <label class="check">
+          <input type="checkbox" [(ngModel)]="form.active" /> Activa
+        </label>
+      </div>
+
+      <div class="actions">
+        <button class="btn primary" [disabled]="loading" (click)="saveFaq()">
+          {{ editingId ? 'Guardar cambios' : 'Crear pregunta' }}
+        </button>
+        <button *ngIf="editingId" class="btn ghost" (click)="cancelEdit()">Cancelar</button>
+        <button *ngIf="!editingId" class="btn ghost" (click)="startCreate()">Limpiar</button>
+      </div>
+    </div>
+
+    <div class="faq-list card">
+      <h2>Preguntas configuradas ({{ faqs.length }})</h2>
+      <p *ngIf="loading">Cargando...</p>
+      <table *ngIf="faqs.length">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Pregunta</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let faq of faqs">
+            <td>{{ faq.order }}</td>
+            <td>
+              <strong>{{ faq.question }}</strong>
+              <div class="answer-preview">{{ faq.answer }}</div>
+            </td>
+            <td>
+              <span class="badge" [class.on]="faq.active" [class.off]="!faq.active">
+                {{ faq.active ? 'Activa' : 'Inactiva' }}
+              </span>
+            </td>
+            <td class="row-actions">
+              <button class="btn sm" (click)="startEdit(faq)">Editar</button>
+              <button class="btn sm ghost" (click)="toggleActive(faq)">
+                {{ faq.active ? 'Desactivar' : 'Activar' }}
+              </button>
+              <button class="btn sm danger" (click)="deleteFaq(faq)">Eliminar</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p *ngIf="!loading && !faqs.length" class="empty">Aún no hay preguntas configuradas.</p>
+    </div>
+  </section>
+
+  <!-- ===================== Métricas ===================== -->
+  <section *ngIf="tab === 'metrics'" class="panel">
+    <p *ngIf="loading">Cargando métricas...</p>
+
+    <ng-container *ngIf="metrics as m">
+      <div class="cards">
+        <div class="card stat">
+          <span class="stat-value">{{ m.totalConversations }}</span>
+          <span class="stat-label">Conversaciones</span>
+        </div>
+        <div class="card stat">
+          <span class="stat-value">{{ m.totalUserMessages }}</span>
+          <span class="stat-label">Mensajes de usuarios</span>
+        </div>
+        <div class="card stat">
+          <span class="stat-value">{{ m.totalBotMessages }}</span>
+          <span class="stat-label">Respuestas del bot</span>
+        </div>
+        <div class="card stat">
+          <span class="stat-value">{{ m.tokens.total | number }}</span>
+          <span class="stat-label">Tokens usados</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Consumo de IA estimado</h2>
+        <p class="cost">
+          ≈ {{ m.cost.estimated | number: '1.4-6' }} {{ m.cost.currency }}
+          <span class="muted">(modelo {{ m.cost.model }})</span>
+        </p>
+        <ul class="muted small">
+          <li>Tokens de entrada: {{ m.tokens.prompt | number }}</li>
+          <li>Tokens de salida: {{ m.tokens.completion | number }}</li>
+          <li>Precio entrada: {{ m.cost.priceInputPer1M }} USD / 1M · salida: {{ m.cost.priceOutputPer1M }} USD / 1M</li>
+        </ul>
+        <p class="note">
+          Este es un estimado local. El cobro real y los límites se ven en
+          <a href="https://platform.openai.com/usage" target="_blank" rel="noopener">platform.openai.com/usage</a>.
+        </p>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <h2>Respuestas por origen</h2>
+          <table>
+            <tbody>
+              <tr *ngFor="let s of m.bySource">
+                <td>
+                  <span [ngSwitch]="s.source">
+                    <span *ngSwitchCase="'faq'">Pregunta prelistada (sin costo)</span>
+                    <span *ngSwitchCase="'ia'">IA (OpenAI)</span>
+                    <span *ngSwitchCase="'fallback'">Respaldo (sin respuesta)</span>
+                    <span *ngSwitchDefault>{{ s.source }}</span>
+                  </span>
+                </td>
+                <td class="num">{{ s.count }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <h2>Preguntas más frecuentes</h2>
+          <table>
+            <tbody>
+              <tr *ngFor="let q of m.topQuestions">
+                <td>{{ q.question }}</td>
+                <td class="num">{{ q.count }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <p *ngIf="!m.topQuestions.length" class="empty">Sin datos todavía.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Consumo por día (últimos 30 días)</h2>
+        <table *ngIf="usage.length">
+          <thead>
+            <tr>
+              <th>Día</th>
+              <th class="num">Mensajes IA</th>
+              <th class="num">Tokens</th>
+              <th class="num">Costo estimado (USD)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let d of usage">
+              <td>{{ d.day }}</td>
+              <td class="num">{{ d.messages }}</td>
+              <td class="num">{{ d.totalTokens | number }}</td>
+              <td class="num">{{ d.estimatedCost | number: '1.4-6' }}</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td><strong>Total</strong></td>
+              <td></td>
+              <td></td>
+              <td class="num"><strong>{{ totalEstimatedCost() | number: '1.4-6' }}</strong></td>
+            </tr>
+          </tfoot>
+        </table>
+        <p *ngIf="!usage.length" class="empty">Sin consumo de IA registrado en el período.</p>
+      </div>
+    </ng-container>
+  </section>
+
+  <!-- ===================== Conversaciones ===================== -->
+  <section *ngIf="tab === 'conversations'" class="panel">
+    <p *ngIf="loading">Cargando conversaciones...</p>
+
+    <div *ngIf="!selectedConversation" class="card">
+      <h2>Historial de conversaciones</h2>
+      <table *ngIf="conversations.length">
+        <thead>
+          <tr>
+            <th>Visitante</th>
+            <th>Inicio</th>
+            <th>Última actividad</th>
+            <th class="num">Mensajes</th>
+            <th>IP</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let c of conversations">
+            <td>{{ c.visitorName || 'Anónimo' }}</td>
+            <td>{{ c.startedAt | date: 'short' }}</td>
+            <td>{{ c.lastAt | date: 'short' }}</td>
+            <td class="num">{{ c.messageCount }}</td>
+            <td>{{ c.ip || '—' }}</td>
+            <td><button class="btn sm" (click)="openConversation(c.id)">Ver</button></td>
+          </tr>
+        </tbody>
+      </table>
+      <p *ngIf="!loading && !conversations.length" class="empty">Aún no hay conversaciones.</p>
+    </div>
+
+    <div *ngIf="selectedConversation as conv" class="card">
+      <button class="btn ghost sm" (click)="closeConversation()">← Volver</button>
+      <h2>Conversación · {{ conv.visitorName || 'Anónimo' }}</h2>
+      <p class="muted small">
+        Inicio: {{ conv.startedAt | date: 'medium' }} · IP: {{ conv.ip || '—' }}
+      </p>
+      <div class="transcript">
+        <div *ngFor="let msg of conv.messages" class="t-msg" [ngClass]="'t-' + msg.role">
+          <div class="t-bubble">
+            <span class="t-role">{{ msg.role === 'user' ? 'Usuario' : 'Asistente' }}</span>
+            <span class="t-text">{{ msg.content }}</span>
+            <span *ngIf="msg.source" class="t-meta">
+              {{ msg.source }}<span *ngIf="msg.completionTokens"> · {{ msg.promptTokens + msg.completionTokens }} tokens</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>

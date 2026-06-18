@@ -13,16 +13,45 @@
       <div *ngFor="let msg of messages" class="msg" [ngClass]="'msg-' + msg.type">
         <div class="msg-bubble">
           <span class="msg-text">{{ msg.text }}</span>
-          <div *ngIf="msg.options && msg.type === 'bot'" class="msg-options">
+          <div *ngIf="msg.suggestions && msg.suggestions.length && msg.type === 'bot'" class="msg-options">
             <button
-              *ngFor="let opt of msg.options"
+              *ngFor="let faq of msg.suggestions"
               type="button"
               class="opt-btn"
-              (click)="selectOption(opt)"
+              [disabled]="loading"
+              (click)="selectFaq(faq)"
             >
-              {{ opt.text }}
+              {{ faq.question }}
             </button>
           </div>
+        </div>
+      </div>
+
+      <!-- Paso para pedir el nombre (una sola vez, sin costo de IA) -->
+      <div *ngIf="askingName" class="msg msg-bot">
+        <div class="msg-bubble name-step">
+          <span class="msg-text">Para darte un mejor servicio, ¿cómo te llamás?</span>
+          <input
+            type="text"
+            class="name-input"
+            [(ngModel)]="nameInput"
+            placeholder="Tu nombre (opcional)"
+            maxlength="40"
+            (keydown.enter)="submitName()"
+          />
+          <div class="name-actions">
+            <button type="button" class="opt-btn primary" (click)="submitName()">Continuar</button>
+            <button type="button" class="opt-btn" (click)="submitName(true)">Omitir</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Indicador de "escribiendo..." mientras llega la respuesta -->
+      <div *ngIf="loading" class="msg msg-bot">
+        <div class="msg-bubble typing">
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
         </div>
       </div>
     </div>
@@ -32,9 +61,12 @@
         type="text"
         [(ngModel)]="customInput"
         placeholder="Escribe tu pregunta..."
+        [disabled]="loading || askingName"
         (keydown.enter)="sendCustom()"
       />
-      <button type="button" class="send-btn" (click)="sendCustom()">Enviar</button>
+      <button type="button" class="send-btn" [disabled]="loading || askingName" (click)="sendCustom()">
+        Enviar
+      </button>
     </div>
   </div>
 </div>

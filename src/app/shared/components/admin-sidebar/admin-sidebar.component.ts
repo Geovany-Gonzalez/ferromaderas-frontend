@@ -18,6 +18,7 @@ const ALL_MENU_ITEMS: MenuItem[] = [
   { label: 'Reportes', route: '/admin/reportes', permission: 'view_quotes' },
   { label: 'Bitácora', route: '/admin/bitacora', permission: 'view_bitacora' },
   { label: 'Políticas', route: '/admin/politicas', permission: 'manage_policies' },
+  { label: 'Chatbot', route: '/admin/chatbot', permission: 'manage_chatbot' },
   { label: 'Usuarios', route: '/admin/usuarios', permission: 'manage_users' },
 ];
 

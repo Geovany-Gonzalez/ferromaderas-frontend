@@ -126,6 +126,11 @@ export const routes: Routes = [
           import('./features/admin/policies-admin/policies-admin').then(m => m.PoliciesAdminComponent),
       },
       {
+        path: 'chatbot',
+        loadComponent: () =>
+          import('./features/admin/chatbot-admin/chatbot-admin.component').then(m => m.ChatbotAdminComponent),
+      },
+      {
         path: 'usuarios/crear',
         loadComponent: () =>
           import('./features/admin/users-admin/users-admin.component').then(m => m.UsersAdminComponent),
