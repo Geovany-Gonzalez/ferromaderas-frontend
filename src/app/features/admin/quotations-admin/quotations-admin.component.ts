@@ -58,7 +58,7 @@ export class QuotationsAdminComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadQuotations();
-    this.vendedores = this.vendedoresService.getAll();
+    this.loadVendedores();
   }
 
   private loadQuotations(): void {
@@ -66,6 +66,14 @@ export class QuotationsAdminComponent implements OnInit {
       next: (list) => (this.quotations = list),
       error: () =>
         this.notification.showMessage('No se pudieron cargar las cotizaciones.', 'error'),
+    });
+  }
+
+  private loadVendedores(): void {
+    this.vendedoresService.getAll().subscribe({
+      next: (list) => (this.vendedores = list),
+      error: () =>
+        this.notification.showMessage('No se pudieron cargar los vendedores.', 'error'),
     });
   }
 

@@ -1,54 +1,24 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 export interface Vendedor {
   id: string;
   nombre: string;
-  username?: string;
 }
 
-/** Lista de vendedores para asignar a cotizaciones. Sincronizar con usuarios con rol vendedor cuando exista backend. */
-const VENDEDORES_KEY = 'ferromaderas_vendedores';
-
+/**
+ * Vendedores para asignar a cotizaciones. Se obtienen del backend: usuarios
+ * activos con rol `vendedor`. Así la asignación siempre apunta a un usuario
+ * real del sistema (no a datos ficticios locales).
+ */
 @Injectable({ providedIn: 'root' })
 export class VendedoresService {
-  private vendedores: Vendedor[] = [];
+  private readonly http = inject(HttpClient);
+  private readonly api = `${environment.apiUrl}/users/vendedores`;
 
-  constructor() {
-    this.load();
-    if (this.vendedores.length === 0) {
-      this.vendedores = this.getDefaultVendedores();
-      this.save();
-    }
-  }
-
-  private load(): void {
-    const raw = localStorage.getItem(VENDEDORES_KEY);
-    if (raw) {
-      try {
-        this.vendedores = JSON.parse(raw);
-      } catch {
-        this.vendedores = [];
-      }
-    }
-  }
-
-  private save(): void {
-    localStorage.setItem(VENDEDORES_KEY, JSON.stringify(this.vendedores));
-  }
-
-  private getDefaultVendedores(): Vendedor[] {
-    return [
-      { id: '1', nombre: 'Juan Perez', username: 'juan1' },
-      { id: '2', nombre: 'Pedro Catalan', username: 'pedro1' },
-      { id: '3', nombre: 'María López', username: 'maria1' },
-    ];
-  }
-
-  getAll(): Vendedor[] {
-    return [...this.vendedores];
-  }
-
-  getById(id: string): Vendedor | undefined {
-    return this.vendedores.find((v) => v.id === id);
+  getAll(): Observable<Vendedor[]> {
+    return this.http.get<Vendedor[]>(this.api);
   }
 }
