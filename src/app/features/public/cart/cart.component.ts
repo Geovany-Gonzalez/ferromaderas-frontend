@@ -44,6 +44,7 @@ export class CartComponent implements OnInit {
   trackingData = {
     nombre: '',
     telefono: '',
+    email: '',
     direccion: '',
     nota: '',
   };
@@ -189,6 +190,7 @@ export class CartComponent implements OnInit {
     return {
       clienteNombre: this.trackingData.nombre || undefined,
       clienteTelefono: this.trackingData.telefono || undefined,
+      clienteEmail: this.trackingData.email?.trim() || undefined,
       clienteDireccion: this.trackingData.direccion || undefined,
       clienteNota: this.trackingData.nota || undefined,
       items: this.cart.items().map((l) => ({

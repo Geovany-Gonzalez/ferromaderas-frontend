@@ -15,6 +15,7 @@ export interface QuoteItemInput {
 export interface CreateQuoteInput {
   clienteNombre?: string;
   clienteTelefono?: string;
+  clienteEmail?: string;
   clienteDireccion?: string;
   clienteNota?: string;
   items: QuoteItemInput[];
@@ -36,6 +37,7 @@ export interface Quote {
   estado: QuotationStatus;
   clienteNombre?: string;
   clienteTelefono?: string;
+  clienteEmail?: string;
   clienteDireccion?: string;
   clienteNota?: string;
   subtotal: number;
@@ -115,5 +117,13 @@ export class QuotesApiService {
       decision,
       nota,
     });
+  }
+
+  /** Admin: envía la cotización al cliente por correo. */
+  sendByEmail(id: string, email?: string): Observable<{ ok: boolean; email: string }> {
+    return this.http.post<{ ok: boolean; email: string }>(
+      `${this.api}/${id}/enviar-correo`,
+      { email },
+    );
   }
 }

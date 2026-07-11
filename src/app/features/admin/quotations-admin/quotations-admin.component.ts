@@ -40,6 +40,10 @@ export class QuotationsAdminComponent implements OnInit {
   /** Nota opcional al aprobar/rechazar un descuento. */
   approvalNote = '';
 
+  /** Correo destino para socializar la cotización. */
+  emailToSend = '';
+  sendingEmail = false;
+
   statusOptions: { value: QuotationStatus | ''; label: string }[] = [
     { value: '', label: 'Estado' },
     { value: 'nueva', label: 'Nueva' },
@@ -159,6 +163,7 @@ export class QuotationsAdminComponent implements OnInit {
     this.discountPct = q.descuentoPorcentaje ?? 0;
     this.discountMotivo = q.descuentoMotivo ?? '';
     this.approvalNote = '';
+    this.emailToSend = q.email ?? '';
   }
 
   closeViewModal(): void {
@@ -213,6 +218,29 @@ export class QuotationsAdminComponent implements OnInit {
             'error'
           ),
       });
+  }
+
+  sendByEmail(): void {
+    if (!this.viewModalQuotation) return;
+    const email = this.emailToSend.trim();
+    if (!email) {
+      this.notification.showMessage('Ingresa un correo para enviar la cotización.', 'error');
+      return;
+    }
+    this.sendingEmail = true;
+    this.quotationsService.sendByEmail(this.viewModalQuotation.id, email).subscribe({
+      next: (res) => {
+        this.sendingEmail = false;
+        this.notification.showMessage(`Cotización enviada a ${res.email}.`, 'success');
+      },
+      error: (err) => {
+        this.sendingEmail = false;
+        this.notification.showMessage(
+          err?.error?.message ?? 'No se pudo enviar el correo.',
+          'error'
+        );
+      },
+    });
   }
 
   aprobacionLabel(estado: ApprovalState): string {

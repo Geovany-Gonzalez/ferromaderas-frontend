@@ -20,6 +20,7 @@ export interface Quotation {
   fechaHora: string; // DD/MM/YYYY o formato legible
   cliente: string;
   telefono: string;
+  email?: string;
   /** Total bruto (antes de descuento). */
   subtotal: number;
   descuentoPorcentaje: number;

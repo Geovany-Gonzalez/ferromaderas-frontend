@@ -20,6 +20,7 @@ export class QuotationsService {
       fechaHora: this.formatFecha(q.createdAt),
       cliente: q.clienteNombre?.trim() || '—',
       telefono: q.clienteTelefono ?? '',
+      email: q.clienteEmail,
       subtotal: q.subtotal ?? q.total,
       descuentoPorcentaje: q.descuentoPorcentaje ?? 0,
       descuentoMonto: q.descuentoMonto ?? 0,
@@ -83,5 +84,9 @@ export class QuotationsService {
     return this.api
       .decideApproval(id, decision, nota)
       .pipe(map((q) => this.toQuotation(q)));
+  }
+
+  sendByEmail(id: string, email?: string): Observable<{ ok: boolean; email: string }> {
+    return this.api.sendByEmail(id, email);
   }
 }

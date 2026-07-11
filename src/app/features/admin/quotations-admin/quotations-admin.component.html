@@ -230,6 +230,23 @@
           Quitar vendedor
         </button>
       </div>
+
+      <!-- Socialización por correo -->
+      <div class="assign-section">
+        <h4 class="assign-title">Enviar cotización por correo</h4>
+        <div class="assign-row">
+          <input
+            type="email"
+            class="assign-select discount-motivo"
+            [(ngModel)]="emailToSend"
+            placeholder="correo@cliente.com"
+            aria-label="Correo del cliente"
+          />
+          <button type="button" class="btn btn-assign" (click)="sendByEmail()" [disabled]="sendingEmail || !emailToSend">
+            {{ sendingEmail ? 'Enviando…' : 'Enviar' }}
+          </button>
+        </div>
+      </div>
     </div>
     <div class="modal-footer">
       <button type="button" class="btn btn-secondary" (click)="closeViewModal()">Cerrar</button>
