@@ -268,31 +268,49 @@ export class CartComponent implements OnInit {
     });
   }
 
+  /** Formatea un monto en quetzales con separador de miles y 2 decimales (Q1,234.50). */
+  private fmtQ(n: number): string {
+    return `Q${n.toLocaleString('es-GT', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+  }
+
   private buildWhatsAppMessage(q: Quote | null): string {
     const lines = this.cart.items();
     const { id, url } = this.quoteLinkFor(q);
+    const t = this.trackingData;
 
-    // URL primero y sola = más probable que WhatsApp la detecte como link clicable
-    let msg = `Ver cotización completa:\n${url}\n\n`;
-    msg += 'Buen día estimado Ferromaderas,\n\n';
-    msg += 'He generado la siguiente cotización:\n\n';
-    msg += `*Cotización ${id}*\n\n`;
-    msg += '*Productos:*\n';
+    const partes: string[] = [];
+    partes.push('Buen día, estimado Ferromaderas.');
+    partes.push('Le comparto una cotización generada desde su sitio web:');
+    partes.push(`*Cotización ${id}*`);
+
+    const productos = ['*Productos*'];
     lines.forEach((l) => {
       const sub = l.product.price * l.qty;
-      msg += `• ${l.product.code} - ${l.product.name}\n  ${l.qty} x Q${l.product.price} = Q${sub}\n`;
+      productos.push(
+        `• ${l.product.code} - ${l.product.name}\n   ${l.qty} x ${this.fmtQ(l.product.price)} = ${this.fmtQ(sub)}`,
+      );
     });
-    msg += `\n*Total: Q${this.cart.total()}*\n\n`;
-    if (this.trackingData.nombre || this.trackingData.telefono || this.trackingData.direccion || this.trackingData.nota) {
-      msg += '--- Datos para seguimiento ---\n';
-      if (this.trackingData.nombre) msg += `Nombre: ${this.trackingData.nombre}\n`;
-      msg += `Teléfono/WhatsApp: +502 ${this.trackingData.telefono || '—'}\n`;
-      if (this.trackingData.direccion) msg += `Dirección: ${this.trackingData.direccion}\n`;
-      if (this.trackingData.nota) msg += `Nota: ${this.trackingData.nota}\n`;
-      msg += '\n';
+    partes.push(productos.join('\n'));
+
+    partes.push(`*Total: ${this.fmtQ(this.cart.total())}*`);
+
+    if (t.nombre || t.telefono || t.email || t.direccion || t.nota) {
+      const datos = ['*Mis datos*'];
+      if (t.nombre) datos.push(`Nombre: ${t.nombre}`);
+      if (t.telefono) datos.push(`Teléfono/WhatsApp: +502 ${t.telefono}`);
+      if (t.email) datos.push(`Correo: ${t.email}`);
+      if (t.direccion) datos.push(`Dirección: ${t.direccion}`);
+      if (t.nota) datos.push(`Nota: ${t.nota}`);
+      partes.push(datos.join('\n'));
     }
-    msg += 'Quedo atento(a). Gracias.';
-    return msg;
+
+    partes.push(`Ver la cotización en línea:\n${url}`);
+    partes.push('Quedo atento(a) a su confirmación. ¡Gracias!');
+
+    return partes.join('\n\n');
   }
 
   trackById(_index: number, line: CartLine): string {

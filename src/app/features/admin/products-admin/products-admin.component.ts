@@ -21,6 +21,15 @@ export class ProductsAdminComponent implements OnInit {
   filterEstado: 'todos' | 'activo' | 'inactivo' = 'todos';
   viewMode: 'todos' | 'pendientes' = 'todos';
 
+  /** Paginación: con catálogos grandes (miles de productos) renderizar todo congela el navegador. */
+  pageSize = 50;
+  currentPage = 1;
+
+  /** Memoización del filtrado para no recalcular sobre miles de productos en cada ciclo de detección. */
+  private filterCacheKey = '';
+  private filteredCache: Product[] = [];
+  private dataVersion = 0;
+
   showBulkImport = false;
   bulkFile: File | null = null;
   bulkPreview: { code: string; name: string; stock: number; status: 'nuevo' | 'actualizado' | 'sin_cambios' }[] = [];
@@ -54,6 +63,7 @@ export class ProductsAdminComponent implements OnInit {
     }).subscribe({
       next: ({ products }) => {
         this.products = products;
+        this.dataVersion++;
       },
     });
   }
@@ -62,6 +72,7 @@ export class ProductsAdminComponent implements OnInit {
     this.catalogService.loadProducts().subscribe({
       next: (list) => {
         this.products = list;
+        this.dataVersion++;
       },
       error: () => {
         this.notification.showMessage('No se pudieron cargar los productos. Intenta más tarde.', 'error');
@@ -82,17 +93,68 @@ export class ProductsAdminComponent implements OnInit {
 
   get filteredProducts(): Product[] {
     const term = this.searchTerm?.toLowerCase().trim() || '';
+    const key = `${this.viewMode}|${this.filterEstado}|${term}|${this.dataVersion}`;
+    if (key === this.filterCacheKey) return this.filteredCache;
+
     let list = this.baseProducts;
     if (this.viewMode === 'todos') {
       if (this.filterEstado === 'activo') list = list.filter((p) => p.active !== false);
       if (this.filterEstado === 'inactivo') list = list.filter((p) => p.active === false);
     }
-    if (!term) return list;
-    return list.filter(
-      (p) =>
-        p.name.toLowerCase().includes(term) ||
-        p.code.toLowerCase().includes(term)
-    );
+    if (term) {
+      list = list.filter(
+        (p) =>
+          p.name.toLowerCase().includes(term) ||
+          p.code.toLowerCase().includes(term)
+      );
+    }
+
+    this.filterCacheKey = key;
+    this.filteredCache = list;
+    return list;
+  }
+
+  get totalPages(): number {
+    return Math.max(1, Math.ceil(this.filteredProducts.length / this.pageSize));
+  }
+
+  /** Productos de la página actual (lo único que se renderiza en la tabla). */
+  get pagedProducts(): Product[] {
+    const page = Math.min(this.currentPage, this.totalPages);
+    const start = (page - 1) * this.pageSize;
+    return this.filteredProducts.slice(start, start + this.pageSize);
+  }
+
+  /** Rango mostrado ("1–50 de 3364") para el pie de la tabla. */
+  get pageRangeStart(): number {
+    if (this.filteredProducts.length === 0) return 0;
+    return (Math.min(this.currentPage, this.totalPages) - 1) * this.pageSize + 1;
+  }
+
+  get pageRangeEnd(): number {
+    return Math.min(this.pageRangeStart + this.pageSize - 1, this.filteredProducts.length);
+  }
+
+  goToPage(page: number): void {
+    this.currentPage = Math.min(Math.max(1, page), this.totalPages);
+  }
+
+  prevPage(): void {
+    this.goToPage(this.currentPage - 1);
+  }
+
+  nextPage(): void {
+    this.goToPage(this.currentPage + 1);
+  }
+
+  /** Al cambiar de pestaña, búsqueda o filtro volvemos a la primera página. */
+  onFilterChange(): void {
+    this.currentPage = 1;
+  }
+
+  setViewMode(mode: 'todos' | 'pendientes'): void {
+    this.viewMode = mode;
+    this.onFilterChange();
   }
 
   getCategoryName(categoryId: string): string {
