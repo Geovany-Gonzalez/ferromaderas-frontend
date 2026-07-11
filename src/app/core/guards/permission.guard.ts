@@ -1,5 +1,5 @@
 import { inject } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, CanActivateFn } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 
 export function permissionGuard(permission: string): boolean {
@@ -13,3 +13,15 @@ export function permissionGuard(permission: string): boolean {
   router.navigate(['/admin/dashboard']);
   return false;
 }
+
+/**
+ * Fábrica de guards por permiso, para usar en la definición de rutas.
+ * Materializa el control de acceso basado en roles (RBAC) también a nivel
+ * de navegación del cliente, complementando la validación del backend.
+ *
+ * Uso: `canActivate: [requirePermission('manage_products')]`
+ */
+export const requirePermission =
+  (permission: string): CanActivateFn =>
+  () =>
+    permissionGuard(permission);

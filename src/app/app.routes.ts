@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
+import { requirePermission } from './core/guards/permission.guard';
 
 export const routes: Routes = [
   {
@@ -72,11 +73,13 @@ export const routes: Routes = [
       },
       {
         path: 'reportes',
+        canActivate: [requirePermission('view_quotes')],
         loadComponent: () =>
           import('./features/admin/reports-dashboard/reports-dashboard.component').then(m => m.ReportsDashboardComponent),
       },
       {
         path: 'bitacora',
+        canActivate: [requirePermission('view_bitacora')],
         loadComponent: () =>
           import('./features/admin/bitacora-admin/bitacora-admin.component').then(m => m.BitacoraAdminComponent),
       },
@@ -87,56 +90,67 @@ export const routes: Routes = [
       },
       {
         path: 'productos/editar/:id',
+        canActivate: [requirePermission('manage_products')],
         loadComponent: () =>
           import('./features/admin/product-form/product-form.component').then(m => m.ProductFormComponent),
       },
       {
         path: 'productos',
+        canActivate: [requirePermission('manage_products')],
         loadComponent: () =>
           import('./features/admin/products-admin/products-admin.component').then(m => m.ProductsAdminComponent),
       },
       {
         path: 'categorias/editar/:id',
+        canActivate: [requirePermission('manage_categories')],
         loadComponent: () =>
           import('./features/admin/category-form/category-form.component').then(m => m.CategoryFormComponent),
       },
       {
         path: 'categorias/crear',
+        canActivate: [requirePermission('manage_categories')],
         loadComponent: () =>
           import('./features/admin/category-form/category-form.component').then(m => m.CategoryFormComponent),
       },
       {
         path: 'categorias',
+        canActivate: [requirePermission('manage_categories')],
         loadComponent: () =>
           import('./features/admin/categories-admin/categories-admin.component').then(m => m.CategoriesAdminComponent),
       },
       {
         path: 'destacados',
+        canActivate: [requirePermission('manage_featured')],
         loadComponent: () =>
           import('./features/admin/featured-admin/featured-admin.component').then(m => m.FeaturedAdminComponent),
       },
       {
         path: 'cotizaciones',
+        canActivate: [requirePermission('view_quotes')],
         loadComponent: () =>
           import('./features/admin/quotations-admin/quotations-admin.component').then(m => m.QuotationsAdminComponent),
       },
       {
         path: 'politicas',
+        canActivate: [requirePermission('manage_policies')],
         loadComponent: () =>
           import('./features/admin/policies-admin/policies-admin').then(m => m.PoliciesAdminComponent),
       },
       {
         path: 'chatbot',
+        canActivate: [requirePermission('manage_chatbot')],
         loadComponent: () =>
           import('./features/admin/chatbot-admin/chatbot-admin.component').then(m => m.ChatbotAdminComponent),
       },
       {
         path: 'usuarios/crear',
+        canActivate: [requirePermission('manage_users')],
         loadComponent: () =>
           import('./features/admin/users-admin/users-admin.component').then(m => m.UsersAdminComponent),
       },
       {
         path: 'usuarios',
+        canActivate: [requirePermission('manage_users')],
         loadComponent: () =>
           import('./features/admin/user-list/user-list.component').then(m => m.UserListComponent),
       },
