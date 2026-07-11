@@ -53,7 +53,7 @@
         </thead>
         <tbody>
           <tr *ngFor="let q of filteredQuotations; trackBy: trackById">
-            <td class="col-id" data-label="ID">{{ q.id }}</td>
+            <td class="col-id" data-label="ID">{{ q.codigo }}</td>
             <td class="col-fecha" data-label="Fecha">{{ q.fechaHora }}</td>
             <td class="col-cliente" data-label="Cliente">{{ q.cliente }}</td>
             <td class="col-telefono" data-label="Teléfono">{{ q.telefono }}</td>
@@ -93,7 +93,7 @@
 <div class="modal-overlay" *ngIf="viewModalQuotation" (click)="closeViewModal()">
   <div class="modal-dialog modal-view" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h3 class="modal-title">Cotización {{ viewModalQuotation.id }}</h3>
+      <h3 class="modal-title">Cotización {{ viewModalQuotation.codigo }}</h3>
       <button type="button" class="modal-close" (click)="closeViewModal()" aria-label="Cerrar">×</button>
     </div>
     <div class="modal-body" *ngIf="viewModalQuotation">

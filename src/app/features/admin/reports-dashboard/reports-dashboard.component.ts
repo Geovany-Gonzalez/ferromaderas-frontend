@@ -98,7 +98,19 @@ export class ReportsDashboardComponent implements OnInit, AfterViewChecked {
   };
 
   ngOnInit(): void {
-    this.quotations = this.quotationsService.getAll();
+    this.quotationsService.getAll().subscribe({
+      next: (list) => {
+        this.quotations = list;
+        this.buildReports();
+      },
+      error: () => {
+        this.quotations = [];
+        this.buildReports();
+      },
+    });
+  }
+
+  private buildReports(): void {
     this.buildEstadoCotizaciones();
     this.buildProductosMasCotizados();
     this.buildVendedoresRanking();

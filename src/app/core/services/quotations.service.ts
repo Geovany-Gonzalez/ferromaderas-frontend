@@ -1,87 +1,63 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { Quotation } from '../models/quotation.model';
+import { QuotesApiService, Quote } from './quotes-api.service';
 
-const STORAGE_KEY = 'ferromaderas_quotations';
-
+/**
+ * Servicio de cotizaciones del panel administrativo.
+ * Consume el API real (`/api/quotes`) y adapta la respuesta al modelo Quotation
+ * que utiliza la vista.
+ */
 @Injectable({ providedIn: 'root' })
 export class QuotationsService {
-  private quotations: Quotation[] = [];
+  private readonly api = inject(QuotesApiService);
 
-  constructor() {
-    this.load();
-    if (this.quotations.length === 0) {
-      this.quotations = this.getDefaultData();
-      this.save();
-    }
-  }
-
-  private load(): void {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      try {
-        this.quotations = JSON.parse(raw);
-      } catch {
-        this.quotations = [];
-      }
-    }
-  }
-
-  private save(): void {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(this.quotations));
-  }
-
-  private getDefaultData(): Quotation[] {
-    return [
-      { id: '001', fechaHora: '10/01/2026', cliente: 'Juan Perez', telefono: '55852563', total: 1540, direccion: 'El bosque 11-14', estado: 'nueva' },
-      { id: '002', fechaHora: '02/02/2026', cliente: 'Raul Molina', telefono: '56987852', total: 150, direccion: 'San Lorenzo 10-1', estado: 'en_seguimiento', vendedorId: '1', vendedorNombre: 'Juan Perez' },
-      { id: '003', fechaHora: '10/02/2026', cliente: 'Karla Ramos', telefono: '87569875', total: 3000, direccion: 'Cerro corado 3-20', estado: 'confirmada', vendedorId: '2', vendedorNombre: 'Pedro Catalan' },
-      { id: '004', fechaHora: '20/02/2026', cliente: 'Melany Díaz', telefono: '56987852', total: 1120, direccion: 'Colonia Lupita 20-1', estado: 'cerrada', vendedorId: '2', vendedorNombre: 'Pedro Catalan' },
-      { id: '005', fechaHora: '21/02/2026', cliente: 'Javier Mileni', telefono: '69854258', total: 1520, direccion: 'Llano de ánimas 20-1', estado: 'cancelada' },
-    ];
-  }
-
-  getAll(): Quotation[] {
-    return [...this.quotations];
-  }
-
-  getById(id: string): Quotation | undefined {
-    return this.quotations.find((q) => q.id === id);
-  }
-
-  updateStatus(id: string, estado: Quotation['estado']): Quotation | null {
-    const idx = this.quotations.findIndex((q) => q.id === id);
-    if (idx < 0) return null;
-    this.quotations[idx] = { ...this.quotations[idx], estado };
-    this.save();
-    return this.quotations[idx];
-  }
-
-  add(quotation: Omit<Quotation, 'id'>): Quotation {
-    const next = String(this.quotations.length + 1).padStart(3, '0');
-    const q: Quotation = { ...quotation, id: next };
-    this.quotations.unshift(q);
-    this.save();
-    return q;
-  }
-
-  assignVendedor(id: string, vendedorId: string, vendedorNombre: string): Quotation | null {
-    const idx = this.quotations.findIndex((q) => q.id === id);
-    if (idx < 0) return null;
-    this.quotations[idx] = {
-      ...this.quotations[idx],
-      vendedorId,
-      vendedorNombre,
-      estado: this.quotations[idx].estado === 'nueva' ? 'en_seguimiento' : this.quotations[idx].estado,
+  private toQuotation(q: Quote): Quotation {
+    return {
+      id: q.id,
+      codigo: q.codigo,
+      fechaHora: this.formatFecha(q.createdAt),
+      cliente: q.clienteNombre?.trim() || '—',
+      telefono: q.clienteTelefono ?? '',
+      total: q.total,
+      direccion: q.clienteDireccion ?? '',
+      estado: q.estado,
+      vendedorId: q.vendedorId,
+      vendedorNombre: q.vendedorNombre,
     };
-    this.save();
-    return this.quotations[idx];
   }
 
-  unassignVendedor(id: string): Quotation | null {
-    const idx = this.quotations.findIndex((q) => q.id === id);
-    if (idx < 0) return null;
-    this.quotations[idx] = { ...this.quotations[idx], vendedorId: undefined, vendedorNombre: undefined };
-    this.save();
-    return this.quotations[idx];
+  private formatFecha(iso: string): string {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return iso;
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const yyyy = d.getFullYear();
+    const hh = String(d.getHours()).padStart(2, '0');
+    const min = String(d.getMinutes()).padStart(2, '0');
+    return `${dd}/${mm}/${yyyy} ${hh}:${min}`;
+  }
+
+  getAll(): Observable<Quotation[]> {
+    return this.api.list().pipe(map((list) => list.map((q) => this.toQuotation(q))));
+  }
+
+  getById(id: string): Observable<Quotation> {
+    return this.api.getById(id).pipe(map((q) => this.toQuotation(q)));
+  }
+
+  updateStatus(id: string, estado: Quotation['estado']): Observable<Quotation> {
+    return this.api.updateStatus(id, estado).pipe(map((q) => this.toQuotation(q)));
+  }
+
+  assignVendedor(id: string, vendedorId: string, vendedorNombre: string): Observable<Quotation> {
+    return this.api
+      .assignVendedor(id, vendedorId, vendedorNombre)
+      .pipe(map((q) => this.toQuotation(q)));
+  }
+
+  unassignVendedor(id: string): Observable<Quotation> {
+    return this.api.assignVendedor(id, null, null).pipe(map((q) => this.toQuotation(q)));
   }
 }

@@ -45,13 +45,21 @@ export class QuotationsAdminComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.quotations = this.quotationsService.getAll();
+    this.loadQuotations();
     this.vendedores = this.vendedoresService.getAll();
+  }
+
+  private loadQuotations(): void {
+    this.quotationsService.getAll().subscribe({
+      next: (list) => (this.quotations = list),
+      error: () =>
+        this.notification.showMessage('No se pudieron cargar las cotizaciones.', 'error'),
+    });
   }
 
   get filteredQuotations(): Quotation[] {
     return this.quotations.filter((q) => {
-      const matchId = !this.searchId || q.id.toLowerCase().includes(this.searchId.toLowerCase());
+      const matchId = !this.searchId || q.codigo.toLowerCase().includes(this.searchId.toLowerCase());
       const matchEstado = !this.filterEstado || q.estado === this.filterEstado;
       const matchVendedor = !this.filterVendedor || (q.vendedorId === this.filterVendedor);
       let matchFecha = true;
@@ -68,17 +76,30 @@ export class QuotationsAdminComponent implements OnInit {
     if (!vendedorId) return;
     const v = this.vendedores.find((x) => x.id === vendedorId);
     if (!v) return;
-    this.quotationsService.assignVendedor(q.id, v.id, v.nombre);
-    this.quotations = this.quotationsService.getAll();
-    this.viewModalQuotation = this.quotations.find((x) => x.id === q.id) ?? null;
-    this.notification.showMessage(`Vendedor ${v.nombre} asignado a cotización ${q.id}.`, 'success');
+    this.quotationsService.assignVendedor(q.id, v.id, v.nombre).subscribe({
+      next: (updated) => {
+        this.replaceInList(updated);
+        this.viewModalQuotation = updated;
+        this.notification.showMessage(`Vendedor ${v.nombre} asignado a cotización ${updated.codigo}.`, 'success');
+      },
+      error: () => this.notification.showMessage('No se pudo asignar el vendedor.', 'error'),
+    });
   }
 
   unassignVendedor(q: Quotation): void {
-    this.quotationsService.unassignVendedor(q.id);
-    this.quotations = this.quotationsService.getAll();
-    this.viewModalQuotation = this.quotations.find((x) => x.id === q.id) ?? null;
-    this.notification.showMessage(`Vendedor desasignado de cotización ${q.id}.`, 'success');
+    this.quotationsService.unassignVendedor(q.id).subscribe({
+      next: (updated) => {
+        this.replaceInList(updated);
+        this.viewModalQuotation = updated;
+        this.notification.showMessage(`Vendedor desasignado de cotización ${updated.codigo}.`, 'success');
+      },
+      error: () => this.notification.showMessage('No se pudo desasignar el vendedor.', 'error'),
+    });
+  }
+
+  /** Reemplaza una cotización en la lista local tras actualizarla en el backend. */
+  private replaceInList(updated: Quotation): void {
+    this.quotations = this.quotations.map((x) => (x.id === updated.id ? updated : x));
   }
 
   onAssignInModal(): void {
@@ -124,9 +145,13 @@ export class QuotationsAdminComponent implements OnInit {
   changeStatus(q: Quotation): void {
     const next = this.getNextStatus(q.estado);
     if (!next) return;
-    this.quotationsService.updateStatus(q.id, next);
-    this.quotations = this.quotationsService.getAll();
-    this.notification.showMessage(`Cotización ${q.id} actualizada a ${this.statusLabel(next)}.`, 'success');
+    this.quotationsService.updateStatus(q.id, next).subscribe({
+      next: (updated) => {
+        this.replaceInList(updated);
+        this.notification.showMessage(`Cotización ${updated.codigo} actualizada a ${this.statusLabel(next)}.`, 'success');
+      },
+      error: () => this.notification.showMessage('No se pudo actualizar el estado.', 'error'),
+    });
   }
 
   canChangeStatus(q: Quotation): boolean {

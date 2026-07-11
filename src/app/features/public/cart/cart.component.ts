@@ -2,9 +2,12 @@ import { Component, inject, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { Observable, of } from 'rxjs';
+import { catchError, tap } from 'rxjs/operators';
 import { CartService, CartLine } from '../../../core/services/cart.service';
 import { CatalogService } from '../../../core/services/catalog.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { QuotesApiService, Quote, CreateQuoteInput } from '../../../core/services/quotes-api.service';
 
 /** Número de WhatsApp para recibir cotizaciones: +502 58226530 */
 const WHATSAPP_NUMBER = '50258226530';
@@ -24,12 +27,16 @@ export class CartComponent implements OnInit {
   private catalog = inject(CatalogService);
   private notification = inject(NotificationService);
   private route = inject(ActivatedRoute);
+  private quotesApi = inject(QuotesApiService);
 
   items = this.cart.items;
   total = this.cart.total;
   isEmpty = computed(() => this.cart.items().length === 0);
 
-  /** Vista de cotización compartida (cuando se abre un link con ?c=) */
+  /** Cotización ya guardada en el backend (evita crear duplicados al reenviar). */
+  private savedQuote: Quote | null = null;
+
+  /** Vista de cotización compartida (cuando se abre un link con ?code= o ?c=) */
   showQuoteView = false;
   quoteData: { id: string; lines: CartLine[]; total: number; nombre: string; telefono: string; direccion: string; nota: string } | null = null;
 
@@ -45,6 +52,22 @@ export class CartComponent implements OnInit {
     this.catalog.loadCatalog().subscribe();
     this.catalog.loadCategories().subscribe();
     this.route.queryParams.subscribe((params) => {
+      // Enlace nuevo: ?code=FM-2026-XXXX → se consulta la cotización en el backend.
+      const code = params['code'];
+      if (code) {
+        this.quotesApi.getByCodigo(code).subscribe({
+          next: (q) => {
+            this.quoteData = this.mapQuoteToView(q);
+            this.showQuoteView = true;
+          },
+          error: () => {
+            this.notification.showMessage('No se encontró la cotización solicitada.', 'error');
+          },
+        });
+        return;
+      }
+
+      // Enlace anterior (compatibilidad): ?c=base64 con el detalle embebido.
       const c = params['c'];
       if (c) {
         try {
@@ -72,6 +95,33 @@ export class CartComponent implements OnInit {
         }
       }
     });
+  }
+
+  /** Convierte los items de una cotización del backend al formato de la vista. */
+  private mapQuoteToView(q: Quote): { id: string; lines: CartLine[]; total: number; nombre: string; telefono: string; direccion: string; nota: string } {
+    const lines: CartLine[] = (q.items ?? []).map((it) => {
+      const existing = it.productoId ? this.catalog.getProductById(it.productoId) : undefined;
+      return {
+        product: {
+          id: it.productoId ?? it.codigo,
+          code: it.codigo,
+          name: it.nombre,
+          price: it.precioUnitario,
+          imageUrl: existing?.imageUrl ?? '/assets/icons/logo.png',
+          categoryId: existing?.categoryId ?? '',
+        },
+        qty: it.cantidad,
+      };
+    });
+    return {
+      id: q.codigo,
+      lines,
+      total: q.total,
+      nombre: q.clienteNombre ?? '',
+      telefono: q.clienteTelefono ?? '',
+      direccion: q.clienteDireccion ?? '',
+      nota: q.clienteNota ?? '',
+    };
   }
 
   /** Convierte payload (compacto o legacy) a CartLine[]. */
@@ -112,14 +162,17 @@ export class CartComponent implements OnInit {
   }
 
   addQty(productId: string): void {
+    this.savedQuote = null;
     this.cart.addQty(productId);
   }
 
   subtractQty(productId: string): void {
+    this.savedQuote = null;
     this.cart.subtractQty(productId);
   }
 
   remove(productId: string): void {
+    this.savedQuote = null;
     this.cart.remove(productId);
   }
 
@@ -131,8 +184,47 @@ export class CartComponent implements OnInit {
     this.showTrackingForm = false;
   }
 
-  /** Genera la cotización. Claves mínimas para URL corta (WhatsApp la detecta como link). */
-  private buildQuoteUrl(): { id: string; url: string } {
+  /** Datos para crear la cotización en el backend a partir del carrito actual. */
+  private buildCreateInput(): CreateQuoteInput {
+    return {
+      clienteNombre: this.trackingData.nombre || undefined,
+      clienteTelefono: this.trackingData.telefono || undefined,
+      clienteDireccion: this.trackingData.direccion || undefined,
+      clienteNota: this.trackingData.nota || undefined,
+      items: this.cart.items().map((l) => ({
+        productoId: l.product.id,
+        codigo: l.product.code,
+        nombre: l.product.name,
+        precioUnitario: l.product.price,
+        cantidad: l.qty,
+      })),
+    };
+  }
+
+  /**
+   * Guarda la cotización en el backend una sola vez. Si el API falla (offline),
+   * devuelve null y el flujo continúa con el enlace embebido (compatibilidad).
+   */
+  private ensureQuoteSaved(): Observable<Quote | null> {
+    if (this.savedQuote) return of(this.savedQuote);
+    if (this.cart.items().length === 0) return of(null);
+    return this.quotesApi.create(this.buildCreateInput()).pipe(
+      tap((q) => (this.savedQuote = q)),
+      catchError(() => of(null)),
+    );
+  }
+
+  /** Enlace de la cotización: usa el código del backend si existe, si no, el legacy base64. */
+  private quoteLinkFor(q: Quote | null): { id: string; url: string } {
+    const base = window.location.origin + window.location.pathname;
+    if (q) {
+      return { id: q.codigo, url: `${base}?code=${encodeURIComponent(q.codigo)}` };
+    }
+    return this.buildLegacyQuoteUrl();
+  }
+
+  /** Enlace embebido (base64) usado como respaldo cuando no hay conexión con el backend. */
+  private buildLegacyQuoteUrl(): { id: string; url: string } {
     const lines = this.cart.items();
     const year = new Date().getFullYear();
     const id = `FM-${year}-${Date.now().toString(36).toUpperCase().slice(-4)}`;
@@ -158,21 +250,25 @@ export class CartComponent implements OnInit {
   }
 
   copyLink(): void {
-    const { url } = this.buildQuoteUrl();
-    navigator.clipboard.writeText(url).then(() => {
-      this.notification.showMessage('Link copiado.', 'success');
+    this.ensureQuoteSaved().subscribe((q) => {
+      const { url } = this.quoteLinkFor(q);
+      navigator.clipboard.writeText(url).then(() => {
+        this.notification.showMessage('Link copiado.', 'success');
+      });
     });
   }
 
   sendToWhatsApp(): void {
-    const msg = this.buildWhatsAppMessage();
-    const encoded = encodeURIComponent(msg);
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encoded}`, '_blank');
+    this.ensureQuoteSaved().subscribe((q) => {
+      const msg = this.buildWhatsAppMessage(q);
+      const encoded = encodeURIComponent(msg);
+      window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encoded}`, '_blank');
+    });
   }
 
-  private buildWhatsAppMessage(): string {
+  private buildWhatsAppMessage(q: Quote | null): string {
     const lines = this.cart.items();
-    const { id, url } = this.buildQuoteUrl();
+    const { id, url } = this.quoteLinkFor(q);
 
     // URL primero y sola = más probable que WhatsApp la detecte como link clicable
     let msg = `Ver cotización completa:\n${url}\n\n`;
