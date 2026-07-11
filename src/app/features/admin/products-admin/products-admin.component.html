@@ -7,7 +7,7 @@
         type="button"
         class="tab-btn"
         [class.active]="viewMode === 'todos'"
-        (click)="viewMode = 'todos'"
+        (click)="setViewMode('todos')"
       >
         Todos
       </button>
@@ -15,7 +15,7 @@
         type="button"
         class="tab-btn"
         [class.active]="viewMode === 'pendientes'"
-        (click)="viewMode = 'pendientes'"
+        (click)="setViewMode('pendientes')"
       >
         Pendientes de configurar
         @if (pendingCount > 0) {
@@ -36,10 +36,10 @@
           <circle cx="11" cy="11" r="8"/>
           <line x1="21" y1="21" x2="16.65" y2="16.65"/>
         </svg>
-        <input type="text" class="search-input" placeholder="Ingresar producto" [(ngModel)]="searchTerm" />
+        <input type="text" class="search-input" placeholder="Ingresar producto" [(ngModel)]="searchTerm" (ngModelChange)="onFilterChange()" />
       </div>
       @if (viewMode === 'todos') {
-        <select class="filter-estado" [(ngModel)]="filterEstado" title="Filtrar por estado">
+        <select class="filter-estado" [(ngModel)]="filterEstado" (ngModelChange)="onFilterChange()" title="Filtrar por estado">
           <option value="todos">Todos</option>
           <option value="activo">Activos</option>
           <option value="inactivo">Inactivos</option>
@@ -68,7 +68,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let product of filteredProducts; trackBy: trackById">
+          <tr *ngFor="let product of pagedProducts; trackBy: trackById">
             <td class="col-code" data-label="Código">{{ product.code }}</td>
             <td class="col-category" data-label="Categoría">{{ (product.categoryId && getCategoryName(product.categoryId)) || (product.pendingConfig ? 'Pendiente' : '—') }}</td>
             <td class="col-name" data-label="Nombre">{{ product.name }}</td>
@@ -104,6 +104,19 @@
       <p *ngIf="filteredProducts.length === 0" class="empty-message">
         {{ viewMode === 'pendientes' ? 'No hay productos pendientes de configurar.' : 'No hay productos o no coinciden con la búsqueda.' }}
       </p>
+    </div>
+
+    <div class="pagination" *ngIf="filteredProducts.length > 0">
+      <span class="pagination-info">
+        Mostrando {{ pageRangeStart }}–{{ pageRangeEnd }} de {{ filteredProducts.length }}
+      </span>
+      <div class="pagination-controls">
+        <button type="button" class="page-btn" (click)="goToPage(1)" [disabled]="currentPage <= 1" title="Primera página">«</button>
+        <button type="button" class="page-btn" (click)="prevPage()" [disabled]="currentPage <= 1" title="Anterior">‹</button>
+        <span class="page-current">Página {{ currentPage }} de {{ totalPages }}</span>
+        <button type="button" class="page-btn" (click)="nextPage()" [disabled]="currentPage >= totalPages" title="Siguiente">›</button>
+        <button type="button" class="page-btn" (click)="goToPage(totalPages)" [disabled]="currentPage >= totalPages" title="Última página">»</button>
+      </div>
     </div>
   </div>
 
