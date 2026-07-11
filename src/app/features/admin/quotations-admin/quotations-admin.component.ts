@@ -5,7 +5,12 @@ import { FormsModule } from '@angular/forms';
 import { QuotationsService } from '../../../core/services/quotations.service';
 import { VendedoresService, Vendedor } from '../../../core/services/vendedores.service';
 import { NotificationService } from '../../../core/services/notification.service';
-import { Quotation, QuotationStatus } from '../../../core/models/quotation.model';
+import { AuthService } from '../../../core/services/auth.service';
+import {
+  ApprovalState,
+  Quotation,
+  QuotationStatus,
+} from '../../../core/models/quotation.model';
 
 @Component({
   selector: 'app-quotations-admin',
@@ -29,6 +34,12 @@ export class QuotationsAdminComponent implements OnInit {
   /** Vendedor seleccionado para asignar (en modal o tabla) */
   assignVendedorId: string = '';
 
+  /** Estado del formulario de descuento dentro del modal. */
+  discountPct = 0;
+  discountMotivo = '';
+  /** Nota opcional al aprobar/rechazar un descuento. */
+  approvalNote = '';
+
   statusOptions: { value: QuotationStatus | ''; label: string }[] = [
     { value: '', label: 'Estado' },
     { value: 'nueva', label: 'Nueva' },
@@ -41,7 +52,8 @@ export class QuotationsAdminComponent implements OnInit {
   constructor(
     private quotationsService: QuotationsService,
     private vendedoresService: VendedoresService,
-    private notification: NotificationService
+    private notification: NotificationService,
+    private auth: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -136,10 +148,73 @@ export class QuotationsAdminComponent implements OnInit {
   viewQuotation(q: Quotation): void {
     this.viewModalQuotation = q;
     this.assignVendedorId = q.vendedorId ?? '';
+    this.discountPct = q.descuentoPorcentaje ?? 0;
+    this.discountMotivo = q.descuentoMotivo ?? '';
+    this.approvalNote = '';
   }
 
   closeViewModal(): void {
     this.viewModalQuotation = null;
+  }
+
+  /** ¿El usuario actual puede aprobar/rechazar descuentos? */
+  canApprove(): boolean {
+    return this.auth.hasPermission('approve_quotes');
+  }
+
+  applyDiscount(): void {
+    if (!this.viewModalQuotation) return;
+    const pct = Number(this.discountPct);
+    if (isNaN(pct) || pct < 0 || pct > 100) {
+      this.notification.showMessage('El descuento debe estar entre 0 y 100%.', 'error');
+      return;
+    }
+    this.quotationsService
+      .applyDiscount(this.viewModalQuotation.id, pct, this.discountMotivo.trim() || undefined)
+      .subscribe({
+        next: (updated) => {
+          this.replaceInList(updated);
+          this.viewModalQuotation = updated;
+          const msg =
+            pct === 0
+              ? 'Descuento eliminado.'
+              : `Descuento de ${pct}% registrado. Requiere aprobación de un gerente.`;
+          this.notification.showMessage(msg, 'success');
+        },
+        error: () => this.notification.showMessage('No se pudo aplicar el descuento.', 'error'),
+      });
+  }
+
+  decideApproval(decision: 'aprobada' | 'rechazada'): void {
+    if (!this.viewModalQuotation) return;
+    this.quotationsService
+      .decideApproval(this.viewModalQuotation.id, decision, this.approvalNote.trim() || undefined)
+      .subscribe({
+        next: (updated) => {
+          this.replaceInList(updated);
+          this.viewModalQuotation = updated;
+          this.approvalNote = '';
+          this.notification.showMessage(
+            decision === 'aprobada' ? 'Descuento aprobado.' : 'Descuento rechazado.',
+            'success'
+          );
+        },
+        error: (err) =>
+          this.notification.showMessage(
+            err?.error?.message ?? 'No se pudo procesar la aprobación.',
+            'error'
+          ),
+      });
+  }
+
+  aprobacionLabel(estado: ApprovalState): string {
+    const map: Record<ApprovalState, string> = {
+      no_requiere: 'Sin aprobación requerida',
+      pendiente: 'Pendiente de aprobación',
+      aprobada: 'Descuento aprobado',
+      rechazada: 'Descuento rechazado',
+    };
+    return map[estado] ?? estado;
   }
 
   changeStatus(q: Quotation): void {

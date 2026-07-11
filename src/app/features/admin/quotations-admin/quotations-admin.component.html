@@ -57,7 +57,10 @@
             <td class="col-fecha" data-label="Fecha">{{ q.fechaHora }}</td>
             <td class="col-cliente" data-label="Cliente">{{ q.cliente }}</td>
             <td class="col-telefono" data-label="Teléfono">{{ q.telefono }}</td>
-            <td class="col-total" data-label="Total">Q{{ q.total | number:'1.0-0' }}</td>
+            <td class="col-total" data-label="Total">
+              Q{{ q.total | number:'1.0-0' }}
+              <span *ngIf="q.aprobacion === 'pendiente'" class="badge aprob-pendiente badge-inline" title="Descuento pendiente de aprobación">⏳</span>
+            </td>
             <td class="col-direccion" data-label="Dirección">{{ q.direccion }}</td>
             <td class="col-vendedor" data-label="Vendedor">
               <span *ngIf="q.vendedorNombre; else sinVendedor">{{ q.vendedorNombre }}</span>
@@ -114,9 +117,27 @@
           <span class="view-label">Teléfono</span>
           <span class="view-value">{{ viewModalQuotation.telefono }}</span>
         </div>
+        <div class="view-row" *ngIf="viewModalQuotation.aprobacion === 'aprobada'">
+          <span class="view-label">Subtotal</span>
+          <span class="view-value">Q{{ viewModalQuotation.subtotal | number:'1.0-0' }}</span>
+        </div>
+        <div class="view-row" *ngIf="viewModalQuotation.aprobacion === 'aprobada'">
+          <span class="view-label">Descuento</span>
+          <span class="view-value">
+            −Q{{ viewModalQuotation.descuentoMonto | number:'1.0-0' }}
+            ({{ viewModalQuotation.descuentoPorcentaje | number:'1.0-2' }}%)
+          </span>
+        </div>
+        <div class="view-row" *ngIf="viewModalQuotation.aprobacion === 'pendiente'">
+          <span class="view-label">Descuento solicitado</span>
+          <span class="view-value">
+            −Q{{ viewModalQuotation.descuentoMonto | number:'1.0-0' }}
+            ({{ viewModalQuotation.descuentoPorcentaje | number:'1.0-2' }}%) · pendiente
+          </span>
+        </div>
         <div class="view-row">
           <span class="view-label">Total</span>
-          <span class="view-value">Q{{ viewModalQuotation.total | number:'1.0-0' }}</span>
+          <span class="view-value"><strong>Q{{ viewModalQuotation.total | number:'1.0-0' }}</strong></span>
         </div>
         <div class="view-row">
           <span class="view-label">Dirección</span>
@@ -128,6 +149,71 @@
             <span class="badge" [ngClass]="'badge-' + viewModalQuotation.estado">{{ statusLabel(viewModalQuotation.estado) }}</span>
           </span>
         </div>
+        <div class="view-row" *ngIf="viewModalQuotation.aprobacion !== 'no_requiere'">
+          <span class="view-label">Aprobación</span>
+          <span class="view-value">
+            <span class="badge" [ngClass]="'aprob-' + viewModalQuotation.aprobacion">{{ aprobacionLabel(viewModalQuotation.aprobacion) }}</span>
+            <small *ngIf="viewModalQuotation.aprobadoPorNombre" class="aprob-meta">
+              por {{ viewModalQuotation.aprobadoPorNombre }}
+            </small>
+          </span>
+        </div>
+      </div>
+
+      <!-- Descuento comercial -->
+      <div class="discount-section">
+        <h4 class="assign-title">Descuento comercial</h4>
+        <p class="discount-hint">
+          Todo descuento requiere aprobación de un gerente; se aplica al total solo cuando es aprobado.
+        </p>
+        <div class="assign-row">
+          <input
+            type="number"
+            class="assign-select discount-input"
+            min="0"
+            max="100"
+            step="1"
+            [(ngModel)]="discountPct"
+            placeholder="% descuento"
+            aria-label="Porcentaje de descuento"
+          />
+          <input
+            type="text"
+            class="assign-select discount-motivo"
+            [(ngModel)]="discountMotivo"
+            placeholder="Motivo (opcional)"
+            aria-label="Motivo del descuento"
+          />
+          <button type="button" class="btn btn-assign" (click)="applyDiscount()">
+            Aplicar
+          </button>
+        </div>
+        <span *ngIf="viewModalQuotation.aprobacion === 'pendiente'" class="discount-pending-note">
+          Este descuento está pendiente de aprobación.
+        </span>
+      </div>
+
+      <!-- Aprobación (solo con permiso approve_quotes) -->
+      <div class="approval-section" *ngIf="viewModalQuotation.aprobacion === 'pendiente' && canApprove()">
+        <h4 class="assign-title">Aprobación de descuento</h4>
+        <textarea
+          class="approval-note"
+          [(ngModel)]="approvalNote"
+          rows="2"
+          placeholder="Nota de aprobación / rechazo (opcional)"
+          aria-label="Nota de aprobación"
+        ></textarea>
+        <div class="assign-row">
+          <button type="button" class="btn btn-approve" (click)="decideApproval('aprobada')">
+            Aprobar
+          </button>
+          <button type="button" class="btn btn-reject" (click)="decideApproval('rechazada')">
+            Rechazar
+          </button>
+        </div>
+      </div>
+      <div class="approval-waiting" *ngIf="viewModalQuotation.aprobacion === 'pendiente' && !canApprove()">
+        Este descuento espera la aprobación de un gerente.
       </div>
       <div class="assign-section">
         <h4 class="assign-title">Asignar vendedor para seguimiento</h4>

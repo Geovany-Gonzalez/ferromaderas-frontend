@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { QuotationStatus } from '../models/quotation.model';
+import { ApprovalState, QuotationStatus } from '../models/quotation.model';
 
 export interface QuoteItemInput {
   productoId?: string;
@@ -38,7 +38,15 @@ export interface Quote {
   clienteTelefono?: string;
   clienteDireccion?: string;
   clienteNota?: string;
+  subtotal: number;
+  descuentoPorcentaje: number;
+  descuentoMonto: number;
+  descuentoMotivo?: string;
   total: number;
+  aprobacion: ApprovalState;
+  aprobadoPorNombre?: string;
+  aprobadoEn?: string;
+  aprobacionNota?: string;
   vendedorId?: string;
   vendedorNombre?: string;
   createdAt: string;
@@ -86,6 +94,26 @@ export class QuotesApiService {
     return this.http.patch<Quote>(`${this.api}/${id}/vendedor`, {
       vendedorId,
       vendedorNombre,
+    });
+  }
+
+  /** Admin: aplica (o quita, con 0) un descuento porcentual. */
+  applyDiscount(id: string, porcentaje: number, motivo?: string): Observable<Quote> {
+    return this.http.patch<Quote>(`${this.api}/${id}/descuento`, {
+      porcentaje,
+      motivo,
+    });
+  }
+
+  /** Admin (gerente): aprueba o rechaza un descuento pendiente. */
+  decideApproval(
+    id: string,
+    decision: 'aprobada' | 'rechazada',
+    nota?: string,
+  ): Observable<Quote> {
+    return this.http.patch<Quote>(`${this.api}/${id}/aprobacion`, {
+      decision,
+      nota,
     });
   }
 }

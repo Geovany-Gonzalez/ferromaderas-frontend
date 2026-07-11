@@ -5,6 +5,13 @@ export type QuotationStatus =
   | 'cerrada'
   | 'cancelada';
 
+/** Estado del flujo de aprobación comercial de descuentos. */
+export type ApprovalState =
+  | 'no_requiere'
+  | 'pendiente'
+  | 'aprobada'
+  | 'rechazada';
+
 export interface Quotation {
   /** Identificador interno (uuid del backend), usado para las acciones del API. */
   id: string;
@@ -13,9 +20,20 @@ export interface Quotation {
   fechaHora: string; // DD/MM/YYYY o formato legible
   cliente: string;
   telefono: string;
+  /** Total bruto (antes de descuento). */
+  subtotal: number;
+  descuentoPorcentaje: number;
+  descuentoMonto: number;
+  descuentoMotivo?: string;
+  /** Total final (subtotal - descuento). */
   total: number;
   direccion: string;
   estado: QuotationStatus;
+  /** Flujo de aprobación del descuento aplicado. */
+  aprobacion: ApprovalState;
+  aprobadoPorNombre?: string;
+  aprobadoEn?: string;
+  aprobacionNota?: string;
   /** Vendedor asignado para dar seguimiento */
   vendedorId?: string;
   vendedorNombre?: string;

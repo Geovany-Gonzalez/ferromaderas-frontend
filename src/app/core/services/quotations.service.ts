@@ -20,9 +20,17 @@ export class QuotationsService {
       fechaHora: this.formatFecha(q.createdAt),
       cliente: q.clienteNombre?.trim() || '—',
       telefono: q.clienteTelefono ?? '',
+      subtotal: q.subtotal ?? q.total,
+      descuentoPorcentaje: q.descuentoPorcentaje ?? 0,
+      descuentoMonto: q.descuentoMonto ?? 0,
+      descuentoMotivo: q.descuentoMotivo,
       total: q.total,
       direccion: q.clienteDireccion ?? '',
       estado: q.estado,
+      aprobacion: q.aprobacion ?? 'no_requiere',
+      aprobadoPorNombre: q.aprobadoPorNombre,
+      aprobadoEn: q.aprobadoEn,
+      aprobacionNota: q.aprobacionNota,
       vendedorId: q.vendedorId,
       vendedorNombre: q.vendedorNombre,
     };
@@ -59,5 +67,21 @@ export class QuotationsService {
 
   unassignVendedor(id: string): Observable<Quotation> {
     return this.api.assignVendedor(id, null, null).pipe(map((q) => this.toQuotation(q)));
+  }
+
+  applyDiscount(id: string, porcentaje: number, motivo?: string): Observable<Quotation> {
+    return this.api
+      .applyDiscount(id, porcentaje, motivo)
+      .pipe(map((q) => this.toQuotation(q)));
+  }
+
+  decideApproval(
+    id: string,
+    decision: 'aprobada' | 'rechazada',
+    nota?: string,
+  ): Observable<Quotation> {
+    return this.api
+      .decideApproval(id, decision, nota)
+      .pipe(map((q) => this.toQuotation(q)));
   }
 }
