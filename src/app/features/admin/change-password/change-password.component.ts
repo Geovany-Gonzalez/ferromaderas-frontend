@@ -18,6 +18,7 @@ const MIN_LENGTH = 8;
 })
 export class ChangePasswordComponent {
   token = '';
+  returnTo: 'admin' | 'cliente' = 'admin';
   currentPassword = '';
   newPassword = '';
   confirmPassword = '';
@@ -33,6 +34,15 @@ export class ChangePasswordComponent {
     private cdr: ChangeDetectorRef,
   ) {
     this.token = this.route.snapshot.queryParams['token'] ?? '';
+    this.returnTo = this.route.snapshot.queryParams['from'] === 'cliente' ? 'cliente' : 'admin';
+  }
+
+  get loginRoute(): string {
+    return this.returnTo === 'cliente' ? '/mis-cotizaciones' : '/admin-login';
+  }
+
+  get loginLabel(): string {
+    return this.returnTo === 'cliente' ? 'Volver a Mis cotizaciones' : 'Volver al login';
   }
 
   /** Calcula fortaleza 0-4 para la barra visual */
@@ -112,7 +122,7 @@ export class ChangePasswordComponent {
             this.cdr.detectChanges();
           });
           setTimeout(() => {
-            this.router.navigate(['/admin-login']);
+            this.router.navigate([this.loginRoute]);
           }, 3000);
         },
         error: (err) => {

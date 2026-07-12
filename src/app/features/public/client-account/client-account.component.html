@@ -1,85 +1,259 @@
-<div class="client-account container">
-  <h1>Mis cotizaciones</h1>
-  <p class="subtitle" *ngIf="!isLoggedIn">
-    Registrate o iniciá sesión para ver el historial y el estado de seguimiento de tus cotizaciones.
-  </p>
-
-  <section class="auth-card card" *ngIf="!isLoggedIn">
-    <div class="tabs">
-      <button type="button" [class.active]="mode === 'login'" (click)="mode = 'login'">Iniciar sesión</button>
-      <button type="button" [class.active]="mode === 'register'" (click)="mode = 'register'">Registrarme</button>
-    </div>
-
-    <form (ngSubmit)="submit()" class="auth-form">
-      <label *ngIf="mode === 'register'">Nombre completo</label>
-      <input *ngIf="mode === 'register'" type="text" [(ngModel)]="name" name="name" required />
-
-      <label>Correo electrónico</label>
-      <input type="email" [(ngModel)]="email" name="email" required />
-
-      <label *ngIf="mode === 'register'">Teléfono (opcional)</label>
-      <input *ngIf="mode === 'register'" type="tel" [(ngModel)]="phone" name="phone" />
-
-      <label>Contraseña</label>
-      <input type="password" [(ngModel)]="password" name="password" minlength="8" required />
-
-      <button type="submit" class="btn btn-primary" [disabled]="loading">
-        {{ loading ? 'Procesando...' : (mode === 'register' ? 'Crear cuenta' : 'Entrar') }}
-      </button>
-    </form>
-  </section>
-
-  <section *ngIf="isLoggedIn" class="quotes-section">
-    <div class="toolbar">
-      <button type="button" class="btn btn-secondary" (click)="logout()">Cerrar sesión</button>
-      <button type="button" class="btn btn-primary" (click)="loadQuotes()">Actualizar</button>
-    </div>
-
-    <table class="quotes-table" *ngIf="quotes.length; else empty">
-      <thead>
-        <tr>
-          <th>Código</th>
-          <th>Fecha</th>
-          <th>Total</th>
-          <th>Estado</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let q of quotes" [class.selected]="selectedQuote?.id === q.id">
-          <td>{{ q.codigo }}</td>
-          <td>{{ q.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
-          <td>Q{{ q.totalConIva | number:'1.0-0' }}</td>
-          <td><span class="badge">{{ statusLabels[q.estado] || q.estado }}</span></td>
-          <td class="actions">
-            <button type="button" class="btn-link" (click)="openQuote(q)">Ver cotización</button>
-            <button type="button" class="btn-link" (click)="viewSeguimiento(q)">
-              {{ selectedQuote?.id === q.id ? 'Ocultar seguimiento' : 'Ver seguimiento' }}
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-    <ng-template #empty>
-      <p class="empty">Aún no tenés cotizaciones. Armá una desde el <a routerLink="/carrito">carrito</a>.</p>
-    </ng-template>
-
-    <section *ngIf="selectedQuote" class="seguimiento-panel card">
-      <h3>Historial de seguimiento — {{ selectedQuote.codigo }}</h3>
-      <p *ngIf="loadingSeguimiento" class="loading-hint">Cargando historial…</p>
-      <ul class="timeline" *ngIf="!loadingSeguimiento && seguimiento.length">
-        <li *ngFor="let e of seguimiento">
-          <div class="timeline-date">{{ e.createdAt | date:'dd/MM/yyyy HH:mm' }}</div>
-          <div class="timeline-body">
-            <strong>{{ seguimientoLabel(e) }}</strong>
-            <span *ngIf="e.usuarioNombre" class="timeline-user"> — {{ e.usuarioNombre }}</span>
-            <p *ngIf="e.comentario" class="timeline-comment">{{ e.comentario }}</p>
-          </div>
-        </li>
-      </ul>
-      <p *ngIf="!loadingSeguimiento && !seguimiento.length" class="empty-hint">
-        Aún no hay movimientos de seguimiento registrados.
-      </p>
-    </section>
-  </section>
-</div>
+<div class="account-page container">
+  <header class="page-hero card">
+    <div class="hero-inner">
+      <img src="/assets/icons/logo.png" alt="" class="hero-logo" aria-hidden="true" />
+      <div class="hero-text">
+        <h1>Mis cotizaciones</h1>
+        <p *ngIf="!isLoggedIn">
+          Creá tu cuenta o iniciá sesión para consultar el historial y el seguimiento de tus pedidos.
+        </p>
+        <p *ngIf="isLoggedIn">
+          Hola, <strong>{{ userName }}</strong>. Acá podés ver el estado de tus cotizaciones.
+        </p>
+      </div>
+    </div>
+  </header>
+
+  <!-- Autenticación -->
+  <section class="auth-shell card" *ngIf="!isLoggedIn">
+    <div class="auth-tabs" role="tablist">
+      <button
+        type="button"
+        role="tab"
+        [class.active]="mode === 'login'"
+        [attr.aria-selected]="mode === 'login'"
+        (click)="setMode('login')"
+      >
+        Iniciar sesión
+      </button>
+      <button
+        type="button"
+        role="tab"
+        [class.active]="mode === 'register'"
+        [attr.aria-selected]="mode === 'register'"
+        (click)="setMode('register')"
+      >
+        Registrarme
+      </button>
+    </div>
+
+    <!-- Login -->
+    <form *ngIf="mode === 'login'" (ngSubmit)="submit()" class="auth-form">
+      <div class="field">
+        <label for="login-email">Correo electrónico</label>
+        <input
+          id="login-email"
+          type="email"
+          [(ngModel)]="email"
+          name="email"
+          placeholder="tucorreo@ejemplo.com"
+          autocomplete="email"
+          required
+        />
+      </div>
+      <div class="field">
+        <label for="login-password">Contraseña</label>
+        <input
+          id="login-password"
+          type="password"
+          [(ngModel)]="password"
+          name="password"
+          placeholder="Tu contraseña"
+          autocomplete="current-password"
+          minlength="8"
+          required
+        />
+      </div>
+      <div class="form-footer">
+        <button type="button" class="link-btn" (click)="setMode('forgot')">
+          ¿Olvidaste tu contraseña?
+        </button>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" [disabled]="loading">
+        {{ loading ? 'Ingresando...' : 'Entrar' }}
+      </button>
+      <p class="auth-hint">
+        ¿Primera vez acá?
+        <button type="button" class="link-btn inline" (click)="setMode('register')">Creá tu cuenta</button>
+      </p>
+    </form>
+
+    <!-- Registro -->
+    <form *ngIf="mode === 'register'" (ngSubmit)="submit()" class="auth-form">
+      <div class="field">
+        <label for="reg-name">Nombre completo</label>
+        <input
+          id="reg-name"
+          type="text"
+          [(ngModel)]="name"
+          name="name"
+          placeholder="Tu nombre"
+          autocomplete="name"
+          required
+        />
+      </div>
+      <div class="field">
+        <label for="reg-email">Correo electrónico</label>
+        <input
+          id="reg-email"
+          type="email"
+          [(ngModel)]="email"
+          name="email"
+          placeholder="tucorreo@ejemplo.com"
+          autocomplete="email"
+          required
+        />
+      </div>
+      <div class="field">
+        <label for="reg-phone">Teléfono <span class="optional">(opcional)</span></label>
+        <input
+          id="reg-phone"
+          type="tel"
+          [(ngModel)]="phone"
+          name="phone"
+          placeholder="+502 1234-5678"
+          autocomplete="tel"
+        />
+      </div>
+      <div class="field">
+        <label for="reg-password">Contraseña</label>
+        <input
+          id="reg-password"
+          type="password"
+          [(ngModel)]="password"
+          name="password"
+          placeholder="Mínimo 8 caracteres"
+          autocomplete="new-password"
+          minlength="8"
+          required
+        />
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" [disabled]="loading">
+        {{ loading ? 'Creando cuenta...' : 'Crear cuenta' }}
+      </button>
+      <p class="auth-hint">
+        ¿Ya tenés cuenta?
+        <button type="button" class="link-btn inline" (click)="setMode('login')">Iniciá sesión</button>
+      </p>
+    </form>
+
+    <!-- Recuperar contraseña -->
+    <div *ngIf="mode === 'forgot'" class="forgot-panel">
+      <div class="forgot-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="11" width="18" height="11" rx="2" />
+          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+        </svg>
+      </div>
+      <h2>Recuperar contraseña</h2>
+      <p class="forgot-desc">
+        Te enviaremos una contraseña temporal y un enlace seguro para que definas una nueva.
+      </p>
+
+      <div *ngIf="forgotSuccess" class="alert alert-success">
+        <span class="alert-icon">✓</span>
+        <p>{{ forgotSuccess }}</p>
+      </div>
+
+      <form *ngIf="!forgotSuccess" (ngSubmit)="submitForgot()" class="auth-form">
+        <div *ngIf="forgotError" class="alert alert-error">{{ forgotError }}</div>
+        <div class="field">
+          <label for="forgot-email">Correo registrado</label>
+          <input
+            id="forgot-email"
+            type="email"
+            [(ngModel)]="forgotEmail"
+            name="forgotEmail"
+            placeholder="tucorreo@ejemplo.com"
+            autocomplete="email"
+            [disabled]="forgotLoading"
+            required
+          />
+        </div>
+        <button type="submit" class="btn btn-primary btn-block" [disabled]="forgotLoading">
+          {{ forgotLoading ? 'Enviando...' : 'Enviar instrucciones' }}
+        </button>
+      </form>
+
+      <button type="button" class="link-btn back-link" (click)="setMode('login')">
+        ← Volver a iniciar sesión
+      </button>
+    </div>
+  </section>
+
+  <!-- Panel del cliente logueado -->
+  <section *ngIf="isLoggedIn" class="dashboard">
+    <div class="dashboard-toolbar card">
+      <div class="toolbar-info">
+        <span class="toolbar-label">Tus cotizaciones</span>
+        <span class="toolbar-count" *ngIf="!loadingQuotes">{{ quotes.length }} registrada(s)</span>
+        <span class="toolbar-count" *ngIf="loadingQuotes">Cargando...</span>
+      </div>
+      <div class="toolbar-actions">
+        <button type="button" class="btn btn-secondary" (click)="loadQuotes()" [disabled]="loadingQuotes">
+          Actualizar
+        </button>
+        <button type="button" class="btn btn-outline" (click)="logout()">Cerrar sesión</button>
+      </div>
+    </div>
+
+    <p *ngIf="loadingQuotes" class="loading-quotes">Cargando tus cotizaciones…</p>
+
+    <div class="quote-grid" *ngIf="!loadingQuotes && quotes.length">
+      <article
+        class="quote-card card"
+        *ngFor="let q of quotes"
+        [class.expanded]="selectedQuote?.id === q.id"
+      >
+        <div class="quote-card-head">
+          <div>
+            <span class="quote-code">{{ q.codigo }}</span>
+            <time class="quote-date">{{ q.createdAt | date:'dd/MM/yyyy HH:mm' }}</time>
+          </div>
+          <span class="badge" [ngClass]="statusClass[q.estado] || ''">
+            {{ statusLabels[q.estado] || q.estado }}
+          </span>
+        </div>
+        <div class="quote-card-total">
+          <span>Total</span>
+          <strong>Q{{ q.totalConIva | number:'1.0-0' }}</strong>
+        </div>
+        <div class="quote-card-actions">
+          <button type="button" class="btn btn-primary btn-sm" (click)="openQuote(q)">
+            Ver cotización
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" (click)="viewSeguimiento(q)">
+            {{ selectedQuote?.id === q.id ? 'Ocultar seguimiento' : 'Ver seguimiento' }}
+          </button>
+        </div>
+
+        <div *ngIf="selectedQuote?.id === q.id" class="seguimiento-inline">
+          <h4>Historial de seguimiento</h4>
+          <p *ngIf="loadingSeguimiento" class="loading-hint">Cargando historial…</p>
+          <ul class="timeline" *ngIf="!loadingSeguimiento && seguimiento.length">
+            <li *ngFor="let e of seguimiento">
+              <div class="timeline-dot" aria-hidden="true"></div>
+              <div class="timeline-content">
+                <time>{{ e.createdAt | date:'dd/MM/yyyy HH:mm' }}</time>
+                <strong>{{ seguimientoLabel(e) }}</strong>
+                <span *ngIf="e.usuarioNombre" class="timeline-user">{{ e.usuarioNombre }}</span>
+                <p *ngIf="e.comentario" class="timeline-comment">{{ e.comentario }}</p>
+              </div>
+            </li>
+          </ul>
+          <p *ngIf="!loadingSeguimiento && !seguimiento.length" class="empty-hint">
+            Aún no hay movimientos de seguimiento.
+          </p>
+        </div>
+      </article>
+    </div>
+
+    <div class="empty-state card" *ngIf="!loadingQuotes && !quotes.length">
+      <img src="/assets/icons/Carrito-compras.png" alt="" class="empty-icon" aria-hidden="true" />
+      <h3>Aún no tenés cotizaciones</h3>
+      <p>Armá una desde el catálogo y quedará vinculada a tu cuenta.</p>
+      <a routerLink="/carrito" class="btn btn-primary">Ir al carrito</a>
+      <a routerLink="/categorias" class="btn btn-secondary">Ver productos</a>
+    </div>
+  </section>
+</div>
