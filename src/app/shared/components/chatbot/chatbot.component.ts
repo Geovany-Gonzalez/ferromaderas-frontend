@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { finalize } from 'rxjs';
 import {
   ChatbotService,
   ChatFaq,
@@ -36,6 +37,7 @@ export class ChatbotComponent implements OnInit {
   constructor(
     private readonly chatbot: ChatbotService,
     private readonly analytics: AnalyticsService,
+    private readonly cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
@@ -53,6 +55,7 @@ export class ChatbotComponent implements OnInit {
       if (!this.askingName && this.messages.length && this.messages[0].type === 'bot') {
         this.messages[0].suggestions = this.faqs.slice(0, 6);
       }
+      this.cdr.detectChanges();
     });
   }
 
@@ -103,6 +106,7 @@ export class ChatbotComponent implements OnInit {
       text,
       suggestions: this.faqs.slice(0, 6),
     });
+    this.cdr.detectChanges();
   }
 
   /** Clic en una pregunta prelistada: se envía como mensaje normal. */
@@ -125,25 +129,34 @@ export class ChatbotComponent implements OnInit {
     this.messages.push({ type: 'user', text });
     this.loading = true;
 
-    this.chatbot.sendMessage(text).subscribe({
-      next: (res) => {
-        this.loading = false;
-        this.messages.push({
-          type: 'bot',
-          text: res.answer,
-          suggestions: res.suggestions?.length
-            ? res.suggestions
-            : this.faqs.slice(0, 6),
-        });
-      },
-      error: () => {
-        this.loading = false;
-        this.messages.push({
-          type: 'bot',
-          text: 'Ocurrió un problema al responder. Intentá de nuevo en un momento o escribinos por WhatsApp.',
-          suggestions: this.faqs.slice(0, 6),
-        });
-      },
-    });
+    this.cdr.detectChanges();
+    this.chatbot
+      .sendMessage(text)
+      .pipe(
+        finalize(() => {
+          this.loading = false;
+          this.cdr.detectChanges();
+        }),
+      )
+      .subscribe({
+        next: (res) => {
+          this.messages.push({
+            type: 'bot',
+            text: res.answer,
+            suggestions: res.suggestions?.length
+              ? res.suggestions
+              : this.faqs.slice(0, 6),
+          });
+          this.cdr.detectChanges();
+        },
+        error: () => {
+          this.messages.push({
+            type: 'bot',
+            text: 'Ocurrió un problema al responder. Intentá de nuevo en un momento o escribinos por WhatsApp.',
+            suggestions: this.faqs.slice(0, 6),
+          });
+          this.cdr.detectChanges();
+        },
+      });
   }
 }

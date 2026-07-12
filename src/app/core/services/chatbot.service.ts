@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, catchError, of } from 'rxjs';
+import { Observable, catchError, of, throwError, timeout, TimeoutError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 /** Opción de pregunta rápida (compatibilidad con el flujo anterior por botones). */
@@ -64,11 +64,27 @@ export class ChatbotService {
 
   /** Envía el mensaje del usuario y devuelve la respuesta del asistente. */
   sendMessage(message: string): Observable<ChatResponse> {
-    return this.http.post<ChatResponse>(`${this.api}/message`, {
-      message,
-      sessionId: this.getSessionId(),
-      name: this.getName() || undefined,
-    });
+    return this.http
+      .post<ChatResponse>(`${this.api}/message`, {
+        message,
+        sessionId: this.getSessionId(),
+        name: this.getName() || undefined,
+      })
+      .pipe(
+        timeout(30000),
+        catchError((err) => {
+          if (err instanceof TimeoutError) {
+            return of({
+              conversationId: '',
+              answer:
+                'La respuesta está tardando más de lo normal. Probá de nuevo o escribinos por WhatsApp.',
+              source: 'fallback' as const,
+              suggestions: [],
+            });
+          }
+          return throwError(() => err);
+        }),
+      );
   }
 
   /** Nombre del visitante guardado (vacío si aún no lo dio). */
