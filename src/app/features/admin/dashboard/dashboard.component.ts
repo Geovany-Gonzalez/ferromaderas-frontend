@@ -1,14 +1,18 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartData, ChartType } from 'chart.js';
 
 import { StatisticsService } from '../../../core/services/statistics.service';
+import { FollowUpAlertsService } from '../../../core/services/follow-up-alerts.service';
+import { FollowUpAlertItem } from '../../../core/services/quotes-api.service';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, BaseChartDirective],
+  imports: [CommonModule, RouterLink, BaseChartDirective],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
 })
@@ -24,6 +28,13 @@ export class DashboardComponent implements OnInit {
 
   loading = true;
   error: string | null = null;
+
+  private readonly followUpAlerts = inject(FollowUpAlertsService);
+  private readonly auth = inject(AuthService);
+
+  readonly canViewQuotes = () => this.auth.hasPermission('view_quotes');
+  readonly alertsLoading = this.followUpAlerts.loading;
+  readonly alertsData = this.followUpAlerts.data;
 
   /** Gráfico: Visitas por día (última semana) */
   public barChartType: ChartType = 'bar';
@@ -122,6 +133,9 @@ export class DashboardComponent implements OnInit {
   constructor(private readonly statistics: StatisticsService) {}
 
   ngOnInit(): void {
+    if (this.canViewQuotes()) {
+      this.followUpAlerts.refresh();
+    }
     this.statistics.getDashboard().subscribe({
       next: (data) => this.applyDashboardData(data),
       error: () => {
@@ -194,5 +208,20 @@ export class DashboardComponent implements OnInit {
     const date = new Date(y, m, d);
     const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
     return `${days[date.getDay()]} ${d}`;
+  }
+
+  alertLabel(tipo: FollowUpAlertItem['tipo']): string {
+    return tipo === 'nueva_sin_vendedor' ? 'Sin vendedor' : 'Descuento pendiente';
+  }
+
+  formatAlertFecha(iso: string): string {
+    try {
+      return new Date(iso).toLocaleString('es-GT', {
+        dateStyle: 'short',
+        timeStyle: 'short',
+      });
+    } catch {
+      return iso;
+    }
   }
 }

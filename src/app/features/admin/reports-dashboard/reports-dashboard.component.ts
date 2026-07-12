@@ -6,6 +6,7 @@ import { ActivatedRoute } from '@angular/router';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartData, ChartType } from 'chart.js';
 import { QuotationsService } from '../../../core/services/quotations.service';
+import { QuotesApiService } from '../../../core/services/quotes-api.service';
 import { ChatbotService } from '../../../core/services/chatbot.service';
 import { Quotation, QuotationStatus } from '../../../core/models/quotation.model';
 import jsPDF from 'jspdf';
@@ -44,6 +45,7 @@ export class ReportsDashboardComponent implements OnInit, AfterViewChecked {
   @ViewChild('pdfFrame') pdfFrame!: ElementRef<HTMLIFrameElement>;
 
   private quotationsService = inject(QuotationsService);
+  private quotesApi = inject(QuotesApiService);
   private chatbotService = inject(ChatbotService);
   private route = inject(ActivatedRoute);
   private sanitizer = inject(DomSanitizer);
@@ -108,6 +110,14 @@ export class ReportsDashboardComponent implements OnInit, AfterViewChecked {
         this.buildReports();
       },
     });
+    this.quotesApi.getTopQuotedProducts().subscribe({
+      next: (list) => {
+        this.productosMasCotizados = list;
+      },
+      error: () => {
+        this.productosMasCotizados = [];
+      },
+    });
   }
 
   private buildReports(): void {
@@ -165,14 +175,7 @@ export class ReportsDashboardComponent implements OnInit, AfterViewChecked {
   }
 
   private buildProductosMasCotizados(): void {
-    // Mock: cuando el backend almacene líneas por cotización, calcular aquí
-    this.productosMasCotizados = [
-      { nombre: 'Cemento UGC progreso', codigo: '001', vecesCotizado: 24, porcentaje: 18.5 },
-      { nombre: 'Cemento La Cantera', codigo: '002', vecesCotizado: 19, porcentaje: 14.6 },
-      { nombre: 'Tubo PVC 1/2 pulgada', codigo: '005', vecesCotizado: 16, porcentaje: 12.3 },
-      { nombre: 'Pintura látex blanca', codigo: '006', vecesCotizado: 14, porcentaje: 10.8 },
-      { nombre: 'Cemento El Nacional', codigo: '003', vecesCotizado: 12, porcentaje: 9.2 },
-    ];
+    if (this.productosMasCotizados.length > 0) return;
   }
 
   private buildVendedoresRanking(): void {
@@ -186,7 +189,7 @@ export class ReportsDashboardComponent implements OnInit, AfterViewChecked {
       if (!byVendedor.has(id)) byVendedor.set(id, { nombre: nom, count: 0, monto: 0 });
       const v = byVendedor.get(id)!;
       v.count += 1;
-      v.monto += q.total;
+      v.monto += q.totalConIva ?? q.total;
     });
     this.vendedoresRanking = Array.from(byVendedor.entries())
       .map(([, v]) => ({ nombre: v.nombre, cotizacionesCompletadas: v.count, montoTotal: v.monto }))

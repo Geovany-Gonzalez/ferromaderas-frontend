@@ -101,11 +101,8 @@ export class AuthService {
     return this.userData()?.role === role;
   }
 
-  /** Valida sesión con el servidor (cookie HttpOnly). */
+  /** Valida sesión con el servidor (cookie HttpOnly). Siempre consulta /me para detectar cookies expiradas. */
   ensureSession(): Observable<boolean> {
-    if (this.sessionConfirmed && this.userData()) {
-      return of(true);
-    }
     return this.http.get<{ user: AuthUser | null }>(`${this.api}/me`).pipe(
       tap((res) => {
         if (res.user) this.persistUser(res.user);

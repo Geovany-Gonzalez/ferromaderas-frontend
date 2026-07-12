@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -6,6 +6,7 @@ import { QuotationsService } from '../../../core/services/quotations.service';
 import { VendedoresService, Vendedor } from '../../../core/services/vendedores.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { FollowUpAlertsService } from '../../../core/services/follow-up-alerts.service';
 import {
   ApprovalState,
   Quotation,
@@ -22,11 +23,18 @@ import {
 export class QuotationsAdminComponent implements OnInit {
   quotations: Quotation[] = [];
   vendedores: Vendedor[] = [];
+  /** Vendedor seleccionado por fila en la tabla (asignación rápida). */
+  inlineAssign: Record<string, string> = {};
   searchId = '';
   filterEstado: QuotationStatus | '' = '';
   fechaDesde = '';
   fechaHasta = '';
   filterVendedor = '';
+
+  loading = false;
+  loadError = '';
+  private loadAttempt = 0;
+  private emptyListRetried = false;
 
   /** Modal ver detalle */
   viewModalQuotation: Quotation | null = null;
@@ -57,20 +65,110 @@ export class QuotationsAdminComponent implements OnInit {
     private quotationsService: QuotationsService,
     private vendedoresService: VendedoresService,
     private notification: NotificationService,
-    private auth: AuthService
+    private auth: AuthService,
+    private followUpAlerts: FollowUpAlertsService,
+    private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
+    this.auth.refreshMe().subscribe();
     this.loadQuotations();
-    this.loadVendedores();
+    if (this.canManageAssignments) {
+      this.loadVendedores();
+    }
   }
 
   private loadQuotations(): void {
+    this.loading = true;
+    this.loadError = '';
     this.quotationsService.getAll().subscribe({
-      next: (list) => (this.quotations = list),
-      error: () =>
-        this.notification.showMessage('No se pudieron cargar las cotizaciones.', 'error'),
+      next: (list) => {
+        this.quotations = list;
+        this.syncInlineAssign();
+        this.loading = false;
+        this.followUpAlerts.refresh();
+        this.cdr.detectChanges();
+
+        // Si hay alertas en caché pero la lista vino vacía, reintenta una vez (race con cookie).
+        if (
+          list.length === 0 &&
+          this.followUpAlerts.pendingCount() > 0 &&
+          !this.emptyListRetried
+        ) {
+          this.emptyListRetried = true;
+          setTimeout(() => this.loadQuotations(), 800);
+        }
+      },
+      error: (err: { status?: number; message?: string }) => {
+        this.loading = false;
+        this.quotations = [];
+        this.followUpAlerts.data.set(null);
+        this.cdr.markForCheck();
+
+        if (err?.status === 401) {
+          this.loadError = 'Sesión expirada. Volvé a iniciar sesión.';
+        } else if (err?.status === 403) {
+          this.loadError = 'No tenés permiso para ver cotizaciones.';
+        } else {
+          this.loadError =
+            'No se pudieron cargar las cotizaciones. Verificá que el backend esté en ejecución.';
+        }
+        this.notification.showMessage(this.loadError, 'error');
+
+        if (this.loadAttempt < 2) {
+          this.loadAttempt++;
+          setTimeout(() => this.loadQuotations(), 1500);
+        }
+      },
     });
+  }
+
+  refreshQuotations(): void {
+    this.emptyListRetried = false;
+    this.loadAttempt = 0;
+    this.loadQuotations();
+  }
+
+  get pendingAlertsCount(): number {
+    return this.followUpAlerts.pendingCount();
+  }
+
+  /** Vista restringida para el rol vendedor (solo sus asignaciones). */
+  get isVendedorView(): boolean {
+    return this.auth.hasRole('vendedor');
+  }
+
+  /** Admin/gerente pueden asignar vendedores. */
+  get canManageAssignments(): boolean {
+    return !this.isVendedorView;
+  }
+
+  get pageTitle(): string {
+    return this.isVendedorView ? 'Mis cotizaciones asignadas' : 'Listado de cotizaciones';
+  }
+
+  get emptyListMessage(): string {
+    return this.isVendedorView
+      ? 'Aún no tenés cotizaciones asignadas. Pedile a un administrador que te asigne una.'
+      : 'Aún no hay cotizaciones registradas.';
+  }
+
+  private syncInlineAssign(): void {
+    const map: Record<string, string> = {};
+    for (const q of this.quotations) {
+      map[q.id] = q.vendedorId ?? '';
+    }
+    this.inlineAssign = map;
+  }
+
+  onInlineAssignChange(q: Quotation): void {
+    const vendedorId = this.inlineAssign[q.id];
+    if (!vendedorId) {
+      if (q.vendedorId) this.unassignVendedor(q);
+      return;
+    }
+    if (vendedorId === q.vendedorId) return;
+    this.assignVendedor(q, vendedorId);
   }
 
   private loadVendedores(): void {
@@ -104,6 +202,7 @@ export class QuotationsAdminComponent implements OnInit {
       next: (updated) => {
         this.replaceInList(updated);
         this.viewModalQuotation = updated;
+        this.followUpAlerts.refresh();
         this.notification.showMessage(`Vendedor ${v.nombre} asignado a cotización ${updated.codigo}.`, 'success');
       },
       error: () => this.notification.showMessage('No se pudo asignar el vendedor.', 'error'),
@@ -115,6 +214,7 @@ export class QuotationsAdminComponent implements OnInit {
       next: (updated) => {
         this.replaceInList(updated);
         this.viewModalQuotation = updated;
+        this.followUpAlerts.refresh();
         this.notification.showMessage(`Vendedor desasignado de cotización ${updated.codigo}.`, 'success');
       },
       error: () => this.notification.showMessage('No se pudo desasignar el vendedor.', 'error'),
@@ -124,6 +224,7 @@ export class QuotationsAdminComponent implements OnInit {
   /** Reemplaza una cotización en la lista local tras actualizarla en el backend. */
   private replaceInList(updated: Quotation): void {
     this.quotations = this.quotations.map((x) => (x.id === updated.id ? updated : x));
+    this.inlineAssign[updated.id] = updated.vendedorId ?? '';
   }
 
   onAssignInModal(): void {
@@ -132,14 +233,15 @@ export class QuotationsAdminComponent implements OnInit {
     this.assignVendedorId = '';
   }
 
-  /** Acepta DD/MM/YYYY o YYYY-MM-DD (del input type="date"). */
+  /** Acepta DD/MM/YYYY HH:mm (lista) o YYYY-MM-DD (input type="date"). */
   private parseFecha(s: string): number {
     if (!s?.trim()) return 0;
-    const sep = s.includes('-') ? '-' : '/';
-    const parts = s.split(sep).map(Number);
+    const datePart = s.trim().split(/\s+/)[0];
+    const sep = datePart.includes('-') ? '-' : '/';
+    const parts = datePart.split(sep).map(Number);
     if (parts.length < 3) return 0;
     const [a, b, c] = parts;
-    const isIso = sep === '-'; // YYYY-MM-DD
+    const isIso = sep === '-';
     const y = isIso ? a : c;
     const m = isIso ? b : b;
     const d = isIso ? c : a;
@@ -188,6 +290,7 @@ export class QuotationsAdminComponent implements OnInit {
         next: (updated) => {
           this.replaceInList(updated);
           this.viewModalQuotation = updated;
+          this.followUpAlerts.refresh();
           const msg =
             pct === 0
               ? 'Descuento eliminado.'
@@ -207,6 +310,7 @@ export class QuotationsAdminComponent implements OnInit {
           this.replaceInList(updated);
           this.viewModalQuotation = updated;
           this.approvalNote = '';
+          this.followUpAlerts.refresh();
           this.notification.showMessage(
             decision === 'aprobada' ? 'Descuento aprobado.' : 'Descuento rechazado.',
             'success'

@@ -1,7 +1,12 @@
 <div class="cart-page container">
-  <!-- Vista de cotización cuando se abre un link compartido -->
-  <section class="quote-view-section card" *ngIf="showQuoteView && quoteData">
-    <div class="quote-header">Cotización {{ quoteData.id }}</div>
+  <!-- Cargando cotización desde enlace compartido -->
+  <section class="quote-loading card" *ngIf="loadingQuote()">
+    <p>Cargando cotización...</p>
+  </section>
+
+  <!-- Vista de cotización cuando se abre un link con ?code= o ?c= -->
+  <section class="quote-view-section card" *ngIf="showQuoteView() && quoteData() as qd">
+    <div class="quote-header">Cotización {{ qd.id }}</div>
     <div class="quote-body">
       <table class="cart-table">
         <thead>
@@ -14,7 +19,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let line of quoteData.lines; trackBy: trackById">
+          <tr *ngFor="let line of qd.lines; trackBy: trackById">
             <td class="col-code" data-label="Código">{{ line.product.code }}</td>
             <td class="col-product" data-label="Producto">
               <img [src]="line.product.imageUrl || '/assets/icons/logo.png'" [alt]="line.product.name" class="product-thumb" />
@@ -26,13 +31,17 @@
           </tr>
         </tbody>
       </table>
-      <div class="quote-total">Total: Q{{ quoteData.total | number:'1.0-0' }}</div>
-      <div class="quote-client" *ngIf="quoteData.nombre || quoteData.telefono || quoteData.direccion || quoteData.nota">
+      <div class="quote-total">
+        <div>Subtotal: Q{{ qd.neto | number:'1.0-0' }}</div>
+        <div>IVA ({{ qd.ivaPorcentaje }}%): Q{{ qd.ivaMonto | number:'1.2-2' }}</div>
+        <div class="quote-total-final">Total: Q{{ qd.totalConIva | number:'1.0-0' }}</div>
+      </div>
+      <div class="quote-client" *ngIf="qd.nombre || qd.telefono || qd.direccion || qd.nota">
         <h3>Datos del cliente</h3>
-        <p *ngIf="quoteData.nombre"><strong>Nombre:</strong> {{ quoteData.nombre }}</p>
-        <p *ngIf="quoteData.telefono"><strong>Teléfono:</strong> +502 {{ quoteData.telefono }}</p>
-        <p *ngIf="quoteData.direccion"><strong>Dirección:</strong> {{ quoteData.direccion }}</p>
-        <p *ngIf="quoteData.nota"><strong>Nota:</strong> {{ quoteData.nota }}</p>
+        <p *ngIf="qd.nombre"><strong>Nombre:</strong> {{ qd.nombre }}</p>
+        <p *ngIf="qd.telefono"><strong>Teléfono:</strong> +502 {{ qd.telefono }}</p>
+        <p *ngIf="qd.direccion"><strong>Dirección:</strong> {{ qd.direccion }}</p>
+        <p *ngIf="qd.nota"><strong>Nota:</strong> {{ qd.nota }}</p>
       </div>
     </div>
     <div class="quote-actions">
@@ -40,7 +49,14 @@
     </div>
   </section>
 
-  <section class="cart-header card" *ngIf="!showQuoteView">
+  <!-- Error al cargar cotización por enlace -->
+  <section class="quote-error card" *ngIf="!showQuoteView() && !loadingQuote() && quoteCodeFromUrl()">
+    <p>No se encontró la cotización <strong>{{ quoteCodeFromUrl() }}</strong>.</p>
+    <p class="hint">Verificá que el enlace sea correcto o creá una nueva desde el catálogo.</p>
+    <a routerLink="/catalogo" class="btn btn-primary">Ver productos</a>
+  </section>
+
+  <section class="cart-header card" *ngIf="!showQuoteView() && !loadingQuote() && !quoteCodeFromUrl()">
     <div class="cart-title-wrap">
       <img src="/assets/icons/Carrito-compras.png" alt="Carrito" class="cart-icon" />
       <h1 class="cart-title">Mi carrito</h1>
@@ -51,7 +67,7 @@
     </p>
   </section>
 
-  <ng-container *ngIf="!showQuoteView && !showTrackingForm; else trackingForm">
+  <ng-container *ngIf="!showQuoteView() && !loadingQuote() && !quoteCodeFromUrl() && !showTrackingForm; else trackingForm">
     <section class="cart-table-section card" *ngIf="!isEmpty()">
       <table class="cart-table">
         <thead>

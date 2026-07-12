@@ -25,7 +25,11 @@ export class QuotationsService {
       descuentoPorcentaje: q.descuentoPorcentaje ?? 0,
       descuentoMonto: q.descuentoMonto ?? 0,
       descuentoMotivo: q.descuentoMotivo,
+      neto: q.neto ?? q.total,
+      ivaPorcentaje: q.ivaPorcentaje ?? 12,
+      ivaMonto: q.ivaMonto ?? 0,
       total: q.total,
+      totalConIva: q.totalConIva ?? q.total,
       direccion: q.clienteDireccion ?? '',
       estado: q.estado,
       aprobacion: q.aprobacion ?? 'no_requiere',
@@ -49,7 +53,14 @@ export class QuotationsService {
   }
 
   getAll(): Observable<Quotation[]> {
-    return this.api.list().pipe(map((list) => list.map((q) => this.toQuotation(q))));
+    return this.api.list().pipe(
+      map((list) => {
+        if (!Array.isArray(list)) {
+          throw new Error('El servidor no devolvió un listado válido de cotizaciones.');
+        }
+        return list.map((q) => this.toQuotation(q));
+      }),
+    );
   }
 
   getById(id: string): Observable<Quotation> {

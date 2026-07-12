@@ -75,6 +75,11 @@ export class BitacoraAdminComponent implements OnInit {
     this.load();
   }
 
+  setModuloFilter(modulo: string): void {
+    this.filterModulo = modulo;
+    this.aplicarFiltros();
+  }
+
   prevPage(): void {
     if (this.page > 1) {
       this.page--;

@@ -26,8 +26,13 @@ export interface Quotation {
   descuentoPorcentaje: number;
   descuentoMonto: number;
   descuentoMotivo?: string;
-  /** Total final (subtotal - descuento). */
+  /** Total final (subtotal - descuento, sin IVA). */
   total: number;
+  neto: number;
+  ivaPorcentaje: number;
+  ivaMonto: number;
+  /** Total a pagar incluyendo IVA. */
+  totalConIva: number;
   direccion: string;
   estado: QuotationStatus;
   /** Flujo de aprobación del descuento aplicado. */

@@ -390,6 +390,24 @@
 }
 
 /* Vista de cotización compartida */
+.quote-loading,
+.quote-error {
+  margin-bottom: 1.5rem;
+  padding: 2rem 1.5rem;
+  text-align: center;
+}
+
+.quote-loading p {
+  margin: 0;
+  color: var(--primary, #2c3e8f);
+  font-weight: 600;
+}
+
+.quote-error .hint {
+  color: #666;
+  margin: 0.5rem 0 1.25rem;
+}
+
 .quote-view-section {
   margin-bottom: 1.5rem;
   width: 100%;
@@ -415,9 +433,18 @@
 }
 
 .quote-total {
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-align: right;
   margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.quote-total-final {
   font-size: 1.25rem;
   font-weight: 700;
+  margin-top: 0.35rem;
   color: var(--primary, #2c3e8f);
 }
 

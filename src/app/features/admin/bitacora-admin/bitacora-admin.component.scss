@@ -29,6 +29,36 @@
   line-height: 1.4;
 }
 
+.quick-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-top: none;
+
+  .chip {
+    padding: 0.35rem 0.75rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 999px;
+    background: #fff;
+    color: #334155;
+    font-size: 0.8rem;
+    cursor: pointer;
+
+    &:hover {
+      background: #f1f5f9;
+    }
+
+    &.active {
+      background: #2c3e8f;
+      border-color: #2c3e8f;
+      color: #fff;
+    }
+  }
+}
+
 .toolbar {
   display: flex;
   flex-wrap: wrap;

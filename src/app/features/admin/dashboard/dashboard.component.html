@@ -1,4 +1,59 @@
 <div class="dashboard-container">
+  @if (canViewQuotes()) {
+    <section class="alerts-section">
+      <div class="alerts-header">
+        <h2 class="alerts-title">Alertas de seguimiento comercial</h2>
+        <p class="alerts-subtitle">
+          Cotizaciones que requieren acción. También se envían por correo al buzón de la organización
+          configurado en SMTP.
+        </p>
+      </div>
+
+      @if (alertsLoading()) {
+        <p class="alerts-loading">Cargando alertas...</p>
+      } @else if (alertsData(); as data) {
+        <div class="alerts-summary">
+          <div class="alert-stat" [class.has-items]="data.resumen.nuevasSinVendedor > 0">
+            <span class="alert-stat-value">{{ data.resumen.nuevasSinVendedor }}</span>
+            <span class="alert-stat-label">Nuevas sin vendedor</span>
+          </div>
+          <div class="alert-stat" [class.has-items]="data.resumen.descuentosPendientes > 0">
+            <span class="alert-stat-value">{{ data.resumen.descuentosPendientes }}</span>
+            <span class="alert-stat-label">Descuentos pendientes</span>
+          </div>
+          <div class="alert-stat">
+            <span class="alert-stat-value">{{ data.resumen.enSeguimiento }}</span>
+            <span class="alert-stat-label">En seguimiento</span>
+          </div>
+        </div>
+
+        @if (data.alertas.length === 0) {
+          <p class="alerts-empty">No hay alertas pendientes. ¡Todo al día!</p>
+        } @else {
+          <div class="alerts-list">
+            @for (a of data.alertas; track a.id) {
+              <div class="alert-row" [class.prioridad-alta]="a.prioridad === 'alta'">
+                <div class="alert-main">
+                  <span class="alert-badge" [class.badge-descuento]="a.tipo === 'descuento_pendiente'">
+                    {{ alertLabel(a.tipo) }}
+                  </span>
+                  <strong class="alert-codigo">{{ a.codigo }}</strong>
+                  <span class="alert-cliente">{{ a.clienteNombre || 'Cliente sin nombre' }}</span>
+                </div>
+                <div class="alert-meta">
+                  <span>{{ a.mensaje }}</span>
+                  <span class="alert-total">Q{{ a.total | number:'1.0-0' }}</span>
+                  <span class="alert-fecha">{{ formatAlertFecha(a.createdAt) }}</span>
+                </div>
+              </div>
+            }
+          </div>
+          <a routerLink="/admin/cotizaciones" class="alerts-link">Ir a cotizaciones →</a>
+        }
+      }
+    </section>
+  }
+
   <h1 class="dashboard-title">Estadísticas del sitio web</h1>
 
   @if (loading) {

@@ -157,7 +157,10 @@
 }
 
 .menu-item {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   padding: 10px 14px;
   color: #1f2937;
   background: white;
@@ -190,6 +193,19 @@
     background: #dbeafe;
     color: #1e40af;
     font-weight: 700;
+  }
+
+  .menu-badge {
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: #dc2626;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 20px;
+    text-align: center;
   }
 }
 

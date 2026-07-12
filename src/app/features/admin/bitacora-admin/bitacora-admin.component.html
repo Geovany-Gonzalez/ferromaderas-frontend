@@ -2,8 +2,17 @@
   <div class="list-section">
     <h2 class="list-title">Bitácora de auditoría</h2>
     <p class="list-intro">
-      Registro de acciones sobre productos (crear, editar, activar) y cargas masivas / sincronización de inventario.
+      Registro de acciones del sistema: productos, cotizaciones, autenticación, inventario y
+      <strong>errores del servidor</strong> (módulo <code>errores</code>).
     </p>
+
+    <div class="quick-filters">
+      <button type="button" class="chip" [class.active]="filterModulo === ''" (click)="setModuloFilter('')">Todos</button>
+      <button type="button" class="chip" [class.active]="filterModulo === 'errores'" (click)="setModuloFilter('errores')">Errores del sistema</button>
+      <button type="button" class="chip" [class.active]="filterModulo === 'cotizaciones'" (click)="setModuloFilter('cotizaciones')">Cotizaciones</button>
+      <button type="button" class="chip" [class.active]="filterModulo === 'auth'" (click)="setModuloFilter('auth')">Autenticación</button>
+      <button type="button" class="chip" [class.active]="filterModulo === 'productos'" (click)="setModuloFilter('productos')">Productos</button>
+    </div>
 
     <div class="toolbar">
       <a [routerLink]="['/admin/dashboard']" class="btn-home" title="Inicio" aria-label="Inicio">

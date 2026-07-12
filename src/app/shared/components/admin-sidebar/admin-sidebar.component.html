@@ -32,7 +32,12 @@
         class="menu-item"
         (click)="closeMenu()"
       >
-        {{ item.label }}
+        {{ getMenuLabel(item) }}
+        <span
+          *ngIf="showQuotesBadge(item)"
+          class="menu-badge"
+          [attr.title]="pendingQuotesCount() + ' pendiente(s) de seguimiento'"
+        >{{ pendingQuotesCount() }}</span>
       </a>
     </nav>
   </div>

@@ -44,7 +44,11 @@ export interface Quote {
   descuentoPorcentaje: number;
   descuentoMonto: number;
   descuentoMotivo?: string;
+  neto: number;
+  ivaPorcentaje: number;
+  ivaMonto: number;
   total: number;
+  totalConIva: number;
   aprobacion: ApprovalState;
   aprobadoPorNombre?: string;
   aprobadoEn?: string;
@@ -54,6 +58,31 @@ export interface Quote {
   createdAt: string;
   updatedAt: string;
   items?: QuoteItem[];
+}
+
+/** Tipos de alerta de seguimiento comercial (panel admin). */
+export type FollowUpAlertType = 'nueva_sin_vendedor' | 'descuento_pendiente';
+
+export interface FollowUpAlertItem {
+  id: string;
+  codigo: string;
+  tipo: FollowUpAlertType;
+  prioridad: 'alta' | 'media';
+  mensaje: string;
+  clienteNombre?: string;
+  total: number;
+  createdAt: string;
+  diasSinAtender: number;
+}
+
+export interface FollowUpAlertsResponse {
+  resumen: {
+    nuevasSinVendedor: number;
+    enSeguimiento: number;
+    descuentosPendientes: number;
+    totalPendientes: number;
+  };
+  alertas: FollowUpAlertItem[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -125,5 +154,19 @@ export class QuotesApiService {
       `${this.api}/${id}/enviar-correo`,
       { email },
     );
+  }
+
+  /** Admin: alertas de seguimiento comercial para dashboard y menú. */
+  getFollowUpAlerts(): Observable<FollowUpAlertsResponse> {
+    return this.http.get<FollowUpAlertsResponse>(`${this.api}/seguimiento/alertas`);
+  }
+
+  /** Admin: productos más cotizados para reportes. */
+  getTopQuotedProducts(): Observable<
+    { codigo: string; nombre: string; vecesCotizado: number; porcentaje: number }[]
+  > {
+    return this.http.get<
+      { codigo: string; nombre: string; vecesCotizado: number; porcentaje: number }[]
+    >(`${this.api}/reportes/productos-cotizados`);
   }
 }

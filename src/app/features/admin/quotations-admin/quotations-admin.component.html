@@ -1,6 +1,13 @@
 <div class="quotations-admin-container">
   <div class="list-section">
-    <h2 class="list-title">Listado de cotizaciones</h2>
+    <h2 class="list-title">{{ pageTitle }}</h2>
+
+    @if (pendingAlertsCount > 0 && canManageAssignments) {
+      <div class="alerts-banner">
+        <strong>{{ pendingAlertsCount }} alerta(s) de seguimiento pendiente(s).</strong>
+        Asigná vendedor o aprobá descuentos según corresponda. También se notificó por correo a la organización.
+      </div>
+    }
 
     <div class="toolbar">
       <a [routerLink]="['/admin/dashboard']" class="btn-home" title="Inicio" aria-label="Inicio">
@@ -30,10 +37,13 @@
       <select class="filter-estado" [(ngModel)]="filterEstado" title="Filtrar por estado">
         <option *ngFor="let o of statusOptions" [value]="o.value">{{ o.label }}</option>
       </select>
-      <select class="filter-estado" [(ngModel)]="filterVendedor" title="Filtrar por vendedor">
+      <select class="filter-estado" [(ngModel)]="filterVendedor" title="Filtrar por vendedor" *ngIf="canManageAssignments">
         <option value="">Vendedor</option>
         <option *ngFor="let v of vendedores" [value]="v.id">{{ v.nombre }}</option>
       </select>
+      <button type="button" class="btn-refresh-list" (click)="refreshQuotations()" [disabled]="loading" title="Actualizar listado">
+        {{ loading ? 'Cargando...' : 'Actualizar' }}
+      </button>
     </div>
 
     <div class="table-wrap">
@@ -58,13 +68,25 @@
             <td class="col-cliente" data-label="Cliente">{{ q.cliente }}</td>
             <td class="col-telefono" data-label="Teléfono">{{ q.telefono }}</td>
             <td class="col-total" data-label="Total">
-              Q{{ q.total | number:'1.0-0' }}
+              Q{{ q.totalConIva | number:'1.0-0' }}
               <span *ngIf="q.aprobacion === 'pendiente'" class="badge aprob-pendiente badge-inline" title="Descuento pendiente de aprobación">⏳</span>
             </td>
             <td class="col-direccion" data-label="Dirección">{{ q.direccion }}</td>
             <td class="col-vendedor" data-label="Vendedor">
-              <span *ngIf="q.vendedorNombre; else sinVendedor">{{ q.vendedorNombre }}</span>
-              <ng-template #sinVendedor><span class="text-muted">—</span></ng-template>
+              <ng-container *ngIf="canManageAssignments; else vendedorSoloLectura">
+                <select
+                  class="inline-vendedor-select"
+                  [(ngModel)]="inlineAssign[q.id]"
+                  (change)="onInlineAssignChange(q)"
+                  [title]="q.vendedorNombre ? 'Cambiar vendedor' : 'Asignar vendedor'"
+                >
+                  <option value="">— Sin asignar —</option>
+                  <option *ngFor="let v of vendedores" [value]="v.id">{{ v.nombre }}</option>
+                </select>
+              </ng-container>
+              <ng-template #vendedorSoloLectura>
+                <span>{{ q.vendedorNombre || '—' }}</span>
+              </ng-template>
             </td>
             <td class="col-estado" data-label="Estado">
               <span class="badge" [ngClass]="'badge-' + q.estado">{{ statusLabel(q.estado) }}</span>
@@ -87,7 +109,10 @@
           </tr>
         </tbody>
       </table>
-      <p *ngIf="filteredQuotations.length === 0" class="empty-message">No hay cotizaciones que coincidan con los filtros.</p>
+      <p *ngIf="loading" class="empty-message">Cargando cotizaciones...</p>
+      <p *ngIf="!loading && loadError" class="empty-message error-message">{{ loadError }}</p>
+      <p *ngIf="!loading && !loadError && quotations.length === 0" class="empty-message">{{ emptyListMessage }}</p>
+      <p *ngIf="!loading && !loadError && quotations.length > 0 && filteredQuotations.length === 0" class="empty-message">No hay cotizaciones que coincidan con los filtros.</p>
     </div>
   </div>
 </div>
@@ -136,8 +161,15 @@
           </span>
         </div>
         <div class="view-row">
-          <span class="view-label">Total</span>
-          <span class="view-value"><strong>Q{{ viewModalQuotation.total | number:'1.0-0' }}</strong></span>
+          <span class="view-label">Total (con IVA {{ viewModalQuotation.ivaPorcentaje }}%)</span>
+          <span class="view-value"><strong>Q{{ viewModalQuotation.totalConIva | number:'1.0-0' }}</strong></span>
+        </div>
+        <div class="view-row view-row-muted">
+          <span class="view-label">Desglose</span>
+          <span class="view-value">
+            Neto Q{{ viewModalQuotation.neto | number:'1.0-0' }}
+            · IVA Q{{ viewModalQuotation.ivaMonto | number:'1.2-2' }}
+          </span>
         </div>
         <div class="view-row">
           <span class="view-label">Dirección</span>
@@ -158,6 +190,23 @@
             </small>
           </span>
         </div>
+      </div>
+
+      <!-- Asignar vendedor (solo administradores/gerentes) -->
+      <div class="assign-section" *ngIf="canManageAssignments">
+        <h4 class="assign-title">Asignar vendedor para seguimiento</h4>
+        <div class="assign-row">
+          <select [(ngModel)]="assignVendedorId" class="assign-select">
+            <option value="">Seleccionar vendedor</option>
+            <option *ngFor="let v of vendedores" [value]="v.id">{{ v.nombre }}</option>
+          </select>
+          <button type="button" class="btn btn-assign" (click)="onAssignInModal()" [disabled]="!assignVendedorId">
+            Asignar
+          </button>
+        </div>
+        <button *ngIf="viewModalQuotation.vendedorId" type="button" class="btn btn-unassign" (click)="unassignVendedor(viewModalQuotation)">
+          Quitar vendedor
+        </button>
       </div>
 
       <!-- Descuento comercial -->
@@ -214,21 +263,6 @@
       </div>
       <div class="approval-waiting" *ngIf="viewModalQuotation.aprobacion === 'pendiente' && !canApprove()">
         Este descuento espera la aprobación de un gerente.
-      </div>
-      <div class="assign-section">
-        <h4 class="assign-title">Asignar vendedor para seguimiento</h4>
-        <div class="assign-row">
-          <select [(ngModel)]="assignVendedorId" class="assign-select">
-            <option value="">Seleccionar vendedor</option>
-            <option *ngFor="let v of vendedores" [value]="v.id">{{ v.nombre }}</option>
-          </select>
-          <button type="button" class="btn btn-assign" (click)="onAssignInModal()" [disabled]="!assignVendedorId">
-            Asignar
-          </button>
-        </div>
-        <button *ngIf="viewModalQuotation.vendedorId" type="button" class="btn btn-unassign" (click)="unassignVendedor(viewModalQuotation)">
-          Quitar vendedor
-        </button>
       </div>
 
       <!-- Socialización por correo -->

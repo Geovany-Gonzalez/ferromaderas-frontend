@@ -1,7 +1,8 @@
-import { Component, OnInit, OnDestroy, HostListener, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { FollowUpAlertsService } from '../../../core/services/follow-up-alerts.service';
 
 interface MenuItem {
   label: string;
@@ -30,10 +31,14 @@ const ALL_MENU_ITEMS: MenuItem[] = [
   styleUrl: './admin-sidebar.component.scss',
 })
 export class AdminSidebarComponent implements OnInit, OnDestroy {
+  private readonly followUpAlerts = inject(FollowUpAlertsService);
+  private readonly auth = inject(AuthService);
+
   isMenuOpen = false;
   private lastScrollTop = 0;
 
   userName = computed(() => this.auth.currentUser()?.name ?? 'Usuario');
+  pendingQuotesCount = this.followUpAlerts.pendingCount;
   menuItems = computed(() => {
     const user = this.auth.currentUser();
     if (!user) return [];
@@ -43,7 +48,20 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
     });
   });
 
-  constructor(private readonly auth: AuthService) {}
+  getMenuLabel(item: MenuItem): string {
+    if (item.route === '/admin/cotizaciones' && this.auth.hasRole('vendedor')) {
+      return 'Mis cotizaciones';
+    }
+    return item.label;
+  }
+
+  showQuotesBadge(item: MenuItem): boolean {
+    return (
+      item.route === '/admin/cotizaciones' &&
+      this.pendingQuotesCount() > 0 &&
+      !this.auth.hasRole('vendedor')
+    );
+  }
 
   ngOnInit(): void {
     this.checkScreenSize();
