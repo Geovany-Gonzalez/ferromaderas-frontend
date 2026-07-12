@@ -5,6 +5,7 @@ import {
   ChatbotService,
   ChatFaq,
 } from '../../../core/services/chatbot.service';
+import { AnalyticsService } from '../../../core/services/analytics.service';
 
 interface ChatMessage {
   type: 'bot' | 'user';
@@ -32,7 +33,10 @@ export class ChatbotComponent implements OnInit {
 
   private faqs: ChatFaq[] = [];
 
-  constructor(private readonly chatbot: ChatbotService) {}
+  constructor(
+    private readonly chatbot: ChatbotService,
+    private readonly analytics: AnalyticsService,
+  ) {}
 
   ngOnInit(): void {
     this.resetConversation();
@@ -53,9 +57,13 @@ export class ChatbotComponent implements OnInit {
   }
 
   toggle(): void {
-    this.isOpen = !this.isOpen;
-    if (this.isOpen && this.messages.length === 0) {
-      this.resetConversation();
+    const opening = !this.isOpen;
+    this.isOpen = opening;
+    if (opening) {
+      this.analytics.chatbotOpen();
+      if (this.messages.length === 0) {
+        this.resetConversation();
+      }
     }
   }
 
@@ -100,7 +108,7 @@ export class ChatbotComponent implements OnInit {
   /** Clic en una pregunta prelistada: se envía como mensaje normal. */
   selectFaq(faq: ChatFaq): void {
     this.chatbot.recordClick(faq.id, faq.question);
-    this.send(faq.question);
+    this.send(faq.question, faq.id);
   }
 
   /** Envío de texto libre. */
@@ -111,8 +119,9 @@ export class ChatbotComponent implements OnInit {
     this.send(text);
   }
 
-  private send(text: string): void {
+  private send(text: string, questionId = 'custom'): void {
     if (this.loading) return;
+    this.analytics.chatbotQuestion(questionId, text);
     this.messages.push({ type: 'user', text });
     this.loading = true;
 

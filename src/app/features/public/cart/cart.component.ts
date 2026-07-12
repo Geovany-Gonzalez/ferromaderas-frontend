@@ -8,6 +8,7 @@ import { CartService, CartLine } from '../../../core/services/cart.service';
 import { CatalogService } from '../../../core/services/catalog.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { QuotesApiService, Quote, CreateQuoteInput } from '../../../core/services/quotes-api.service';
+import { AnalyticsService } from '../../../core/services/analytics.service';
 
 /** Número de WhatsApp para recibir cotizaciones: +502 58226530 */
 const WHATSAPP_NUMBER = '50258226530';
@@ -28,6 +29,7 @@ export class CartComponent implements OnInit {
   private notification = inject(NotificationService);
   private route = inject(ActivatedRoute);
   private quotesApi = inject(QuotesApiService);
+  private analytics = inject(AnalyticsService);
 
   items = this.cart.items;
   total = this.cart.total;
@@ -43,6 +45,7 @@ export class CartComponent implements OnInit {
   readonly quoteCodeFromUrl = signal<string | null>(null);
   readonly quoteData = signal<{
     id: string;
+    estado: string;
     lines: CartLine[];
     total: number;
     neto: number;
@@ -136,15 +139,18 @@ export class CartComponent implements OnInit {
         if (lines.length > 0) {
           const total =
             data.t ?? data.total ?? lines.reduce((acc, l) => acc + l.product.price * l.qty, 0);
-          const ivaMonto = Math.round(total * 12) / 100;
+          const divisor = 1.12;
+          const neto = Math.round((total / divisor) * 100) / 100;
+          const ivaMonto = Math.round((total - neto) * 100) / 100;
           this.quoteData.set({
             id,
+            estado: 'nueva',
             lines,
             total,
-            neto: total,
+            neto,
             ivaPorcentaje: 12,
             ivaMonto,
-            totalConIva: Math.round((total + ivaMonto) * 100) / 100,
+            totalConIva: total,
             nombre: data.o ?? data.nombre ?? '',
             telefono: data.tel ?? data.telefono ?? '',
             direccion: data.d ?? data.direccion ?? '',
@@ -162,6 +168,7 @@ export class CartComponent implements OnInit {
   /** Convierte los items de una cotización del backend al formato de la vista. */
   private mapQuoteToView(q: Quote): {
     id: string;
+    estado: string;
     lines: CartLine[];
     total: number;
     neto: number;
@@ -189,6 +196,7 @@ export class CartComponent implements OnInit {
     });
     return {
       id: q.codigo,
+      estado: q.estado,
       lines,
       total: q.total,
       neto: q.neto ?? q.total,
@@ -257,6 +265,7 @@ export class CartComponent implements OnInit {
 
   openTrackingForm(): void {
     this.showTrackingForm = true;
+    this.analytics.beginCheckout(this.cart.total(), this.cart.items().length);
   }
 
   closeTrackingForm(): void {
@@ -341,6 +350,7 @@ export class CartComponent implements OnInit {
       const { url } = this.quoteLinkFor(q);
       navigator.clipboard.writeText(url).then(() => {
         this.notification.showMessage(`Link de la cotización ${q.codigo} copiado.`, 'success');
+        this.analytics.generateLead(q.codigo, this.cart.total(), 'share');
       });
     });
   }
@@ -358,6 +368,7 @@ export class CartComponent implements OnInit {
         `Cotización ${q.codigo} registrada.${emailNote} Se abrió WhatsApp.`,
         'success',
       );
+      this.analytics.generateLead(q.codigo, this.cart.total(), 'whatsapp');
       this.closeTrackingForm();
     });
   }
@@ -409,5 +420,16 @@ export class CartComponent implements OnInit {
 
   trackById(_index: number, line: CartLine): string {
     return line.product.id;
+  }
+
+  quoteStatusLabel(estado: string): string {
+    const map: Record<string, string> = {
+      nueva: 'Nueva — en revisión',
+      en_seguimiento: 'En seguimiento',
+      confirmada: 'Confirmada',
+      cerrada: 'Cerrada',
+      cancelada: 'Cancelada',
+    };
+    return map[estado] ?? estado;
   }
 }

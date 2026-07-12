@@ -67,8 +67,8 @@ export class QuotationsService {
     return this.api.getById(id).pipe(map((q) => this.toQuotation(q)));
   }
 
-  updateStatus(id: string, estado: Quotation['estado']): Observable<Quotation> {
-    return this.api.updateStatus(id, estado).pipe(map((q) => this.toQuotation(q)));
+  updateStatus(id: string, estado: Quotation['estado'], comentario?: string): Observable<Quotation> {
+    return this.api.updateStatus(id, estado, comentario).pipe(map((q) => this.toQuotation(q)));
   }
 
   assignVendedor(id: string, vendedorId: string, vendedorNombre: string): Observable<Quotation> {

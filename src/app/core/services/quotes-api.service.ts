@@ -63,6 +63,16 @@ export interface Quote {
 /** Tipos de alerta de seguimiento comercial (panel admin). */
 export type FollowUpAlertType = 'nueva_sin_vendedor' | 'descuento_pendiente';
 
+export interface SeguimientoEntry {
+  id: string;
+  tipo: string;
+  estadoAnterior?: string;
+  estadoNuevo?: string;
+  comentario?: string;
+  usuarioNombre?: string;
+  createdAt: string;
+}
+
 export interface FollowUpAlertItem {
   id: string;
   codigo: string;
@@ -111,9 +121,23 @@ export class QuotesApiService {
     return this.http.get<Quote>(`${this.api}/${id}`);
   }
 
-  /** Admin: cambia el estado de seguimiento. */
-  updateStatus(id: string, estado: QuotationStatus): Observable<Quote> {
-    return this.http.patch<Quote>(`${this.api}/${id}/status`, { estado });
+  /** Admin: cambia el estado de seguimiento (con comentario opcional). */
+  updateStatus(
+    id: string,
+    estado: QuotationStatus,
+    comentario?: string,
+  ): Observable<Quote> {
+    return this.http.patch<Quote>(`${this.api}/${id}/status`, { estado, comentario });
+  }
+
+  /** Cliente registrado: sus cotizaciones. */
+  getMisCotizaciones(): Observable<Quote[]> {
+    return this.http.get<Quote[]>(`${this.api}/mis-cotizaciones`);
+  }
+
+  /** Historial de seguimiento de una cotización. */
+  getSeguimientoHistorial(id: string): Observable<SeguimientoEntry[]> {
+    return this.http.get<SeguimientoEntry[]>(`${this.api}/${id}/historial-seguimiento`);
   }
 
   /** Admin: asigna (o quita, con null) el vendedor responsable. */

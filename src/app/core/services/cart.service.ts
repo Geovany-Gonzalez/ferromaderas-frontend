@@ -1,10 +1,12 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
 import { Product } from '../models/product.model';
+import { AnalyticsService } from './analytics.service';
 
 export type CartLine = { product: Product; qty: number };
 
 @Injectable({ providedIn: 'root' })
 export class CartService {
+  private readonly analytics = inject(AnalyticsService);
   private readonly lines = signal<CartLine[]>([]);
 
   readonly count = computed(() =>
@@ -24,9 +26,10 @@ export class CartService {
       const copy = [...curr];
       copy[idx] = { ...copy[idx], qty: copy[idx].qty + 1 };
       this.lines.set(copy);
-      return;
+    } else {
+      this.lines.set([...curr, { product, qty: 1 }]);
     }
-    this.lines.set([...curr, { product, qty: 1 }]);
+    this.analytics.addToCart(product.code, product.name, 1, product.price);
   }
 
   addQty(productId: string): void {

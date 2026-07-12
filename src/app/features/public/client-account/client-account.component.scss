@@ -1,0 +1,146 @@
+.client-account {
+  padding: 2rem 1rem 4rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.subtitle {
+  color: #64748b;
+  margin-bottom: 1.5rem;
+}
+
+.auth-card {
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+
+  button {
+    flex: 1;
+    padding: 0.6rem;
+    border: 1px solid #cbd5e1;
+    background: #f8fafc;
+    border-radius: 8px;
+    cursor: pointer;
+
+    &.active {
+      background: #1e3a8a;
+      color: #fff;
+      border-color: #1e3a8a;
+    }
+  }
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  input {
+    padding: 0.6rem 0.75rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+  }
+}
+
+.toolbar {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.quotes-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th, td {
+    padding: 0.65rem;
+    border-bottom: 1px solid #e2e8f0;
+    text-align: left;
+  }
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  background: #dbeafe;
+  color: #1e40af;
+  font-size: 0.85rem;
+}
+
+.empty {
+  text-align: center;
+  color: #64748b;
+  padding: 2rem;
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: #1e3a8a;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+}
+
+tr.selected td {
+  background: #f8fafc;
+}
+
+.seguimiento-panel {
+  margin-top: 1.5rem;
+  padding: 1.25rem;
+
+  h3 {
+    margin: 0 0 1rem;
+    font-size: 1.1rem;
+  }
+}
+
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  li {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #e2e8f0;
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+}
+
+.timeline-date {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-bottom: 0.25rem;
+}
+
+.timeline-user {
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.timeline-comment {
+  margin: 0.35rem 0 0;
+  color: #334155;
+}
+
+.loading-hint,
+.empty-hint {
+  color: #64748b;
+  margin: 0;
+}

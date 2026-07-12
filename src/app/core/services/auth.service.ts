@@ -14,7 +14,7 @@ export interface AuthUser {
   username: string;
   name: string;
   email: string;
-  role: 'vendedor' | 'administrador' | 'gerente' | 'editor';
+  role: 'vendedor' | 'administrador' | 'gerente' | 'editor' | 'cliente';
   permissions: string[];
 }
 
@@ -138,6 +138,26 @@ export class AuthService {
         email: email.trim().toLowerCase(),
       })
       .pipe(timeout(15000));
+  }
+
+  registerClient(
+    email: string,
+    password: string,
+    name: string,
+    phone?: string,
+  ): Observable<{ user: AuthUser; linkedQuotes: number }> {
+    return this.http
+      .post<{ user: AuthUser; linkedQuotes: number }>(`${this.api}/register-client`, {
+        email: email.trim().toLowerCase(),
+        password,
+        name: name.trim(),
+        phone: phone?.trim(),
+      })
+      .pipe(
+        tap((res) => {
+          if (res.user) this.persistUser(res.user);
+        }),
+      );
   }
 
   /** Compatibilidad: antes existía initFromStorage(); el estado sale de sessionStorage en el constructor. */

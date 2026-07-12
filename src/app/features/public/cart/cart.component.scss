@@ -428,6 +428,23 @@
   text-align: center;
 }
 
+.quote-status-bar {
+  padding: 0.75rem 1.5rem;
+  background: #f1f5f9;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 0.95rem;
+}
+
+.quote-status-badge {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: #dbeafe;
+  color: #1e40af;
+  font-weight: 600;
+}
+
 .quote-body {
   padding: 1.5rem;
 }

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { QuotationsService } from '../../../core/services/quotations.service';
+import { QuotesApiService, QuoteItem, SeguimientoEntry } from '../../../core/services/quotes-api.service';
 import { VendedoresService, Vendedor } from '../../../core/services/vendedores.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -38,6 +39,10 @@ export class QuotationsAdminComponent implements OnInit {
 
   /** Modal ver detalle */
   viewModalQuotation: Quotation | null = null;
+  modalItems: QuoteItem[] = [];
+  seguimientoHistory: SeguimientoEntry[] = [];
+  loadingDetail = false;
+  statusComment = '';
 
   /** Vendedor seleccionado para asignar (en modal o tabla) */
   assignVendedorId: string = '';
@@ -68,6 +73,7 @@ export class QuotationsAdminComponent implements OnInit {
     private auth: AuthService,
     private followUpAlerts: FollowUpAlertsService,
     private cdr: ChangeDetectorRef,
+    private quotesApi: QuotesApiService,
   ) {}
 
   ngOnInit(): void {
@@ -266,10 +272,48 @@ export class QuotationsAdminComponent implements OnInit {
     this.discountMotivo = q.descuentoMotivo ?? '';
     this.approvalNote = '';
     this.emailToSend = q.email ?? '';
+    this.statusComment = '';
+    this.modalItems = [];
+    this.seguimientoHistory = [];
+    this.loadingDetail = true;
+
+    this.quotationsService.getById(q.id).subscribe({
+      next: (detail) => {
+        this.viewModalQuotation = detail;
+        this.loadingDetail = false;
+      },
+      error: () => {
+        this.loadingDetail = false;
+      },
+    });
+
+    this.quotesApi.getById(q.id).subscribe({
+      next: (full) => {
+        this.modalItems = full.items ?? [];
+      },
+    });
+
+    this.quotesApi.getSeguimientoHistorial(q.id).subscribe({
+      next: (hist) => {
+        this.seguimientoHistory = hist;
+      },
+    });
   }
 
   closeViewModal(): void {
     this.viewModalQuotation = null;
+    this.modalItems = [];
+    this.seguimientoHistory = [];
+  }
+
+  seguimientoLabel(entry: SeguimientoEntry): string {
+    if (entry.tipo === 'asignacion_vendedor') return 'Asignación de vendedor';
+    if (entry.tipo === 'desasignacion_vendedor') return 'Desasignación de vendedor';
+    if (entry.tipo === 'creacion') return 'Cotización creada';
+    if (entry.estadoAnterior && entry.estadoNuevo) {
+      return `${this.statusLabel(entry.estadoAnterior as QuotationStatus)} → ${this.statusLabel(entry.estadoNuevo as QuotationStatus)}`;
+    }
+    return 'Seguimiento';
   }
 
   /** ¿El usuario actual puede aprobar/rechazar descuentos? */
@@ -360,9 +404,14 @@ export class QuotationsAdminComponent implements OnInit {
   changeStatus(q: Quotation): void {
     const next = this.getNextStatus(q.estado);
     if (!next) return;
-    this.quotationsService.updateStatus(q.id, next).subscribe({
+    this.quotationsService.updateStatus(q.id, next, this.statusComment.trim() || undefined).subscribe({
       next: (updated) => {
         this.replaceInList(updated);
+        this.viewModalQuotation = updated;
+        this.statusComment = '';
+        this.quotesApi.getSeguimientoHistorial(q.id).subscribe({
+          next: (hist) => (this.seguimientoHistory = hist),
+        });
         this.notification.showMessage(`Cotización ${updated.codigo} actualizada a ${this.statusLabel(next)}.`, 'success');
       },
       error: () => this.notification.showMessage('No se pudo actualizar el estado.', 'error'),

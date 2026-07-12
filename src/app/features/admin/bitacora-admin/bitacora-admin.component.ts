@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -31,7 +31,8 @@ export class BitacoraAdminComponent implements OnInit {
 
   constructor(
     private readonly bitacoraApi: BitacoraApiService,
-    private readonly notification: NotificationService
+    private readonly notification: NotificationService,
+    private readonly cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
@@ -55,9 +56,11 @@ export class BitacoraAdminComponent implements OnInit {
           this.page = res.page;
           this.pageSize = res.pageSize;
           this.loading = false;
+          this.cdr.detectChanges();
         },
         error: (err: { status?: number }) => {
           this.loading = false;
+          this.cdr.detectChanges();
           if (err?.status === 403) {
             this.notification.showMessage(
               'No tenés permiso para ver la bitácora. Pedí el permiso «Ver bitácora» al administrador.',

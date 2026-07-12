@@ -7,6 +7,10 @@
   <!-- Vista de cotización cuando se abre un link con ?code= o ?c= -->
   <section class="quote-view-section card" *ngIf="showQuoteView() && quoteData() as qd">
     <div class="quote-header">Cotización {{ qd.id }}</div>
+    <div class="quote-status-bar">
+      Estado de seguimiento:
+      <span class="quote-status-badge">{{ quoteStatusLabel(qd.estado) }}</span>
+    </div>
     <div class="quote-body">
       <table class="cart-table">
         <thead>
@@ -32,8 +36,6 @@
         </tbody>
       </table>
       <div class="quote-total">
-        <div>Subtotal: Q{{ qd.neto | number:'1.0-0' }}</div>
-        <div>IVA ({{ qd.ivaPorcentaje }}%): Q{{ qd.ivaMonto | number:'1.2-2' }}</div>
         <div class="quote-total-final">Total: Q{{ qd.totalConIva | number:'1.0-0' }}</div>
       </div>
       <div class="quote-client" *ngIf="qd.nombre || qd.telefono || qd.direccion || qd.nota">

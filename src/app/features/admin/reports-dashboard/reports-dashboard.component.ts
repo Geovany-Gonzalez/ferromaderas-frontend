@@ -7,7 +7,7 @@ import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartData, ChartType } from 'chart.js';
 import { QuotationsService } from '../../../core/services/quotations.service';
 import { QuotesApiService } from '../../../core/services/quotes-api.service';
-import { ChatbotService } from '../../../core/services/chatbot.service';
+import { ChatbotAdminService } from '../../../core/services/chatbot-admin.service';
 import { Quotation, QuotationStatus } from '../../../core/models/quotation.model';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -46,7 +46,7 @@ export class ReportsDashboardComponent implements OnInit, AfterViewChecked {
 
   private quotationsService = inject(QuotationsService);
   private quotesApi = inject(QuotesApiService);
-  private chatbotService = inject(ChatbotService);
+  private chatbotAdmin = inject(ChatbotAdminService);
   private route = inject(ActivatedRoute);
   private sanitizer = inject(DomSanitizer);
 
@@ -118,6 +118,20 @@ export class ReportsDashboardComponent implements OnInit, AfterViewChecked {
         this.productosMasCotizados = [];
       },
     });
+    this.chatbotAdmin.getMetrics().subscribe({
+      next: (m) => {
+        this.preguntasFrecuentes = m.topQuestions.map((q) => ({
+          pregunta: q.question,
+          veces: q.count,
+        }));
+        if (!this.preguntasFrecuentes.length) {
+          this.preguntasFrecuentes = [
+            { pregunta: 'Aún no hay preguntas registradas en el chatbot.', veces: 0 },
+          ];
+        }
+      },
+      error: () => this.buildChatbotFaqFallback(),
+    });
   }
 
   private buildReports(): void {
@@ -126,7 +140,6 @@ export class ReportsDashboardComponent implements OnInit, AfterViewChecked {
     this.buildVendedoresRanking();
     this.buildConversion();
     this.buildVentasPorPeriodo();
-    this.buildChatbotFaq();
   }
 
   ngAfterViewChecked(): void {
@@ -263,13 +276,10 @@ export class ReportsDashboardComponent implements OnInit, AfterViewChecked {
     };
   }
 
-  private buildChatbotFaq(): void {
-    this.preguntasFrecuentes = this.chatbotService.getPreguntasFrecuentes();
-    if (this.preguntasFrecuentes.length === 0) {
-      this.preguntasFrecuentes = [
-        { pregunta: 'Aún no hay datos. Usa el chatbot en la web para generar estadísticas.', veces: 0 },
-      ];
-    }
+  private buildChatbotFaqFallback(): void {
+    this.preguntasFrecuentes = [
+      { pregunta: 'No se pudieron cargar las métricas del chatbot.', veces: 0 },
+    ];
   }
 
   sectionTitles: { id: string; title: string }[] = [

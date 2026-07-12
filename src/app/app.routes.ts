@@ -43,6 +43,13 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/public/cart/cart.component').then(m => m.CartComponent),
       },
+      {
+        path: 'mis-cotizaciones',
+        loadComponent: () =>
+          import('./features/public/client-account/client-account.component').then(
+            m => m.ClientAccountComponent,
+          ),
+      },
     ],
   },
   {

@@ -161,11 +161,11 @@
           </span>
         </div>
         <div class="view-row">
-          <span class="view-label">Total (con IVA {{ viewModalQuotation.ivaPorcentaje }}%)</span>
+          <span class="view-label">Total</span>
           <span class="view-value"><strong>Q{{ viewModalQuotation.totalConIva | number:'1.0-0' }}</strong></span>
         </div>
         <div class="view-row view-row-muted">
-          <span class="view-label">Desglose</span>
+          <span class="view-label">Desglose comercial (IVA incluido)</span>
           <span class="view-value">
             Neto Q{{ viewModalQuotation.neto | number:'1.0-0' }}
             · IVA Q{{ viewModalQuotation.ivaMonto | number:'1.2-2' }}
@@ -191,6 +191,32 @@
           </span>
         </div>
       </div>
+
+      <!-- Productos de la cotización -->
+      <div class="items-section" *ngIf="modalItems.length">
+        <h4 class="assign-title">Productos cotizados</h4>
+        <table class="items-table">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Producto</th>
+              <th>Cant.</th>
+              <th>Precio</th>
+              <th>Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let it of modalItems">
+              <td>{{ it.codigo }}</td>
+              <td>{{ it.nombre }}</td>
+              <td>{{ it.cantidad }}</td>
+              <td>Q{{ it.precioUnitario | number:'1.0-0' }}</td>
+              <td>Q{{ it.subtotal | number:'1.0-0' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p *ngIf="loadingDetail" class="discount-hint">Cargando detalle...</p>
 
       <!-- Asignar vendedor (solo administradores/gerentes) -->
       <div class="assign-section" *ngIf="canManageAssignments">
@@ -281,10 +307,38 @@
           </button>
         </div>
       </div>
+
+      <!-- Historial de seguimiento -->
+      <div class="seguimiento-section" *ngIf="seguimientoHistory.length">
+        <h4 class="assign-title">Historial de seguimiento</h4>
+        <ul class="seguimiento-list">
+          <li *ngFor="let entry of seguimientoHistory">
+            <div class="seg-head">
+              <strong>{{ seguimientoLabel(entry) }}</strong>
+              <span class="seg-date">{{ entry.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+            </div>
+            <p *ngIf="entry.comentario" class="seg-comment">{{ entry.comentario }}</p>
+            <small *ngIf="entry.usuarioNombre" class="seg-user">— {{ entry.usuarioNombre }}</small>
+          </li>
+        </ul>
+      </div>
+
+      <div class="assign-section">
+        <h4 class="assign-title">Comentario al cambiar estado</h4>
+        <textarea
+          class="approval-note"
+          [(ngModel)]="statusComment"
+          rows="2"
+          placeholder="Observación de seguimiento (opcional)"
+          aria-label="Comentario de seguimiento"
+        ></textarea>
+      </div>
     </div>
     <div class="modal-footer">
       <button type="button" class="btn btn-secondary" (click)="closeViewModal()">Cerrar</button>
-      <button type="button" class="btn btn-primary" (click)="changeStatus(viewModalQuotation!); closeViewModal()">Actualizar estado</button>
+      <button type="button" class="btn btn-primary" (click)="changeStatus(viewModalQuotation!)" [disabled]="!canChangeStatus(viewModalQuotation!)">
+        Actualizar estado
+      </button>
     </div>
   </div>
 </div>
