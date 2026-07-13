@@ -1,0 +1,83 @@
+.reco-section {
+  margin: 2rem auto 3rem;
+  padding: 0 1rem;
+}
+
+.reco-header {
+  margin-bottom: 1.25rem;
+}
+
+.reco-title {
+  margin: 0 0 0.35rem;
+  font-size: clamp(1.25rem, 3vw, 1.6rem);
+  font-weight: 800;
+  color: var(--primary, #1e3a8a);
+}
+
+.reco-subtitle {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.95rem;
+}
+
+.reco-agent-note {
+  margin: 0.35rem 0 0;
+  font-size: 0.8rem;
+  color: #1e40af;
+  font-weight: 600;
+}
+
+.reco-item {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.reco-badges {
+  min-height: 1.5rem;
+}
+
+.reco-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+}
+
+.reco-badge.complementario {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.reco-badge.alternativo {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.reco-badge.relacionado {
+  background: #f8fafc;
+  color: #475569;
+}
+
+.reco-razon {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #64748b;
+  line-height: 1.35;
+  min-height: 2.2em;
+}
+
+.reco-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1.25rem;
+}
+
+@media (max-width: 480px) {
+  .reco-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 0.85rem;
+  }
+}

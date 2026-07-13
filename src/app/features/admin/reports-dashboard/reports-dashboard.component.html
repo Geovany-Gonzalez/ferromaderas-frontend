@@ -145,6 +145,9 @@
           </tr>
         </thead>
         <tbody>
+          <tr *ngIf="ventasSinDatos">
+            <td colspan="3" class="empty-row">Aún no hay ventas confirmadas o cerradas para mostrar.</td>
+          </tr>
           <tr *ngFor="let v of ventasPorMes">
             <td>{{ v.mes }}</td>
             <td>Q{{ v.monto | number }}</td>

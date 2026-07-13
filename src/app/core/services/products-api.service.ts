@@ -24,6 +24,37 @@ export class ProductsApiService {
       .pipe(map((list) => list.map((p) => this.mapToProduct(p))));
   }
 
+  /** Detalle público de un producto activo (id o código). */
+  getCatalogProduct(idOrCode: string): Observable<Product | null> {
+    return this.http
+      .get<Record<string, unknown>>(`${this.api}/catalog/${encodeURIComponent(idOrCode)}`)
+      .pipe(
+        map((p) => this.mapToProduct(p)),
+        catchError(() => of(null)),
+      );
+  }
+
+  /** Recomendaciones públicas (co-ocurrencia, categoría o más cotizados). */
+  getRecommendations(params: {
+    productId?: string;
+    categoryId?: string;
+    limit?: number;
+  }): Observable<Product[]> {
+    const q = new URLSearchParams();
+    if (params.productId) q.set('productId', params.productId);
+    if (params.categoryId) q.set('categoryId', params.categoryId);
+    if (params.limit != null) q.set('limit', String(params.limit));
+    const query = q.toString();
+    return this.http
+      .get<Record<string, unknown>[]>(
+        `${this.api}/recommendations${query ? `?${query}` : ''}`,
+      )
+      .pipe(
+        map((list) => list.map((p) => this.mapToProduct(p))),
+        catchError(() => of([])),
+      );
+  }
+
   /** Admin: todos los productos */
   getAll(): Observable<Product[]> {
     return this.http

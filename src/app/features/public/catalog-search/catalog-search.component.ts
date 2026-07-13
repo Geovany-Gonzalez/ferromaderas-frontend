@@ -12,13 +12,15 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CatalogService } from '../../../core/services/catalog.service';
 import { CartService } from '../../../core/services/cart.service';
+import { AnalyticsService } from '../../../core/services/analytics.service';
 import { ProductCardComponent } from '../../../shared/components/product-card/product-card.component';
+import { ProductRecommendationsComponent } from '../../../shared/components/product-recommendations/product-recommendations.component';
 import { Product } from '../../../core/models/product.model';
 
 @Component({
   selector: 'app-catalog-search',
   standalone: true,
-  imports: [CommonModule, FormsModule, ProductCardComponent],
+  imports: [CommonModule, FormsModule, ProductCardComponent, ProductRecommendationsComponent],
   templateUrl: './catalog-search.component.html',
   styleUrl: './catalog-search.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -26,6 +28,7 @@ import { Product } from '../../../core/models/product.model';
 export class CatalogSearchComponent implements OnInit {
   private catalog = inject(CatalogService);
   private cart = inject(CartService);
+  private analytics = inject(AnalyticsService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
@@ -63,6 +66,9 @@ export class CatalogSearchComponent implements OnInit {
     const q = (this.route.snapshot.queryParamMap.get('q') || '').trim();
     this.searchQuery = q;
     this.results = this.filterProducts(q);
+    if (q) {
+      this.analytics.search(q, this.results.length);
+    }
   }
 
   private filterProducts(term: string): Product[] {

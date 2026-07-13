@@ -9,6 +9,8 @@ import { CatalogService } from '../../../core/services/catalog.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { QuotesApiService, Quote, CreateQuoteInput } from '../../../core/services/quotes-api.service';
 import { AnalyticsService } from '../../../core/services/analytics.service';
+import { AuthService } from '../../../core/services/auth.service';
+import { ProductRecommendationsComponent } from '../../../shared/components/product-recommendations/product-recommendations.component';
 
 /** Número de WhatsApp para recibir cotizaciones: +502 58226530 */
 const WHATSAPP_NUMBER = '50258226530';
@@ -19,7 +21,7 @@ type CompactLine = { p: string; q: number; c?: string; n?: string; m?: string; r
 @Component({
   selector: 'app-cart',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [CommonModule, RouterLink, FormsModule, ProductRecommendationsComponent],
   templateUrl: './cart.component.html',
   styleUrl: './cart.component.scss',
 })
@@ -30,6 +32,7 @@ export class CartComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private quotesApi = inject(QuotesApiService);
   private analytics = inject(AnalyticsService);
+  private auth = inject(AuthService);
 
   items = this.cart.items;
   total = this.cart.total;
@@ -70,6 +73,7 @@ export class CartComponent implements OnInit {
   ngOnInit(): void {
     this.catalog.loadCatalog().subscribe();
     this.catalog.loadCategories().subscribe();
+    this.prefillClientTrackingData();
 
     // Leer el código de inmediato (snapshot) para no depender solo del subscribe async.
     const snapshotCode = this.route.snapshot.queryParamMap.get('code');
@@ -264,8 +268,21 @@ export class CartComponent implements OnInit {
   }
 
   openTrackingForm(): void {
+    this.prefillClientTrackingData();
     this.showTrackingForm = true;
     this.analytics.beginCheckout(this.cart.total(), this.cart.items().length);
+  }
+
+  /** Si el visitante es cliente registrado, pre-llena el formulario de seguimiento. */
+  private prefillClientTrackingData(): void {
+    const user = this.auth.currentUser();
+    if (!user || user.role !== 'cliente') return;
+    if (!this.trackingData.nombre.trim()) {
+      this.trackingData.nombre = user.name?.trim() || '';
+    }
+    if (!this.trackingData.email.trim()) {
+      this.trackingData.email = user.email?.trim() || '';
+    }
   }
 
   closeTrackingForm(): void {
@@ -369,6 +386,9 @@ export class CartComponent implements OnInit {
         'success',
       );
       this.analytics.generateLead(q.codigo, this.cart.total(), 'whatsapp');
+      if (this.trackingData.email?.trim()) {
+        this.analytics.generateLead(q.codigo, this.cart.total(), 'email');
+      }
       this.closeTrackingForm();
     });
   }

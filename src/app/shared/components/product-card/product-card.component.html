@@ -1,12 +1,18 @@
 <div class="p-card">
-  <div class="img-wrap">
+  <a class="img-wrap" [routerLink]="['/producto', product.id]" (click)="openProduct()">
     <img [src]="product.imageUrl" [alt]="product.name" loading="lazy">
-  </div>
+  </a>
 
   <div class="meta">
     <div class="code">Código {{ product.code }}</div>
-    <div class="name">{{ product.name }}</div>
+    <a class="name name-link" [routerLink]="['/producto', product.id]" (click)="openProduct()">
+      {{ product.name }}
+    </a>
     <div class="price">{{ product.price | currency:'GTQ':'symbol':'1.0-0' }}</div>
+    <div class="stock" *ngIf="product.stock != null && product.stock > 0">
+      Disponible: {{ product.stock }}
+    </div>
+    <div class="stock stock-low" *ngIf="product.stock === 0">Consultar disponibilidad</div>
 
     <div class="quantity-controls">
       <button class="qty-btn" type="button" (click)="decreaseQuantity()" [disabled]="quantity <= 1">

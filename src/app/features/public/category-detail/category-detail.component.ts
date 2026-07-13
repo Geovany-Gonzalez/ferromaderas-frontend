@@ -10,11 +10,12 @@ import { CartService } from '../../../core/services/cart.service';
 import { Category } from '../../../core/models/category.model';
 import { Product } from '../../../core/models/product.model';
 import { ProductCardComponent } from '../../../shared/components/product-card/product-card.component';
+import { ProductRecommendationsComponent } from '../../../shared/components/product-recommendations/product-recommendations.component';
 
 @Component({
   selector: 'app-category-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, ProductCardComponent],
+  imports: [CommonModule, FormsModule, ProductCardComponent, ProductRecommendationsComponent],
   templateUrl: './category-detail.component.html',
   styleUrls: ['./category-detail.component.scss']
 })

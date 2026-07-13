@@ -172,6 +172,13 @@
   tbody tr:hover {
     background: #f9fafb;
   }
+
+  .empty-row {
+    text-align: center;
+    color: #6b7280;
+    font-style: italic;
+    padding: 1.25rem 1rem;
+  }
 }
 
 .conversion-grid {

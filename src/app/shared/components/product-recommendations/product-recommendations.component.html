@@ -1,0 +1,22 @@
+<section class="reco-section container" *ngIf="!loading && recommendations.length">
+  <div class="reco-header">
+    <h2 class="reco-title">{{ title }}</h2>
+    <p class="reco-subtitle" *ngIf="subtitle">{{ subtitle }}</p>
+    <p class="reco-agent-note">
+      Agente de IA propio · datos del catálogo y cotizaciones de Ferromaderas
+    </p>
+  </div>
+  <div class="reco-grid">
+    <div class="reco-item" *ngFor="let rec of recommendations; trackBy: trackById">
+      <div class="reco-badges">
+        <span class="reco-badge" [class]="rec.tipo">{{ tipoLabel(rec.tipo) }}</span>
+      </div>
+      <p class="reco-razon">{{ rec.razon }}</p>
+      <app-product-card
+        [product]="rec.product"
+        (add)="onAdd($event)"
+      />
+    </div>
+  </div>
+</section>
+

@@ -30,6 +30,13 @@ export class CartService {
       this.lines.set([...curr, { product, qty: 1 }]);
     }
     this.analytics.addToCart(product.code, product.name, 1, product.price);
+    this.analytics.selectItem(
+      product.code,
+      product.name,
+      product.price,
+      1,
+      product.categoryId || undefined,
+    );
   }
 
   addQty(productId: string): void {

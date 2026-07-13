@@ -50,3 +50,11 @@
     <p *ngIf="!searchQuery.trim()">No hay productos activos en el catálogo.</p>
   </div>
 </section>
+
+<app-product-recommendations
+  *ngIf="!loading && !loadError && searchQuery.trim()"
+  title="Sugerencias para tu búsqueda"
+  subtitle="El agente usa tu consulta, la categoría y patrones de cotización"
+  [query]="searchQuery.trim()"
+  [limit]="6"
+/>

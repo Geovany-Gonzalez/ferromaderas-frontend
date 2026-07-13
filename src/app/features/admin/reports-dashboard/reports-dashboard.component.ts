@@ -12,7 +12,7 @@ import { Quotation, QuotationStatus } from '../../../core/models/quotation.model
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
-/** Datos para reporte de productos más cotizados (mock - requiere detalle de líneas en cotizaciones) */
+/** Datos para reporte de productos más cotizados */
 interface ProductoCotizado {
   nombre: string;
   codigo: string;
@@ -20,7 +20,7 @@ interface ProductoCotizado {
   porcentaje: number;
 }
 
-/** Datos para reporte de vendedores (mock - requiere campo vendedor en cotizaciones) */
+/** Datos para reporte de vendedores */
 interface VendedorRanking {
   nombre: string;
   cotizacionesCompletadas: number;
@@ -65,10 +65,10 @@ export class ReportsDashboardComponent implements OnInit, AfterViewChecked {
   barChartEstadoData!: ChartData<'bar'>;
   barChartEstadoOptions!: ChartConfiguration<'bar'>['options'];
 
-  /** Productos más cotizados - mock hasta tener detalle de líneas */
+  /** Productos más cotizados (API) */
   productosMasCotizados: ProductoCotizado[] = [];
 
-  /** Vendedores - mock hasta tener campo vendedor */
+  /** Ranking de vendedores (datos reales) */
   vendedoresRanking: VendedorRanking[] = [];
 
   /** Conversión */
@@ -84,8 +84,9 @@ export class ReportsDashboardComponent implements OnInit, AfterViewChecked {
   lineChartVentasData!: ChartData<'line'>;
   lineChartVentasOptions!: ChartConfiguration<'line'>['options'];
 
-  /** Chatbot FAQ - mock hasta integrar chatbot real */
+  /** Chatbot FAQ (métricas del backend) */
   preguntasFrecuentes: PreguntaFrecuente[] = [];
+  ventasSinDatos = false;
 
   searchTerm = '';
   /** Nombre del usuario que genera el informe (para PDF) */
@@ -136,7 +137,6 @@ export class ReportsDashboardComponent implements OnInit, AfterViewChecked {
 
   private buildReports(): void {
     this.buildEstadoCotizaciones();
-    this.buildProductosMasCotizados();
     this.buildVendedoresRanking();
     this.buildConversion();
     this.buildVentasPorPeriodo();
@@ -185,10 +185,6 @@ export class ReportsDashboardComponent implements OnInit, AfterViewChecked {
         y: { beginAtZero: true, ticks: { stepSize: 1 } },
       },
     };
-  }
-
-  private buildProductosMasCotizados(): void {
-    if (this.productosMasCotizados.length > 0) return;
   }
 
   private buildVendedoresRanking(): void {
@@ -246,18 +242,13 @@ export class ReportsDashboardComponent implements OnInit, AfterViewChecked {
       })
       .slice(-6);
 
-    if (this.ventasPorMes.length === 0) {
-      this.ventasPorMes = [
-        { mes: 'Ene 2026', monto: 4120, cantidad: 3 },
-        { mes: 'Feb 2026', monto: 5340, cantidad: 4 },
-      ];
-    }
+    this.ventasSinDatos = this.ventasPorMes.length === 0;
 
     this.lineChartVentasData = {
-      labels: this.ventasPorMes.map((v) => v.mes),
+      labels: this.ventasSinDatos ? ['Sin datos'] : this.ventasPorMes.map((v) => v.mes),
       datasets: [
         {
-          data: this.ventasPorMes.map((v) => v.monto),
+          data: this.ventasSinDatos ? [0] : this.ventasPorMes.map((v) => v.monto),
           label: 'Ventas (Q)',
           borderColor: '#1e3a8a',
           backgroundColor: 'rgba(30, 58, 138, 0.1)',

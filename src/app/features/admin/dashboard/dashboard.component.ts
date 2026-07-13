@@ -28,6 +28,7 @@ export class DashboardComponent implements OnInit {
 
   loading = true;
   error: string | null = null;
+  dataSource: 'ga4' | 'mock' = 'mock';
 
   private readonly followUpAlerts = inject(FollowUpAlertsService);
   private readonly auth = inject(AuthService);
@@ -154,7 +155,9 @@ export class DashboardComponent implements OnInit {
     visitasPorDia: { date: string; visits: number }[];
     dispositivos: { device: string; percentage: number }[];
     traficoMensual: { month: string; visits: number }[];
+    dataSource?: 'ga4' | 'mock';
   }): void {
+    this.dataSource = data.dataSource ?? 'mock';
     this.visitasTotales = data.visitasTotales;
     this.vistasPagina = data.vistasPagina;
     this.paginasSesion = data.paginasSesion;

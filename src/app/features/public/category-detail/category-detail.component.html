@@ -48,6 +48,14 @@
   </div>
 </section>
 
+<app-product-recommendations
+  *ngIf="category"
+  title="Sugerencias para esta categoría"
+  subtitle="Complementos y alternativas según la categoría y las cotizaciones"
+  [categoryId]="category.id"
+  [limit]="6"
+/>
+
 <section class="container cta-section">
   <div class="cta-card">
     <div class="cta-image">

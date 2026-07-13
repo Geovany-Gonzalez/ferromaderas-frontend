@@ -12,6 +12,7 @@ export interface DashboardStats {
   visitasPorDia: { date: string; visits: number }[];
   dispositivos: { device: string; percentage: number }[];
   traficoMensual: { month: string; visits: number }[];
+  dataSource?: 'ga4' | 'mock';
 }
 
 @Injectable({ providedIn: 'root' })

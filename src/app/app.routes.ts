@@ -29,6 +29,13 @@ export const routes: Routes = [
           import('./features/public/catalog-search/catalog-search.component').then(m => m.CatalogSearchComponent),
       },
       {
+        path: 'producto/:id',
+        loadComponent: () =>
+          import('./features/public/product-detail/product-detail.component').then(
+            m => m.ProductDetailComponent,
+          ),
+      },
+      {
         path: 'ubicacion',
         loadComponent: () =>
           import('./features/public/location/location.component').then(m => m.LocationComponent),

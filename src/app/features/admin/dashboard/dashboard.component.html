@@ -56,6 +56,16 @@
 
   <h1 class="dashboard-title">Estadísticas del sitio web</h1>
 
+  @if (dataSource === 'mock') {
+    <div class="data-source-banner mock">
+      Datos de demostración. Configurá <code>GA4_PROPERTY_ID</code> y GTM en producción para ver tráfico real.
+    </div>
+  } @else {
+    <div class="data-source-banner live">
+      Conectado a Google Analytics 4.
+    </div>
+  }
+
   @if (loading) {
     <p class="loading-message">Cargando estadísticas...</p>
   } @else if (error) {

@@ -179,4 +179,12 @@
       </div>
     </section>
   </ng-template>
+
+  <app-product-recommendations
+    *ngIf="!isEmpty() && !showQuoteView()"
+    title="Completa tu cotización"
+    subtitle="El agente sugiere complementos según lo que ya agregaste al carrito"
+    [useCartContext]="true"
+    [limit]="6"
+  />
 </div>
