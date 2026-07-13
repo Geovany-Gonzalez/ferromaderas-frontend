@@ -12,6 +12,7 @@ interface MenuItem {
 
 const ALL_MENU_ITEMS: MenuItem[] = [
   { label: 'Inicio', route: '/admin/dashboard' },
+  { label: 'Seguridad', route: '/admin/seguridad' },
   { label: 'Productos', route: '/admin/productos', permission: 'manage_products' },
   { label: 'Categorías', route: '/admin/categorias', permission: 'manage_categories' },
   { label: 'Destacados', route: '/admin/destacados', permission: 'manage_featured' },

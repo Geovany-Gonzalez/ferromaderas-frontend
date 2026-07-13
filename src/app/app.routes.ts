@@ -86,6 +86,13 @@ export const routes: Routes = [
           import('./features/admin/dashboard/dashboard.component').then(m => m.DashboardComponent),
       },
       {
+        path: 'seguridad',
+        loadComponent: () =>
+          import('./features/admin/security-admin/security-admin.component').then(
+            m => m.SecurityAdminComponent,
+          ),
+      },
+      {
         path: 'reportes',
         canActivate: [requirePermission('view_quotes')],
         loadComponent: () =>

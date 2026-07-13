@@ -1,0 +1,140 @@
+<div class="security-page">
+  <header class="security-hero card">
+    <h1>Seguridad del sistema</h1>
+    <p>
+      Esquema de protección de la información según el alcance del proyecto (punto 15):
+      autenticación, roles, permisos, cifrado, validación, rutas protegidas y auditoría.
+    </p>
+  </header>
+
+  @if (loading) {
+    <p class="status-msg">Cargando resumen de seguridad…</p>
+  }
+
+  @if (error && !loading) {
+    <div class="status-msg error card">
+      No se pudo cargar el panel. Verificá que la API esté en ejecución y que tengas sesión activa.
+    </div>
+  }
+
+  @if (overview; as data) {
+    <section class="card session-card">
+      <h2>Tu sesión actual</h2>
+      <div class="session-grid">
+        <div class="session-item">
+          <span class="label">Usuario</span>
+          <strong>{{ currentUserName() }} ({{ data.sesion.usuario }})</strong>
+        </div>
+        <div class="session-item">
+          <span class="label">Rol</span>
+          <strong>{{ roleLabels[data.sesion.rol] ?? data.sesion.rol }}</strong>
+        </div>
+        <div class="session-item">
+          <span class="label">Permisos activos</span>
+          <strong>{{ data.sesion.permisosCount }}</strong>
+        </div>
+      </div>
+      <div class="perm-chips">
+        @for (p of data.sesion.permisos; track p) {
+          <span class="chip">{{ p }}</span>
+        }
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Controles de seguridad implementados</h2>
+      <p class="section-intro">
+        Cada control responde a un requisito del documento de graduación. El estado se evalúa en tiempo real.
+      </p>
+      <div class="controls-grid">
+        @for (c of data.controles; track c.id) {
+          <article class="control-card" [class]="c.estado">
+            <div class="control-head">
+              <h3>{{ c.titulo }}</h3>
+              <span class="estado-badge">{{ estadoLabel(c.estado) }}</span>
+            </div>
+            <p class="control-desc">{{ c.descripcion }}</p>
+            <p class="control-detail">{{ c.detalle }}</p>
+          </article>
+        }
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Matriz de roles y permisos (RBAC)</h2>
+      <p class="section-intro">
+        Datos reales desde la base de datos. Define qué puede hacer cada rol en Ferromaderas.
+      </p>
+      <div class="table-wrap">
+        <table class="matrix-table">
+          <thead>
+            <tr>
+              <th>Permiso</th>
+              @for (role of data.matriz.roles; track role.slug) {
+                <th>{{ roleLabels[role.slug] ?? role.name }}</th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (perm of data.matriz.permissions; track perm.slug) {
+              <tr>
+                <td>
+                  <span class="perm-name">{{ perm.name }}</span>
+                  <span class="perm-slug">{{ perm.slug }}</span>
+                </td>
+                @for (role of data.matriz.roles; track role.slug) {
+                  <td class="cell-check">
+                    @if (hasPermission(role, perm.slug)) {
+                      <span class="yes" title="Permitido">✓</span>
+                    } @else {
+                      <span class="no" title="No permitido">—</span>
+                    }
+                  </td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Rutas protegidas</h2>
+      <p class="section-intro">
+        El frontend aplica guards antes de mostrar pantallas; la API valida permisos en cada endpoint.
+      </p>
+      <div class="table-wrap">
+        <table class="routes-table">
+          <thead>
+            <tr>
+              <th>Ruta</th>
+              <th>Guard / control</th>
+              <th>Permiso requerido</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of data.rutasProtegidas; track r.ruta) {
+              <tr>
+                <td><code>{{ r.ruta }}</code></td>
+                <td>{{ r.guard }}</td>
+                <td>{{ r.permiso }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card audit-link">
+      <h2>Auditoría</h2>
+      <p>
+        Los eventos de seguridad (logins, cambios críticos, alertas) quedan registrados en la bitácora del sistema.
+      </p>
+      <a routerLink="/admin/bitacora" class="btn-link">Ir a Bitácora de auditoría →</a>
+    </section>
+
+    <p class="footer-note">
+      Resumen generado: {{ data.generadoEn | date:'dd/MM/yyyy HH:mm' }}
+    </p>
+  }
+</div>
