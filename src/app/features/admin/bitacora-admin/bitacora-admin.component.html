@@ -6,12 +6,19 @@
       <strong>errores del servidor</strong> (módulo <code>errores</code>).
     </p>
 
-    <div class="quick-filters">
-      <button type="button" class="chip" [class.active]="filterModulo === ''" (click)="setModuloFilter('')">Todos</button>
-      <button type="button" class="chip" [class.active]="filterModulo === 'errores'" (click)="setModuloFilter('errores')">Errores del sistema</button>
-      <button type="button" class="chip" [class.active]="filterModulo === 'cotizaciones'" (click)="setModuloFilter('cotizaciones')">Cotizaciones</button>
-      <button type="button" class="chip" [class.active]="filterModulo === 'auth'" (click)="setModuloFilter('auth')">Autenticación</button>
-      <button type="button" class="chip" [class.active]="filterModulo === 'productos'" (click)="setModuloFilter('productos')">Productos</button>
+    <div class="module-filters">
+      <span class="module-filters-label">Módulos:</span>
+      <label class="module-check" *ngFor="let mod of moduleOptions">
+        <input
+          type="checkbox"
+          [(ngModel)]="selectedModules[mod.id]"
+          (ngModelChange)="onModuleCheckboxChange()"
+        />
+        <span>{{ mod.label }}</span>
+      </label>
+      <span class="module-hint" *ngIf="hasModuleFilters">
+        Podés combinar varios módulos. El campo de texto anula los checkboxes.
+      </span>
     </div>
 
     <div class="toolbar">
@@ -23,8 +30,14 @@
       </a>
       <div class="filters">
         <label class="filter-field">
-          <span>Módulo</span>
-          <input type="text" [(ngModel)]="filterModulo" placeholder="ej. productos" class="filter-input" />
+          <span>Módulo (texto)</span>
+          <input
+            type="text"
+            [(ngModel)]="filterModulo"
+            (ngModelChange)="onModuloTextInput()"
+            placeholder="ej. productos"
+            class="filter-input"
+          />
         </label>
         <label class="filter-field">
           <span>Desde</span>
@@ -35,6 +48,14 @@
           <input type="date" [(ngModel)]="filterHasta" class="filter-input" />
         </label>
         <button type="button" class="btn-filter" (click)="aplicarFiltros()">Filtrar</button>
+        <button
+          type="button"
+          class="btn-export"
+          (click)="exportCsv()"
+          [disabled]="exporting || loading"
+        >
+          {{ exporting ? 'Exportando…' : 'Exportar CSV' }}
+        </button>
       </div>
     </div>
 

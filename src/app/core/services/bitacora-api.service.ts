@@ -9,6 +9,7 @@ export interface BitacoraRow {
   modulo: string;
   accion: string;
   usuarioId: string | null;
+  usuarioNombre?: string | null;
   detalles: Record<string, unknown> | null;
   ip: string | null;
 }
@@ -24,6 +25,7 @@ export interface BitacoraListParams {
   page?: number;
   pageSize?: number;
   modulo?: string;
+  modulos?: string[];
   desde?: string;
   hasta?: string;
 }
@@ -39,6 +41,7 @@ export class BitacoraApiService {
     if (params.page != null) hp = hp.set('page', String(params.page));
     if (params.pageSize != null) hp = hp.set('pageSize', String(params.pageSize));
     if (params.modulo?.trim()) hp = hp.set('modulo', params.modulo.trim());
+    if (params.modulos?.length) hp = hp.set('modulos', params.modulos.join(','));
     if (params.desde) hp = hp.set('desde', params.desde);
     if (params.hasta) hp = hp.set('hasta', params.hasta);
     return this.http.get<BitacoraListResponse>(this.api, { params: hp });
